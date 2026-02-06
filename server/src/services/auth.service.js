@@ -1,5 +1,6 @@
 import User from '../models/user.js'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 export async function createUser(userData) {
     const existingUser = await User.findOne({
@@ -27,4 +28,27 @@ export async function createUser(userData) {
     })
 
     return user
+}
+
+export async function loginUser(userData) {
+    const { emailId , password } = userData
+    if(!emailId || !password) {
+        const err = new Error('Required fields are missing')
+        err.statusCode = 400
+        throw err
+    }
+    const existingUser = await User.findOne({emailId}).select('+password')
+    if(!existingUser) {
+        const err = new Error("Invalid Credentials")
+        err.statusCode = 404
+        throw err
+    }
+    let isValiduser = await bcrypt.compare(password,existingUser.password)
+    if(!isValiduser) {
+        const err = new Error("Invalid Credentials")
+        err.statusCode = 400
+        throw err
+    }
+    const token = await jwt.sign({_id : existingUser._id , userName : existingUser.userName},process.env.JWT_SECRET,{expiresIn : '1h'})
+    return {token}
 }

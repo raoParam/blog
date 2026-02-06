@@ -34,7 +34,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
         minLength: 8,
-        select: false
+        select : false
     },
     role: {
         type: String,
