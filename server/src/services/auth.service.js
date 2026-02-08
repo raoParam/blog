@@ -49,6 +49,11 @@ export async function loginUser(userData) {
         err.statusCode = 400
         throw err
     }
+    if(!process.env.JWT_SECRET) {
+        const err = new Error("Internal Server Error, jwt_secret not found")
+        err.statusCode = 500
+        throw err
+    }
     const token = await jwt.sign({_id : existingUser._id , userName : existingUser.userName},process.env.JWT_SECRET,{expiresIn : '1h'})
     return {token}
 }

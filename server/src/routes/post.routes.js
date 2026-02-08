@@ -1,10 +1,12 @@
 import express from 'express'
-import { createBlog } from '../controllers/post.controller.js'
+import { createBlog , getBlogs } from '../controllers/post.controller.js'
 import auth from '../middleware/auth.js'
 const postRouter = express.Router()
 
 
 // post blog
-postRouter.post('/new',auth,createBlog)
+postRouter.post('/',auth,createBlog)
+// get blogs
+postRouter.get('/posts',auth,getBlogs)
 
 export default postRouter

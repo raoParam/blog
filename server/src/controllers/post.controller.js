@@ -1,5 +1,5 @@
 import validatePost from '../utils/postValidator.js'
-import {createPost} from '../services/post.service.js'
+import { createPost , fetchPost } from '../services/post.service.js'
 
 
 export async function createBlog(req,res,next){
@@ -11,6 +11,19 @@ export async function createBlog(req,res,next){
 			blog,
 			Status : "Success",
 			Message : "Blog created successfully"
+		})
+	} catch(err) {
+		next(err)
+	}
+}
+
+export async function getBlogs(req,res,next) {
+	try {
+		const blogs = await fetchPost(req.query)
+		res.status(200).json({
+			blogs,
+			Status : "Success",
+			Message : "Blogs Fetched Successfully"
 		})
 	} catch(err) {
 		next(err)
