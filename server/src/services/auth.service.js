@@ -40,7 +40,7 @@ export async function loginUser(userData) {
     const existingUser = await User.findOne({emailId}).select('+password')
     if(!existingUser) {
         const err = new Error("Invalid Credentials")
-        err.statusCode = 404
+        err.statusCode = 401
         throw err
     }
     let isValiduser = await bcrypt.compare(password,existingUser.password)
