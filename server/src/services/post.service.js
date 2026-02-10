@@ -6,7 +6,7 @@ export async function createPost(postData) {
     return post
 }
 
-export async function fetchPost(postData) {
+export async function fetchPosts(postData) {
     const page = Number(postData.page) || 1
     const limit = 10
     const blogs = await Post.find()
@@ -27,4 +27,19 @@ export async function fetchPost(postData) {
     })
 
     return sanitizedBlogs
+}
+
+export async function fetchPost(postId) {
+    const blog = await Post.findById(postId)
+    .select('title content excerpt likes visibility createdAt')
+    .populate({
+        path : "author",
+        select : "userName"
+    })
+    if(!blog) {
+        const err = new Error("Blog not found")
+        err.statusCode = 404
+        throw err
+    }
+    return blog
 }
