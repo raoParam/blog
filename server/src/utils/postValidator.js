@@ -39,4 +39,10 @@ export function validateUpdatedPost(postInfo) {
         err.statusCode = 400
         throw err
     }
+
+    if(postInfo.excerpt!==undefined && (postInfo.excerpt.length < 10 || postInfo.excerpt.length > 200)){
+        const err = new Error('Summary must be 10-50 chars long')
+        err.statusCode = 400
+        throw err
+    }
 }

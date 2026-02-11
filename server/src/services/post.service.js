@@ -42,6 +42,9 @@ export async function fetchPost(postId) {
         err.statusCode = 404
         throw err
     }
+    if(blog.visibility === 'anonymous') {
+        blog.author = null
+    }
     return blog
 }
 
@@ -74,5 +77,21 @@ export async function updatePost(postId,updatedPost,userId) {
     if(updatedPost.excerpt !== undefined) 
         blog.excerpt = updatedPost.excerpt
     await blog.save()
+    return blog
+}
+
+export async function deletePost(postId,userId) {
+    const blog = await Post.findById(postId)
+    if(!blog) {
+        const err = new Error("Blog not found")
+        err.statusCode = 404
+        throw err
+    }
+    if (blog.author.toString() !== userId.toString()) {
+        const err = new Error("Not authorized to delete this blog")
+        err.statusCode = 403
+        throw err
+    }
+    await blog.deleteOne()
     return blog
 }
