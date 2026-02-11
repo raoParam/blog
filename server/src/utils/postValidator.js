@@ -26,3 +26,17 @@ export default function validatePost(postInfo) {
         throw err
     }
 }
+
+export function validateUpdatedPost(postInfo) {
+    if (postInfo.title!==undefined && (postInfo.title.length < 5 || postInfo.title.length > 100)) {
+        const err = new Error('Title must be 5–100 characters long')
+        err.statusCode = 400
+        throw err
+    }
+
+    if (postInfo.content!==undefined && (postInfo.content.length > 7000 || postInfo.content.length < 10)) {
+        const err = new Error('Content must be 10-7000 characters long')
+        err.statusCode = 400
+        throw err
+    }
+}

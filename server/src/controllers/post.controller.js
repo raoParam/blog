@@ -1,5 +1,5 @@
 import validatePost from '../utils/postValidator.js'
-import { createPost , fetchPosts , fetchPost } from '../services/post.service.js'
+import { createPost , fetchPosts , fetchPost , updatePost } from '../services/post.service.js'
 
 
 export async function createBlog(req,res,next){
@@ -39,6 +39,20 @@ export async function getBlog(req,res,next) {
 			Message : "Blog fetched successfully"
 		})
 	} catch (err) {
+		next(err)
+	}
+}
+
+export async function updateBlog(req,res,next) {
+	try {
+		const { postId } = req.params
+		const updatedBlog = await updatePost(postId,req.body,req.user._id)
+		res.status(200).json({
+			updatedBlog,
+			Status : "Success",
+			Message : "Blog updated successfully"
+		})
+	} catch(err) {
 		next(err)
 	}
 }

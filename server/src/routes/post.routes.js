@@ -1,5 +1,5 @@
 import express from 'express'
-import { createBlog , getBlogs , getBlog } from '../controllers/post.controller.js'
+import { createBlog , getBlogs , getBlog , updateBlog } from '../controllers/post.controller.js'
 import auth from '../middleware/auth.js'
 const postRouter = express.Router()
 
@@ -10,5 +10,7 @@ postRouter.post('/',auth,createBlog)
 postRouter.get('/posts',auth,getBlogs)
 // get particular blog
 postRouter.get('/:postId',auth,getBlog)
+// update particular blog
+postRouter.put('/:postId',auth,updateBlog)
 
 export default postRouter
