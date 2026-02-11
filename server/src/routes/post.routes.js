@@ -1,5 +1,5 @@
 import express from 'express'
-import { createBlog , getBlogs , getBlog , updateBlog , deleteBlog } from '../controllers/post.controller.js'
+import { createBlog , getBlogs , getBlog , updateBlog , deleteBlog , likeBlog } from '../controllers/post.controller.js'
 import auth from '../middleware/auth.js'
 const postRouter = express.Router()
 
@@ -14,5 +14,7 @@ postRouter.get('/:postId',auth,getBlog)
 postRouter.put('/:postId',auth,updateBlog)
 // delete particular blog
 postRouter.delete('/:postId',auth,deleteBlog)
+// like particular post
+postRouter.post('/:postId/like',auth,likeBlog)
 
 export default postRouter

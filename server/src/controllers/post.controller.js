@@ -1,5 +1,5 @@
 import validatePost from '../utils/postValidator.js'
-import { createPost , fetchPosts , fetchPost , updatePost , deletePost } from '../services/post.service.js'
+import { createPost , fetchPosts , fetchPost , updatePost , deletePost , likePost } from '../services/post.service.js'
 
 
 export async function createBlog(req,res,next){
@@ -67,6 +67,20 @@ export async function deleteBlog(req,res,next) {
 			Message : "Blog deleted successfully"
 		})
 	} catch(err) {
+		next(err)
+	}
+}
+
+export async function likeBlog(req,res,next) {
+	try {
+		const { postId } = req.params
+		const likes = await likePost(postId,req.user._id)
+		res.status(200).json({
+			likes,
+			Status : "Success",
+			Message : "Blog liked successfully"
+		})
+	} catch (err) {
 		next(err)
 	}
 }

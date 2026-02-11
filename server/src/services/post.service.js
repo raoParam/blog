@@ -2,7 +2,6 @@ import Post from '../models/post.js'
 import { validateUpdatedPost } from '../utils/postValidator.js'
 
 export async function createPost(postData) {
-    postData.likes = 0
     const post = await Post.create(postData)
     return post
 }
@@ -95,3 +94,33 @@ export async function deletePost(postId,userId) {
     await blog.deleteOne()
     return blog
 }
+
+export async function likePost(postId, userId) {
+
+    const blog = await Post.findById(postId)
+    if (!blog) {
+        const err = new Error("Blog not found")
+        err.statusCode = 404
+        throw err
+    }
+
+    const alreadyLiked = blog.likes.some(
+        id => id.toString() === userId.toString()
+    )
+
+    if (alreadyLiked) {
+        blog.likes = blog.likes.filter(
+            id => id.toString() !== userId.toString()
+        )
+    } else {
+        blog.likes.push(userId)
+    }
+
+    await blog.save()
+
+    return {
+        totalLikes: blog.likes.length,
+        isLikedByUser: !alreadyLiked
+    }
+}
+

@@ -30,10 +30,13 @@ const postSchema = new Schema({
 		enum: ['public', 'anonymous'],
 		default: 'public'
 	},
-	likes: {
-		type: Number,
-		default: 0
-	}
+	likes: [
+	   {
+	      type: Schema.Types.ObjectId,
+	      ref: "User"
+	   }
+	]
+
 },{
   	timestamps: true
 })
