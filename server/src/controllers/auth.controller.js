@@ -21,10 +21,34 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
     try {
         const { token } = await loginUser(req.body)
+        // res.cookie('token', token, {
+        //     httpOnly: true,
+        //     secure: process.env.NODE_ENV === 'production', 
+        //     sameSite: 'strict',
+        //     maxAge: 60 * 60 * 1000 
+        // })
+        
         res.status(200).json({
             token,
-            Status : "Success",
-            Message : "User Login Successfully"
+            status: "Success",
+            message: "User Login Successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function logout(req, res, next) {
+    try {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        })
+        
+        res.status(200).json({
+            status: "Success",
+            message: "Logged out successfully"
         })
     } catch(err) {
         next(err)
