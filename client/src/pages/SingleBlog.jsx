@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, 
@@ -30,8 +31,8 @@ const SingleBlog = () => {
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
 
-  const { profile } = useSelector((state) => state.user)
-  const { isAuthenticated } = useSelector((state) => state.auth)
+  const profile = useSelector(selectUser)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
 
   // Sidebar navigation items (same as Home)
   const navItems = [
@@ -167,9 +168,15 @@ const SingleBlog = () => {
     )
   }
 
-  const isAnonymous = blog.visibility === 'anonymous'
-  const authorName = isAnonymous ? 'Anonymous' : blog.author?.userName || 'Anonymous'
-  const authorInitial = authorName.charAt(0).toUpperCase()
+  const authorName =
+    blog.author?.userName ||
+    [blog.author?.firstName, blog.author?.lastName].filter(Boolean).join(' ') ||
+    blog.authorName ||
+    blog.authorUserName ||
+    null
+  const isAnonymous = blog.visibility === 'anonymous' && !authorName
+  const displayAuthorName = authorName || 'Anonymous'
+  const authorInitial = displayAuthorName.charAt(0).toUpperCase()
   const formattedDate = formatBlogDate(blog.createdAt)
 
   return (
@@ -237,7 +244,7 @@ const SingleBlog = () => {
             <BlogContent
               blog={blog}
               isAnonymous={isAnonymous}
-              authorName={authorName}
+              authorName={displayAuthorName}
               authorInitial={authorInitial}
               formattedDate={formattedDate}
             />

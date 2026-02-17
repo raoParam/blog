@@ -9,6 +9,7 @@ export const publicAxios = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Send cookies with requests
 })
 
 // Protected instance
@@ -17,34 +18,30 @@ export const protectedAxios = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Send cookies with requests
 })
 
-// Add token to protected requests
-protectedAxios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+// Interceptor to handle responses
+const responseInterceptor = (response) => response
 
-// Handle 401 errors
-protectedAxios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Only clear token and redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-        toast.error('Session expired. Please login again.')
-      }
-    }
-    return Promise.reject(error)
+const errorInterceptor = (error) => {
+  const status = error.response?.status
+  const config = error.config || {}
+  const url = config.url || ''
+
+  const shouldSkipAuthError =
+    config.skipAuthError === true || url.includes('/auth/logout')
+
+  if (status === 401 && !shouldSkipAuthError) {
+    // Dispatch a custom event to log the user out globally
+    window.dispatchEvent(new Event('auth-error'))
+    toast.error('Session expired. Please login again.')
   }
+  return Promise.reject(error)
+}
+
+// Apply interceptors to protected instance
+protectedAxios.interceptors.response.use(
+  responseInterceptor,
+  errorInterceptor
 )

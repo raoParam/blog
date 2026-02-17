@@ -9,10 +9,10 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { login, error, clearError, isAuthenticated } = useAuthRedux()
+  const { login, status, error, clearError, isAuthenticated } = useAuthRedux()
   const navigate = useNavigate()
+  const isSubmitting = status === 'loading'
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -34,22 +34,22 @@ const Login = () => {
       newErrors.password = 'Password must be at least 6 characters'
     }
     setErrors(newErrors)
-    clearError()
-    return Object.keys(newErrors).length === 0
+    if (Object.keys(newErrors).length > 0) {
+        clearError()
+        return false
+    }
+    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validateForm()) return
     
-    setIsSubmitting(true)
     try {
-      const result = await login(emailId, password)
-      if (!result.success) {
-        setIsSubmitting(false)
-      }
-    } catch (error) {
-      setIsSubmitting(false)
+      await login({ emailId, password })
+    } catch (err) {
+      // Error is already handled by the slice and displayed via the `error` state
+      console.error(err)
     }
   }
 
@@ -105,7 +105,7 @@ const Login = () => {
                   value={emailId}
                   onChange={(e) => {
                     setEmailId(e.target.value)
-                    clearError()
+                    if (error) clearError()
                   }}
                   placeholder="Enter your email"
                   className={`w-full h-12 pl-11 pr-4 bg-[#0A0A0A] border ${
@@ -138,7 +138,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
-                    clearError()
+                    if (error) clearError()
                   }}
                   placeholder="Enter your password"
                   className={`w-full h-12 pl-11 pr-12 bg-[#0A0A0A] border ${

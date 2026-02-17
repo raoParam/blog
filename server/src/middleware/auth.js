@@ -38,7 +38,7 @@ export default async function auth(req, res, next) {
             err.statusCode = 404
             throw err
         }
-        
+        req.token = token
         req.user = user
         next()
     } catch (err) {

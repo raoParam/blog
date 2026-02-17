@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getAllBlogs } from '../services/blogService'
+import { useAuthRedux } from '../hooks/useAuthRedux'
 import BlogCard from '../components/blog/BlogCard'
 import Loader from '../components/common/Loader'
-import { fetchUserProfile } from '../store/slices/userSlice'
 import { 
   Home, 
   Bookmark, 
@@ -20,18 +18,13 @@ import {
 } from 'lucide-react'
 
 const HomePage = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [timeoutReached, setTimeoutReached] = useState(false)
-  
-  const { profile, status: userStatus, error: userError } = useSelector((state) => state.user)
-  const { isAuthenticated, token } = useSelector((state) => state.auth)
+  const { user, logout } = useAuthRedux()
   
   const { data: blogs = [], isLoading: blogsLoading } = useQuery({
     queryKey: ['homeBlogs'],
     queryFn: () => getAllBlogs(),
     staleTime: 5 * 60 * 1000,
-    enabled: isAuthenticated && !!profile,
+    enabled: !!user, // Only fetch blogs if the user is loaded
   })
 
   // Sidebar navigation items
@@ -47,112 +40,14 @@ const HomePage = () => {
     { name: 'Settings', icon: Settings, path: '/settings', active: false },
   ]
 
-  // Set a timeout to detect if loading is taking too long
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (userStatus === 'loading' || userStatus === 'idle') {
-        setTimeoutReached(true)
-      }
-    }, 5000)
-
-    return () => clearTimeout(timer)
-  }, [userStatus])
-
-  // Fetch profile if not loaded
-  useEffect(() => {
-    if (isAuthenticated && token) {
-      if (userStatus === 'idle') {
-        console.log('Fetching user profile...')
-        dispatch(fetchUserProfile())
-      }
-    } else {
-      navigate('/login')
-    }
-  }, [isAuthenticated, token, userStatus, dispatch, navigate])
-
   // Get user initial for avatar
   const getUserInitial = () => {
-    if (profile?.firstName) return profile.firstName.charAt(0).toUpperCase()
-    if (profile?.userName) return profile.userName.charAt(0).toUpperCase()
+    if (user?.userName) return user.userName.charAt(0).toUpperCase()
     return 'U'
   }
 
-  // If timeout reached, show error with retry option
-  if (timeoutReached && (userStatus === 'loading' || userStatus === 'idle')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center bg-[#121212] p-8 rounded-2xl border border-[#1E1E1E] max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Taking too long</h2>
-          <p className="text-[#A1A1A1] text-sm mb-6">
-            We're having trouble loading your profile. This might be a network issue.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => {
-                setTimeoutReached(false)
-                dispatch(fetchUserProfile())
-              }}
-              className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg hover:bg-[#2563EB] transition-colors"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token')
-                window.location.href = '/login'
-              }}
-              className="px-4 py-2 bg-[#1E1E1E] text-[#A1A1A1] rounded-lg hover:text-white transition-colors"
-            >
-              Back to Login
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Show loader while profile is loading
-  if (userStatus === 'loading' || userStatus === 'idle') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader />
-          <p className="text-[#A1A1A1] text-sm mt-4">Loading your profile...</p>
-          <p className="text-[#666666] text-xs mt-2">This should only take a moment</p>
-        </div>
-      </div>
-    )
-  }
-
-  // If profile failed to load
-  if (userStatus === 'failed') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center bg-[#121212] p-8 rounded-2xl border border-[#1E1E1E] max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Failed to load profile</h2>
-          <p className="text-[#A1A1A1] text-sm mb-6">
-            {userError || 'Could not load your profile. Please try again.'}
-          </p>
-          <button
-            onClick={() => dispatch(fetchUserProfile())}
-            className="px-6 py-2 bg-[#3B82F6] text-white rounded-lg hover:bg-[#2563EB] transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // ProtectedRoute handles the main loading/error state for the user.
+  // We only need to handle the loading state for the blogs query.
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pt-20">
@@ -223,7 +118,7 @@ const HomePage = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">
-                      {profile?.firstName ? `${profile.firstName} ${profile.lastName || ''}` : profile?.userName || 'User'}
+                      {user?.userName || 'User'}
                     </p>
                     <p className="text-xs text-[#666666] truncate">
                       View your profile
@@ -244,7 +139,7 @@ const HomePage = () => {
             {/* Welcome Header */}
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-white mb-2">
-                Welcome back, {profile?.userName || 'Friend'}! 👋
+                Welcome back, {user?.userName || 'Friend'}! 👋
               </h1>
               <p className="text-[#A1A1A1]">
                 Discover new stories from the community

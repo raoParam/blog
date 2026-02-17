@@ -4,15 +4,16 @@ import { Heart, MessageCircle, Bookmark, MoreHorizontal, User } from 'lucide-rea
 import { formatBlogDate } from '../../utils/formatDate'
 
 const BlogCard = ({ post }) => {
+  console.log(post)
   const {
     _id,
     title,
     content,
     author,
     visibility,
+    isAnonymous: isAnonymousProp, // Handle potential legacy property
     likes = [],
-    comments = [], // Will be added later
-    saves = [], // Will be added later
+    comments = [],
     createdAt,
   } = post
 
@@ -24,11 +25,16 @@ const BlogCard = ({ post }) => {
 
   const formattedDate = formatBlogDate(createdAt)
   
-  const isAnonymous = visibility === 'anonymous'
-  const authorName = isAnonymous 
-    ? 'Anonymous' 
-    : author?.userName || 'Anonymous'
-  const authorInitial = authorName.charAt(0).toUpperCase()
+  const authorName =
+    author?.userName ||
+    [author?.firstName, author?.lastName].filter(Boolean).join(' ') ||
+    post.authorName ||
+    post.authorUserName ||
+    null
+
+  const isAnonymous = isAnonymousProp || (!authorName && visibility === 'anonymous')
+  const displayAuthorName = authorName || 'Anonymous'
+  const authorInitial = displayAuthorName.charAt(0).toUpperCase()
 
   // Reading time calculation (average reading speed: 200 words per minute)
   const wordCount = plainText.split(/\s+/).length
@@ -57,7 +63,7 @@ const BlogCard = ({ post }) => {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-white hover:text-[#3B82F6] transition-colors">
-                  {authorName}
+                  {displayAuthorName}
                 </span>
                 <span className="text-[#A1A1A1]">·</span>
                 <span className="text-[#A1A1A1] text-sm">

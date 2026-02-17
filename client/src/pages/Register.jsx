@@ -5,15 +5,15 @@ import { useAuthRedux } from '../hooks/useAuthRedux'
 import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Github, Chrome } from 'lucide-react'
 
 const Register = () => {
-  const [username, setUsername] = useState('')
+  const [userName, setUserName] = useState('')
   const [emailId, setEmailId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { register, error, clearError, isAuthenticated } = useAuthRedux()
+  const { register, status, error, clearError, isAuthenticated } = useAuthRedux()
   const navigate = useNavigate()
+  const isSubmitting = status === 'loading'
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -26,12 +26,12 @@ const Register = () => {
     const newErrors = {}
     
     // Username validation
-    if (!username) {
-      newErrors.username = 'Username is required'
-    } else if (username.length < 5) {
-      newErrors.username = 'Username must be at least 5 characters'
-    } else if (username.length > 40) {
-      newErrors.username = 'Username must be less than 40 characters'
+    if (!userName) {
+      newErrors.userName = 'Username is required'
+    } else if (userName.length < 5) {
+      newErrors.userName = 'Username must be at least 5 characters'
+    } else if (userName.length > 40) {
+      newErrors.userName = 'Username must be less than 40 characters'
     }
     
     // Email validation
@@ -49,22 +49,22 @@ const Register = () => {
     }
     
     setErrors(newErrors)
-    clearError()
-    return Object.keys(newErrors).length === 0
+    if (Object.keys(newErrors).length > 0) {
+      clearError()
+      return false
+    }
+    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validateForm()) return
     
-    setIsSubmitting(true)
     try {
-      const result = await register(username, emailId, password)
-      if (!result.success) {
-        setIsSubmitting(false)
-      }
-    } catch (error) {
-      setIsSubmitting(false)
+      await register({ userName, emailId, password })
+    } catch (err) {
+      // Error is handled by the slice and displayed via the `error` state
+      console.error(err)
     }
   }
 
@@ -120,19 +120,19 @@ const Register = () => {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666666]" />
                 <input
                   type="text"
-                  value={username}
+                  value={userName}
                   onChange={(e) => {
-                    setUsername(e.target.value)
-                    clearError()
+                    setUserName(e.target.value)
+                    if (error) clearError()
                   }}
                   placeholder="Choose a username"
                   className={`w-full h-12 pl-11 pr-4 bg-[#0A0A0A] border ${
-                    errors.username ? 'border-red-500/50' : 'border-[#1E1E1E]'
+                    errors.userName ? 'border-red-500/50' : 'border-[#1E1E1E]'
                   } rounded-xl text-white placeholder-[#666666] focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 transition-all`}
                 />
               </div>
-              {errors.username && (
-                <p className="text-xs text-red-400 mt-1">{errors.username}</p>
+              {errors.userName && (
+                <p className="text-xs text-red-400 mt-1">{errors.userName}</p>
               )}
             </div>
 
@@ -148,7 +148,7 @@ const Register = () => {
                   value={emailId}
                   onChange={(e) => {
                     setEmailId(e.target.value)
-                    clearError()
+                    if (error) clearError()
                   }}
                   placeholder="Enter your email"
                   className={`w-full h-12 pl-11 pr-4 bg-[#0A0A0A] border ${
@@ -173,7 +173,7 @@ const Register = () => {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
-                    clearError()
+                    if (error) clearError()
                   }}
                   placeholder="Create a password"
                   className={`w-full h-12 pl-11 pr-12 bg-[#0A0A0A] border ${

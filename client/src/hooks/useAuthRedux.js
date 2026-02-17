@@ -4,59 +4,42 @@ import {
   loginUser, 
   registerUser, 
   logoutUser,
-  clearError
+  clearError,
+  selectIsAuthenticated,
+  selectUser,
+  selectAuthStatus
 } from '../store/slices/authSlice'
-import { resetUser } from '../store/slices/userSlice'
 
 export const useAuthRedux = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   
-  const auth = useSelector((state) => state.auth)
-  const user = useSelector((state) => state.user)
+  const status = useSelector(selectAuthStatus)
+  const error = useSelector((state) => state.auth.error)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+  const user = useSelector(selectUser)
 
-  const login = async (emailId, password) => {
-    try {
-      const result = await dispatch(loginUser({ emailId, password })).unwrap()
-      console.log('Login result:', result)
-      
-      // Navigate immediately after successful login
-      navigate('/home')
-      return { success: true }
-    } catch (error) {
-      console.error('Login error:', error)
-      return { success: false, error }
-    }
+  const login = async (credentials) => {
+    // The component will react to the state change from the slice
+    await dispatch(loginUser(credentials)).unwrap()
   }
 
-  const register = async (userName, emailId, password) => {
-    try {
-      await dispatch(registerUser({ userName, emailId, password })).unwrap()
-      navigate('/login')
-      return { success: true }
-    } catch (error) {
-      return { success: false, error }
-    }
+  const register = async (userData) => {
+    // The component will react, but we can navigate here after success
+    await dispatch(registerUser(userData)).unwrap()
+    navigate('/verify-email', { state: { emailId: userData.emailId } })
   }
 
   const logout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap()
-      dispatch(resetUser())
-      navigate('/')
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
+    await dispatch(logoutUser()).unwrap()
+    navigate('/')
   }
 
   return {
-    token: auth.token,
-    status: auth.status,
-    error: auth.error,
-    isAuthenticated: auth.isAuthenticated,
-    profile: user.profile,
-    userStatus: user.status,
-    userError: user.error,
+    status,
+    error,
+    isAuthenticated,
+    user,
     login,
     register,
     logout,

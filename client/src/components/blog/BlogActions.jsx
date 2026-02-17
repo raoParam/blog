@@ -16,28 +16,32 @@ const BlogActions = ({
       <div className="flex items-center gap-3">
         {/* Like Button */}
         <motion.button
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.96 }}
           onClick={onLike}
           disabled={isLiking}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all disabled:opacity-50 ${
+          className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-full border transition-all disabled:opacity-50 ${
             isLiked 
-              ? 'bg-[#F43F5E]/10 border-[#F43F5E] text-[#F43F5E]' 
+              ? 'bg-gradient-to-r from-[#F43F5E]/20 to-[#F43F5E]/5 border-[#F43F5E]/60 text-[#F43F5E] shadow-[0_0_0_1px_rgba(244,63,94,0.2)]' 
               : 'bg-[#121212] border-[#1E1E1E] text-[#A1A1A1] hover:text-[#F43F5E] hover:border-[#F43F5E]/30'
           }`}
         >
-          <Heart className={`w-5 h-5 transition-colors ${isLiked ? 'fill-[#F43F5E]' : ''}`} />
-          <span className="text-sm font-medium">{likesCount}</span>
+          <Heart className={`w-5 h-5 transition-colors ${isLiked ? 'fill-[#F43F5E]' : 'group-hover:text-[#F43F5E]'}`} />
+          <span className="text-sm font-semibold">{likesCount}</span>
+          <span className="text-xs text-[#A1A1A1] group-hover:text-[#F43F5E]">
+            {isLiked ? 'Liked' : 'Like'}
+          </span>
         </motion.button>
 
         {/* Comment Button - Static for now */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#121212] border border-[#1E1E1E] rounded-lg text-[#A1A1A1]">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-[#121212] border border-[#1E1E1E] rounded-full text-[#A1A1A1]">
           <MessageCircle className="w-5 h-5" />
-          <span className="text-sm font-medium">{blog.comments?.length || 0}</span>
+          <span className="text-sm font-semibold">{blog.comments?.length || 0}</span>
+          <span className="text-xs text-[#666666]">Comments</span>
         </div>
       </div>
 
       {!isAuthenticated && (
-        <Link to="/login" className="text-sm text-[#3B82F6] hover:underline">
+        <Link to="/login" className="text-sm text-[#3B82F6] hover:text-white transition-colors">
           Sign in to like
         </Link>
       )}

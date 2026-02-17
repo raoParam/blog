@@ -4,7 +4,7 @@ import { publicAxios, protectedAxios } from './axiosInstance'
 export const getPublicPosts = async () => {
   try {
     const response = await publicAxios.get('/public/posts')
-    return response.data.posts || []
+    return response.data.blogs || []
   } catch (error) {
     // Only log in development
     if (import.meta.env.DEV) {
@@ -51,7 +51,7 @@ export const getSingleBlog = async (postId) => {
 
 export const createBlog = async (blogData) => {
   try {
-    const response = await protectedAxios.post('/posts/', blogData)
+    const response = await protectedAxios.post('/post', blogData)
     return response.data.blog || null
   } catch (error) {
     throw error.response?.data || { message: 'Failed to create blog' }
@@ -60,8 +60,8 @@ export const createBlog = async (blogData) => {
 
 export const updateBlog = async (postId, blogData) => {
   try {
-    const response = await protectedAxios.put(`/posts/${postId}`, blogData)
-    return response.data.blog || null
+    const response = await protectedAxios.put(`/post/${postId}`, blogData)
+    return response.data.updatedBlog || null
   } catch (error) {
     throw error.response?.data || { message: 'Failed to update blog' }
   }
@@ -69,8 +69,8 @@ export const updateBlog = async (postId, blogData) => {
 
 export const deleteBlog = async (postId) => {
   try {
-    const response = await protectedAxios.delete(`/posts/${postId}`)
-    return response.data
+    const response = await protectedAxios.delete(`/post/${postId}`)
+    return response.data.deletedBlog || null
   } catch (error) {
     throw error.response?.data || { message: 'Failed to delete blog' }
   }

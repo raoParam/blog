@@ -41,12 +41,38 @@ const userSchema = new Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    avatar: { 
+        type: String, 
+        default: '' 
+    },
     bio: {
         type: String,
         minLength: 3,
         maxLength: 500,
-        default: 'Hey there! I am using BlogApp'
+        default: 'Hey there! I am using Flagged'
+    },
+    followers: [
+        { type: Schema.Types.ObjectId, ref: 'User' }
+    ],
+    following: [
+        { type: Schema.Types.ObjectId, ref: 'User' }
+    ],
+    savedPosts: [
+        { type: Schema.Types.ObjectId, ref: 'Post' }
+    ],
+    isVerifiedBadge: { type: Boolean, default: false },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    accountStatus: { 
+        type: String, 
+        enum: ['active', 'suspended', 'deleted'],
+        default: 'active' 
     }
+
 }, { timestamps: true })
+
+
 
 export default mongoose.model('User', userSchema)

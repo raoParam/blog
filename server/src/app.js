@@ -8,12 +8,21 @@ import userRouter from './routes/user.routes.js'
 import postRouter from './routes/post.routes.js'
 import publicRouter from './routes/public.routes.js'
 import errorHandler from './middleware/errorHandler.js'
+import helmet from 'helmet'
+import mongoSanitize from 'express-mongo-sanitize'
+import compression from 'compression'
+import morgan from 'morgan'
 
 dotenv.config()
 
 const app = express()
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser()) 
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'))
+}
 
 const allowedOrigins = [
   process.env.CLIENT_ORIGIN || 'http://localhost:5173',
@@ -43,14 +52,29 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' })
 })
 
+app.use(/.*/, (req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Cannot ${req.method} ${req.originalUrl}`
+  })
+})
+
 app.use(errorHandler)
 
 connectDB()
   .then(() => {
-    app.listen(process.env.PORT, () => {
+    const server = app.listen(process.env.PORT, () => {
       console.log(`Server running on port ${process.env.PORT}`)
     })
   })
   .catch((err) => {
     console.error('DB connection failed', err)
   })
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, closing gracefully')
+  server.close(() => {
+    mongoose.connection.close()
+    console.log('Process terminated')
+  })
+})

@@ -1,24 +1,31 @@
 import { Suspense, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import AppRoutes from './routes/AppRoutes'
 import Loader from './components/common/Loader'
-import { fetchUserProfile } from './store/slices/userSlice'
+import { checkAuth, setUnauthenticated } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
-  const { isAuthenticated, token, status: authStatus } = useSelector((state) => state.auth)
-  const { status: userStatus } = useSelector((state) => state.user)
 
-  // Fetch user profile when authenticated
+  // On app load, check if the user is authenticated via cookie
   useEffect(() => {
-    console.log('App - Auth state:', { isAuthenticated, token: !!token, authStatus })
-    
-    if (isAuthenticated && token && userStatus === 'idle') {
-      console.log('App - Fetching user profile...')
-      dispatch(fetchUserProfile())
+    dispatch(checkAuth())
+  }, [dispatch])
+
+  // Global handler for 401 errors
+  useEffect(() => {
+    const handleAuthError = () => {
+      dispatch(setUnauthenticated())
     }
-  }, [isAuthenticated, token, userStatus, dispatch, authStatus])
+
+    window.addEventListener('auth-error', handleAuthError)
+
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener('auth-error', handleAuthError)
+    }
+  }, [dispatch])
 
   return (
     <AnimatePresence mode="wait">

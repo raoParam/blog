@@ -21,7 +21,7 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, profile, logout } = useAuthRedux();
+  const { isAuthenticated, user, logout } = useAuthRedux();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -45,8 +45,7 @@ const Navbar = () => {
 
   // Get user initial for avatar
   const getUserInitial = () => {
-    if (profile?.firstName) return profile.firstName.charAt(0).toUpperCase();
-    if (profile?.userName) return profile.userName.charAt(0).toUpperCase();
+    if (user?.userName) return user.userName.charAt(0).toUpperCase();
     return 'U';
   };
 
@@ -164,12 +163,10 @@ const Navbar = () => {
                           >
                             <div className="p-3 border-b border-[#1E1E1E]">
                               <p className="text-sm font-medium text-white">
-                                {profile?.firstName 
-                                  ? `${profile.firstName} ${profile.lastName || ''}` 
-                                  : profile?.userName || 'User'}
+                                {user?.userName || 'User'}
                               </p>
                               <p className="text-xs text-[#666666] truncate">
-                                {profile?.emailId || 'user@example.com'}
+                                {user?.emailId || 'user@example.com'}
                               </p>
                             </div>
                             <div className="p-2">
@@ -311,12 +308,10 @@ const Navbar = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate">
-                            {profile?.firstName 
-                              ? `${profile.firstName} ${profile.lastName || ''}` 
-                              : profile?.userName || 'User'}
+                            {user?.userName || 'User'}
                           </p>
                           <p className="text-xs text-[#666666] truncate">
-                            {profile?.emailId || 'user@example.com'}
+                            {user?.emailId || 'user@example.com'}
                           </p>
                         </div>
                       </div>

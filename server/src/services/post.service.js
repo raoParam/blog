@@ -9,26 +9,17 @@ export async function createPost(postData) {
 export async function fetchPosts(postData) {
     const page = Number(postData.page) || 1
     const limit = 10
+    
     const blogs = await Post.find()
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate({
-        path: 'author',
-        select: 'firstName lastName userName bio'
-      })
+    .populate('author', 'userName')  // Simpler populate syntax
     .lean()
 
-    const sanitizedBlogs = blogs.map(blog => {
-        if (blog.visibility === 'anonymous') {
-            blog.author = null
-        }
-        return blog
-    })
-
-    return sanitizedBlogs
+    // Don't modify anything, just return
+    return blogs
 }
-
 export async function fetchPost(postId) {
     const blog = await Post.findById(postId)
     .select('title content excerpt likes visibility createdAt')
