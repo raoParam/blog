@@ -30,7 +30,7 @@ export default async function auth(req, res, next) {
         }
         
         const payload = jwt.verify(token, process.env.JWT_SECRET)
-        const { _id } = payload
+        const { _id, version } = payload
         const user = await User.findById(_id)
         
         if(!user) {
@@ -38,6 +38,14 @@ export default async function auth(req, res, next) {
             err.statusCode = 404
             throw err
         }
+
+        // Check if token version matches user's version
+        if (version !== user.refreshTokenVersion) {
+            const err = new Error("Token has been invalidated")
+            err.statusCode = 401
+            throw err
+        }
+        
         req.token = token
         req.user = user
         next()

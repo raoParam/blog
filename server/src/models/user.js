@@ -65,6 +65,10 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
+    refreshTokenVersion: {
+        type: Number,
+        default: 0
+    },
     accountStatus: { 
         type: String, 
         enum: ['active', 'suspended', 'deleted'],
