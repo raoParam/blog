@@ -7,7 +7,7 @@ import { generateOTP, saveOTP } from './otp.service.js'
 import { sendOTPEmail } from './email.service.js'
 
 // Generate Access Token (short-lived)
-const generateAccessToken = (user) => {
+export const generateAccessToken = (user) => {
     return jwt.sign(
         { 
             _id: user._id, 
@@ -20,7 +20,7 @@ const generateAccessToken = (user) => {
 }
 
 // Generate Refresh Token (long-lived)
-const generateRefreshToken = async (user, deviceInfo = '', ipAddress = '') => {
+export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = '') => {
     // Create unique token
     const token = jwt.sign(
         { 

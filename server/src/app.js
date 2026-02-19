@@ -12,6 +12,7 @@ import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
 import compression from 'compression'
 import morgan from 'morgan'
+import passport from './config/passport.js'  
 
 dotenv.config()
 
@@ -19,6 +20,7 @@ const app = express()
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser()) 
+app.use(passport.initialize())
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))

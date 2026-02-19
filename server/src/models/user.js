@@ -69,6 +69,11 @@ const userSchema = new Schema({
         type: Number,
         default: 0
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true 
+    },
     accountStatus: { 
         type: String, 
         enum: ['active', 'suspended', 'deleted'],
