@@ -1,27 +1,22 @@
 import validate from '../utils/authValidator.js'
 import validator from 'validator'
-import { createUser , loginUser , verifyEmailOTP , sendEmailVerificationOTP , resendEmailVerificationOTP , sendPasswordResetOTP , resetUserPassword , changeUserPassword} from '../services/auth.service.js'
+import { createUser , loginUser , verifyEmailOTP , sendEmailVerificationOTP , resendEmailVerificationOTP , sendPasswordResetOTP , resetUserPassword , changeUserPassword, refreshAccessToken, logoutUser} from '../services/auth.service.js'
 
 export async function register(req, res, next) {
     try {
-        // Validate input
         validate(req.body)
-        
-        // Create user (with isEmailVerified: false)
         const user = await createUser(req.body)
-        
-        // AUTO-SEND verification OTP
         await sendEmailVerificationOTP(user.emailId)
         
         res.status(201).json({
-            status: 'success',
-            message: 'User registered successfully. Please verify your email.',
             user: {
                 _id: user._id,
                 userName: user.userName,
                 emailId: user.emailId,
                 isEmailVerified: false
-            }
+            },
+            Status: "success",
+            Message: "User registered successfully. Please verify your email."
         })
     } catch (err) {
         next(err)
@@ -30,29 +25,25 @@ export async function register(req, res, next) {
 
 export async function login(req, res, next) {
     try {
-        // Get device info for tracking (optional)
         const deviceInfo = req.headers['user-agent'] || ''
         const ipAddress = req.ip || req.connection.remoteAddress
 
         const { accessToken, refreshToken, user } = await loginUser(req.body, deviceInfo, ipAddress)
         
-        // Set access token in cookie (short-lived)
         res.cookie('token', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', 
             sameSite: 'lax',
-            maxAge: 15 * 60 * 1000 // 15 minutes
+            maxAge: 15 * 60 * 1000
         })
         
-        // Send refresh token in response body (to be stored securely by frontend)
         res.status(200).json({
-            status: "success",
-            message: "User Login Successfully",
             accessToken,
-            refreshToken, // Frontend should store this securely
-            user
+            refreshToken,
+            user,
+            Status: "success",
+            Message: "User Login Successfully"
         })
-
     } catch(err) {
         next(err)
     }
@@ -71,15 +62,15 @@ export async function verifyEmail(req, res, next) {
         const user = await verifyEmailOTP(emailId, otp)
 
         res.status(200).json({
-            status: 'success',
-            message: 'Email verified successfully',
             user: {
                 _id: user._id,
                 userName: user.userName,
                 emailId: user.emailId,
                 isEmailVerified: user.isEmailVerified,
                 isVerifiedBadge: user.isVerifiedBadge
-            }
+            },
+            Status: "success",
+            Message: "Email verified successfully"
         })
     } catch (err) {
         next(err)
@@ -99,9 +90,9 @@ export async function resendVerificationOTP(req, res, next) {
         await resendEmailVerificationOTP(emailId)
 
         res.status(200).json({
-            status: 'success',
-            message: 'Verification OTP resent successfully',
-            expiresIn: '5 minutes'
+            expiresIn: '5 minutes',
+            Status: "success",
+            Message: "Verification OTP resent successfully"
         })
     } catch (err) {
         next(err)
@@ -121,9 +112,9 @@ export async function forgotPassword(req, res, next) {
         await sendPasswordResetOTP(emailId)
 
         res.status(200).json({
-            status: 'success',
-            message: 'Password reset OTP sent to your email',
-            expiresIn: '5 minutes'
+            expiresIn: '5 minutes',
+            Status: "success",
+            Message: "Password reset OTP sent to your email"
         })
     } catch (err) {
         next(err)
@@ -134,7 +125,6 @@ export async function resetPassword(req, res, next) {
     try {
         const { emailId, otp, newPassword, confirmPassword } = req.body
 
-        // Validate inputs
         if (!emailId || !otp || !newPassword || !confirmPassword) {
             const err = new Error('All fields are required')
             err.statusCode = 400
@@ -156,8 +146,8 @@ export async function resetPassword(req, res, next) {
         await resetUserPassword(emailId, otp, newPassword)
 
         res.status(200).json({
-            status: 'success',
-            message: 'Password reset successfully. You can now login with your new password.'
+            Status: "success",
+            Message: "Password reset successfully. You can now login with your new password."
         })
     } catch (err) {
         next(err)
@@ -167,9 +157,8 @@ export async function resetPassword(req, res, next) {
 export async function changePassword(req, res, next) {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body
-        const userId = req.user._id  // From auth middleware
+        const userId = req.user._id
 
-        // Validate inputs
         if (!currentPassword || !newPassword || !confirmPassword) {
             const err = new Error('All fields are required')
             err.statusCode = 400
@@ -191,14 +180,13 @@ export async function changePassword(req, res, next) {
         await changeUserPassword(userId, currentPassword, newPassword)
 
         res.status(200).json({
-            status: 'success',
-            message: 'Password changed successfully'
+            Status: "success",
+            Message: "Password changed successfully"
         })
     } catch (err) {
         next(err)
     }
 }
-
 
 export async function logout(req, res, next) {
     try {
@@ -208,7 +196,6 @@ export async function logout(req, res, next) {
             throw err
         }
 
-        // Get refresh token from request body
         const { refreshToken } = req.body
         const userId = req.user?._id
 
@@ -224,8 +211,8 @@ export async function logout(req, res, next) {
         })
         
         res.status(200).json({
-            status: "success",
-            message: "Logged out successfully"
+            Status: "success",
+            Message: "Logged out successfully"
         })
     } catch(err) {
         next(err)
@@ -244,19 +231,18 @@ export async function refreshToken(req, res, next) {
 
         const { accessToken, user } = await refreshAccessToken(refreshToken)
 
-        // Set new access token in cookie
         res.cookie('token', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 15 * 60 * 1000 // 15 minutes
+            maxAge: 15 * 60 * 1000
         })
 
         res.status(200).json({
-            status: 'success',
-            message: 'Token refreshed successfully',
             accessToken,
-            user
+            user,
+            Status: "success",
+            Message: "Token refreshed successfully"
         })
     } catch (err) {
         next(err)

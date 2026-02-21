@@ -25,6 +25,14 @@ const postSchema = new Schema({
 		ref: 'User',
 		required: true  
 	},
+    images: [{
+        type: String,  // Array of image URLs (Cloudinary)
+        default: []
+    }],
+    imagePublicIds: [{
+        type: String,  // Store Cloudinary public IDs for deletion
+        default: []
+    }],
 	visibility: {
 		type: String,
 		enum: ['public', 'anonymous'],
@@ -44,5 +52,5 @@ const postSchema = new Schema({
 // postSchema.index({ visibility: 1, createdAt: -1 })
 // postSchema.index({ likes: -1 });
 
-const Post = mongoose.model('post',postSchema)
+const Post = mongoose.model('Post',postSchema)
 export default Post
