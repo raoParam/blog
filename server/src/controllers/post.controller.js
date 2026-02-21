@@ -7,16 +7,19 @@ import {
     deletePost, 
     likePost,
     fetchTrendingPosts,
-    fetchFollowingFeed
+    fetchFollowingFeed,
+    getAllCategories,
+    getPostsByCategoryName,
+    createNewCategory,
+    fetchCommentsByPost,
+    createNewComment,
+    updateCommentById,
+    deleteCommentById
 } from '../services/post.service.js'
 
 
 export async function createBlog(req, res, next) {
     try {
-        console.log('========== CLOUDINARY UPLOAD ==========')
-        console.log('req.body:', req.body)
-        console.log('req.files count:', req.files?.length)
-        console.log('=======================================')
 
         const { title, content, excerpt, visibility } = req.body
 
@@ -166,3 +169,144 @@ export async function getFollowingFeed(req, res, next) {
     }
 }
 
+export async function getCategories(req, res, next) {
+    try {
+        const categories = await getAllCategories()
+        
+        res.status(200).json({
+            categories,
+            Status: "success",
+            Message: "Categories fetched successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function getPostsByCategory(req, res, next) {
+    try {
+        const { name } = req.params
+        const currentUserId = req.user._id
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        
+        const result = await getPostsByCategoryName(name, currentUserId, page, limit)
+        
+        res.status(200).json({
+            blogs: result.blogs,
+            category: result.category,
+            pagination: result.pagination,
+            Status: "success",
+            Message: `Posts in category "${name}" fetched successfully`
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function createCategory(req, res, next) {
+    try {
+        const { name, description } = req.body
+        const adminId = req.user._id  
+        
+        if (!name) {
+            const err = new Error('Category name is required')
+            err.statusCode = 400
+            throw err
+        }
+        
+        const category = await createNewCategory({ name, description, adminId })
+        
+        res.status(201).json({
+            category,
+            Status: "success",
+            Message: "Category created successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function getComments(req, res, next) {
+    try {
+        const { postId } = req.params
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 20
+        
+        const result = await fetchCommentsByPost(postId, page, limit)
+        
+        res.status(200).json({
+            blogId: postId,
+            comments: result.comments,
+            pagination: result.pagination,
+            Status: "success",
+            Message: "Comments fetched successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function addComment(req, res, next) {
+    try {
+        const { postId } = req.params
+        const { content } = req.body
+        const userId = req.user._id
+
+        if (!content) {
+            const err = new Error('Comment content is required')
+            err.statusCode = 400
+            throw err
+        }
+
+        const comment = await createNewComment(postId, userId, content)
+
+        res.status(201).json({
+            comment,
+            Status: "success",
+            Message: "Comment added successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function updateComment(req, res, next) {
+    try {
+        const { commentId } = req.params
+        const { content } = req.body
+        const userId = req.user._id
+
+        if (!content) {
+            const err = new Error('Comment content is required')
+            err.statusCode = 400
+            throw err
+        }
+
+        const updatedComment = await updateCommentById(commentId, userId, content)
+
+        res.status(200).json({
+            comment: updatedComment,
+            Status: "success",
+            Message: "Comment updated successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}
+
+export async function deleteComment(req, res, next) {
+    try {
+        const { commentId } = req.params
+        const userId = req.user._id
+
+        await deleteCommentById(commentId, userId)
+
+        res.status(200).json({
+            Status: "success",
+            Message: "Comment deleted successfully"
+        })
+    } catch(err) {
+        next(err)
+    }
+}

@@ -1,5 +1,7 @@
 import Post from '../models/post.js'
 import User from '../models/user.js'
+import Category from '../models/category.js'
+import Comment from '../models/comment.js'  //
 import { validateUpdatedPost } from '../utils/postValidator.js'
 import { cloudinary } from '../middleware/uploadPost.js'
 
@@ -274,5 +276,248 @@ export async function fetchFollowingFeed(currentUserId, page = 1, limit = 10) {
             hasNext: page < totalPages,
             hasPrev: page > 1
         }
+    }
+}
+
+export async function getAllCategories() {
+    const categories = await Category.find()
+        .sort({ name: 1 })
+        .select('name description slug')
+        .lean()
+    
+    return categories
+}
+
+export async function getPostsByCategoryName(categoryName, currentUserId, page = 1, limit = 10) {
+    // First find the category
+    const category = await Category.findOne({ 
+        $or: [
+            { name: categoryName.toLowerCase() },
+            { slug: categoryName.toLowerCase() }
+        ]
+    })
+    
+    if (!category) {
+        const err = new Error('Category not found')
+        err.statusCode = 404
+        throw err
+    }
+    
+    // Build query
+    const query = {
+        author: { $ne: currentUserId },
+        category: category._id,
+        visibility: 'public'
+    }
+    
+    const blogs = await Post.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate('author', 'userName avatar firstName lastName')
+        .populate('category', 'name slug')
+        .lean()
+    
+    // Handle anonymous posts
+    const sanitizedBlogs = blogs.map(blog => {
+        if (blog.visibility === 'anonymous') {
+            blog.author = null
+        }
+        return blog
+    })
+    
+    const totalPosts = await Post.countDocuments(query)
+    const totalPages = Math.ceil(totalPosts / limit)
+    
+    return {
+        blogs: sanitizedBlogs,
+        category: {
+            _id: category._id,
+            name: category.name,
+            description: category.description,
+            slug: category.slug
+        },
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalPosts,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+        }
+    }
+}
+
+export async function createNewCategory({ name, description = '', adminId }) {
+    // Check if category already exists
+    const existingCategory = await Category.findOne({ 
+        $or: [
+            { name: name.toLowerCase() },
+            { slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
+        ]
+    })
+    
+    if (existingCategory) {
+        const err = new Error('Category already exists')
+        err.statusCode = 409
+        throw err
+    }
+    
+    // Create slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    
+    // Create category
+    const category = await Category.create({
+        name: name.toLowerCase(),
+        description,
+        slug,
+        createdBy: adminId
+    })
+    
+    return category
+}
+
+export async function fetchCommentsByPost(postId, page = 1, limit = 20) {
+    // Check if post exists
+    const post = await Post.findById(postId)
+    if (!post) {
+        const err = new Error('Post not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const comments = await Comment.find({ post: postId })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate('author', 'userName avatar firstName lastName isVerifiedBadge')
+        .lean()
+
+    const totalComments = await Comment.countDocuments({ post: postId })
+    const totalPages = Math.ceil(totalComments / limit)
+
+    return {
+        comments: comments.map(comment => ({
+            _id: comment._id,
+            content: comment.content,
+            author: comment.author, // Contains user info
+            likes: comment.likes?.length || 0,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt
+        })),
+        pagination: {
+            currentPage: page,
+            totalPages,
+            totalComments,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+        }
+    }
+}
+
+export async function createNewComment(postId, userId, content) {
+    // Check if post exists
+    const post = await Post.findById(postId)
+    if (!post) {
+        const err = new Error('Post not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const comment = await Comment.create({
+        content,
+        author: userId,
+        post: postId
+    })
+
+    // Populate author info before returning
+    await comment.populate('author', 'userName avatar firstName lastName isVerifiedBadge')
+
+    return {
+        _id: comment._id,
+        content: comment.content,
+        author: comment.author,
+        likes: 0,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt
+    }
+}
+
+export async function updateCommentById(commentId, userId, content) {
+    const comment = await Comment.findById(commentId)
+
+    if (!comment) {
+        const err = new Error('Comment not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    // Check if user is the author
+    if (comment.author.toString() !== userId.toString()) {
+        const err = new Error('Not authorized to update this comment')
+        err.statusCode = 403
+        throw err
+    }
+
+    comment.content = content
+    await comment.save()
+
+    await comment.populate('author', 'userName avatar firstName lastName isVerifiedBadge')
+
+    return {
+        _id: comment._id,
+        content: comment.content,
+        author: comment.author,
+        likes: comment.likes?.length || 0,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt
+    }
+}
+
+export async function deleteCommentById(commentId, userId) {
+    const comment = await Comment.findById(commentId)
+
+    if (!comment) {
+        const err = new Error('Comment not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    // Check if user is the author
+    if (comment.author.toString() !== userId.toString()) {
+        const err = new Error('Not authorized to delete this comment')
+        err.statusCode = 403
+        throw err
+    }
+
+    await comment.deleteOne()
+    return true
+}
+
+export async function likeComment(commentId, userId) {
+    const comment = await Comment.findById(commentId)
+
+    if (!comment) {
+        const err = new Error('Comment not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const alreadyLiked = comment.likes.some(
+        id => id.toString() === userId.toString()
+    )
+
+    if (alreadyLiked) {
+        comment.likes = comment.likes.filter(
+            id => id.toString() !== userId.toString()
+        )
+    } else {
+        comment.likes.push(userId)
+    }
+
+    await comment.save()
+
+    return {
+        totalLikes: comment.likes.length,
+        isLikedByUser: !alreadyLiked
     }
 }

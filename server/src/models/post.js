@@ -38,6 +38,10 @@ const postSchema = new Schema({
 		enum: ['public', 'anonymous'],
 		default: 'public'
 	},
+	category: {
+    	type: Schema.Types.ObjectId,
+    	ref: 'Category'
+	},
 	likes: [
 	   {
 	      type: Schema.Types.ObjectId,
