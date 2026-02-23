@@ -7,6 +7,7 @@ import authRouter from './routes/auth.routes.js'
 import userRouter from './routes/user.routes.js'
 import postRouter from './routes/post.routes.js'
 import publicRouter from './routes/public.routes.js'
+import adminRouter from './routes/admin.routes.js'
 import errorHandler from './middleware/errorHandler.js'
 import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
@@ -49,6 +50,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/user', userRouter)
 app.use('/api/post', postRouter)
 app.use('/api/public', publicRouter)
+app.use('/api/admin', adminRouter)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' })
