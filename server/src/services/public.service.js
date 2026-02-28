@@ -1,4 +1,5 @@
 import Post from '../models/post.js'
+import Category from '../models/category.js'
 
 export async function fetchPosts(){
 	const blogs = await Post.find()
@@ -7,7 +8,7 @@ export async function fetchPosts(){
 	.select('title excerpt likes author visibility content createdAt')
 	.populate({
 		path : 'author',
-		select : 'userName'
+		select : 'userName avatar'
 	})
 	.lean()
 
@@ -33,4 +34,13 @@ export async function fetchPost(postId) {
 		throw err
 	}
 	return blog
+}
+
+export async function getAllCategories() {
+    const categories = await Category.find()
+        .sort({ name: 1 })
+        .select('name description slug')
+        .lean()
+    
+    return categories
 }

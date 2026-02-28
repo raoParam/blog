@@ -1,5 +1,5 @@
 import express from 'express'
-import { getPosts , getPost } from '../controllers/public.controller.js'
+import { getPosts , getPost , getCategories } from '../controllers/public.controller.js'
 
 const publicRouter = express.Router()
 
@@ -7,5 +7,6 @@ const publicRouter = express.Router()
 publicRouter.get('/posts', getPosts)
 // post_info
 publicRouter.get('/posts/:postId', getPost)
-
+// categories
+publicRouter.get('/categories', getCategories)
 export default publicRouter

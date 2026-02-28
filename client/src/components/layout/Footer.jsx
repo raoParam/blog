@@ -1,67 +1,158 @@
-import { Link } from 'react-router-dom'
+import React from "react";
+import { Link } from "react-router-dom";
+import { Twitter, Github, MessageCircle, Heart } from "lucide-react";
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-[#0A0A0A] border-t border-[#1E1E1E]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="inline-block mb-4">
-              <span className="text-lg font-semibold text-white">
-                Flagged<span className="text-[#3B82F6]">.</span>
-              </span>
+    <footer className="relative bg-surface-0 border-t border-border-subtle pt-16 pb-8 overflow-hidden">
+      {/* Subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-accent/5 via-transparent to-transparent pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto px-6">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          
+          {/* Brand Column */}
+          <div className="col-span-1 md:col-span-1">
+            <Link to="/" className="flex items-center gap-2 mb-4 group">
+              <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
+                <span className="text-white font-bold text-sm">F</span>
+              </div>
+              <span className="font-semibold text-text-primary text-lg">Flagger</span>
             </Link>
-            <p className="text-sm text-[#A1A1A1] max-w-md">
-              A modern platform for developers to write and share their stories — 
-              publicly or anonymously.
+            <p className="text-text-secondary text-sm leading-relaxed mb-4">
+              A modern platform for developers to write, share ideas, 
+              and grow together through meaningful discussions.
             </p>
+            <div className="flex items-center gap-3">
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+                aria-label="Twitter"
+              >
+                <Twitter size={16} />
+              </a>
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+                aria-label="GitHub"
+              >
+                <Github size={16} />
+              </a>
+              <a 
+                href="#" 
+                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+                aria-label="Discord"
+              >
+                <MessageCircle size={16} />
+              </a>
+            </div>
           </div>
 
-          {/* Navigation */}
+          {/* Quick Links */}
           <div>
-            <h3 className="text-sm font-medium text-white mb-4">Navigation</h3>
-            <ul className="space-y-2">
-              {['Home', 'Explore', 'Write'].map((item) => (
-                <li key={item}>
-                  <Link 
-                    to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                    className="text-sm text-[#A1A1A1] hover:text-white transition-colors"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Quick Links</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/explore" className="text-text-secondary hover:text-accent transition text-sm">
+                  Explore
+                </Link>
+              </li>
+              <li>
+                <Link to="/topics" className="text-text-secondary hover:text-accent transition text-sm">
+                  Topics
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-text-secondary hover:text-accent transition text-sm">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-text-secondary hover:text-accent transition text-sm">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Community */}
+          <div>
+            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Community</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/guidelines" className="text-text-secondary hover:text-accent transition text-sm">
+                  Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-text-secondary hover:text-accent transition text-sm">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link to="/support" className="text-text-secondary hover:text-accent transition text-sm">
+                  Support
+                </Link>
+              </li>
+              <li>
+                <Link to="/feedback" className="text-text-secondary hover:text-accent transition text-sm">
+                  Feedback
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h3 className="text-sm font-medium text-white mb-4">Legal</h3>
-            <ul className="space-y-2">
-              {['Privacy', 'Terms', 'Contact'].map((item) => (
-                <li key={item}>
-                  <Link 
-                    to={`/${item.toLowerCase()}`}
-                    className="text-sm text-[#A1A1A1] hover:text-white transition-colors"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Legal</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/privacy" className="text-text-secondary hover:text-accent transition text-sm">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-text-secondary hover:text-accent transition text-sm">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookies" className="text-text-secondary hover:text-accent transition text-sm">
+                  Cookie Policy
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-[#1E1E1E]">
-          <p className="text-sm text-[#666666] text-center">
-            © 2026 Flagged. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-text-secondary text-xs">
+            © {currentYear} Flagger. All rights reserved.
           </p>
+          
+          <div className="flex items-center gap-1 text-text-secondary text-xs">
+            Built with <Heart size={12} className="text-accent mx-1" /> for developers
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Link to="/privacy" className="text-text-secondary hover:text-accent transition text-xs">
+              Privacy
+            </Link>
+            <Link to="/terms" className="text-text-secondary hover:text-accent transition text-xs">
+              Terms
+            </Link>
+            <Link to="/cookies" className="text-text-secondary hover:text-accent transition text-xs">
+              Cookies
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

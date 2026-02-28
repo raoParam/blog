@@ -1,47 +1,54 @@
-import axios from 'axios'
-import toast from 'react-hot-toast'
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// Public instance
-export const publicAxios = axios.create({
+const axiosInstance = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-  withCredentials: true, // Send cookies with requests
-})
+});
 
-// Protected instance
-export const protectedAxios = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
+// Request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
-  withCredentials: true, // Send cookies with requests
-})
+  (error) => Promise.reject(error)
+);
 
-// Interceptor to handle responses
-const responseInterceptor = (response) => response
+// Response interceptor
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-const errorInterceptor = (error) => {
-  const status = error.response?.status
-  const config = error.config || {}
-  const url = config.url || ''
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
-  const shouldSkipAuthError =
-    config.skipAuthError === true || url.includes('/auth/logout')
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        const response = await axiosInstance.post("/auth/refresh-token", {
+          refreshToken,
+        });
 
-  if (status === 401 && !shouldSkipAuthError) {
-    // Dispatch a custom event to log the user out globally
-    window.dispatchEvent(new Event('auth-error'))
-    toast.error('Session expired. Please login again.')
+        localStorage.setItem("accessToken", response.data.accessToken);
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
   }
-  return Promise.reject(error)
-}
+);
 
-// Apply interceptors to protected instance
-protectedAxios.interceptors.response.use(
-  responseInterceptor,
-  errorInterceptor
-)
+export default axiosInstance;
