@@ -14,7 +14,6 @@ const BlogPreview = () => {
       try {
         setLoading(true);
         const response = await publicService.getPosts();
-        console.log(response)
         setPosts(response.blogs || []);
       } catch (err) {
         console.error("Failed to load posts:", err);

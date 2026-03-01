@@ -7,9 +7,12 @@ import ProtectedRoute from "./ProtectedRoute";
 // Pages
 import LandingPage from "../pages/public/LandingPage";
 import ExplorePage from "../pages/public/ExplorePage";
-// import LoginPage from "../pages/auth/LoginPage";
-// import RegisterPage from "../pages/auth/RegisterPage";
-// import HomePage from "../pages/feed/HomePage";
+import LoginPage from "../pages/auth/LoginPage";
+import RegisterPage from "../pages/auth/RegisterPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import HomePage from "../pages/feed/HomePage";
 
 const AppRoutes = () => {
   const { checkAuth } = useAuth();
@@ -31,7 +34,7 @@ const AppRoutes = () => {
           <ExplorePage />
         </PublicOnlyRoute>
       } />
-      {/*<Route path="/login" element={
+      <Route path="/login" element={
         <PublicOnlyRoute>
           <LoginPage />
         </PublicOnlyRoute>
@@ -40,14 +43,29 @@ const AppRoutes = () => {
         <PublicOnlyRoute>
           <RegisterPage />
         </PublicOnlyRoute>
-      } />*/}
+      } />
+      <Route path="/forgot-password" element={
+        <PublicOnlyRoute>
+          <ForgotPasswordPage />
+        </PublicOnlyRoute>
+      } />
+      <Route path="/reset-password" element={
+        <PublicOnlyRoute>
+          <ResetPasswordPage />
+        </PublicOnlyRoute>
+      } />
+      <Route path="/verify-email" element={
+        <PublicOnlyRoute>
+          <VerifyEmailPage />
+        </PublicOnlyRoute>
+      } />
 
       {/* Protected Routes - accessible only when logged in */}
-     {/* <Route path="/home" element={
+      <Route path="/home" element={
         <ProtectedRoute>
           <HomePage />
         </ProtectedRoute>
-      } />*/}
+      } />
     </Routes>
   );
 };

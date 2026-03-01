@@ -27,12 +27,19 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || "";
+    const isAuthEndpoint =
+      requestUrl.includes("/auth/login") ||
+      requestUrl.includes("/auth/refresh-token");
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          return Promise.reject(error);
+        }
         const response = await axiosInstance.post("/auth/refresh-token", {
           refreshToken,
         });
@@ -42,7 +49,9 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       }
     }

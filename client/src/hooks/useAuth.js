@@ -1,5 +1,11 @@
 import { useSelector, useDispatch } from "react-redux";
-import { setUser, setLoading, setError, logout } from "../store/slices/authSlice";
+import {
+  loginSuccess,
+  setUser,
+  setLoading,
+  setError,
+  logoutUser,
+} from "../store/slices/authSlice";
 import api from "../services/axiosInstance";
 
 export const useAuth = () => {
@@ -8,34 +14,52 @@ export const useAuth = () => {
 
   const login = async (email, password) => {
     try {
-      dispatch(setLoading(true));
-      const response = await api.post("/auth/login", { emailId: email, password });
+      dispatch(setError(null));
+      const response = await api.post("/auth/login", { 
+        emailId: email, 
+        password 
+      });
       
-      localStorage.setItem("accessToken", response.data.accessToken);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
+      const { accessToken, refreshToken, user } = response.data;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       
-      dispatch(setUser(response.data.user));
-      return { success: true };
+      dispatch(
+        loginSuccess({
+          user,
+          accessToken,
+        })
+      );
+      
+      return { 
+        success: true, 
+        data: response.data 
+      };
     } catch (err) {
-      dispatch(setError(err.response?.data?.message || "Login failed"));
-      return { success: false, error: err.response?.data?.message };
-    } finally {
-      dispatch(setLoading(false));
+      // Extract error message from backend response
+      const errorMessage = err.response?.data?.message || "Invalid email or password";
+      dispatch(setError(errorMessage));
+      
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
     }
   };
 
-  const logoutUser = async () => {
+  const logout = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
         await api.post("/auth/logout", { refreshToken });
       }
-    } catch (err) {
-      console.error("Logout error:", err);
+    } catch {
+      // Continue logout cleanup even if server logout fails
     } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      dispatch(logout());
+      dispatch(logoutUser());
     }
   };
 
@@ -46,11 +70,11 @@ export const useAuth = () => {
     try {
       dispatch(setLoading(true));
       const response = await api.get("/user/me");
-      dispatch(setUser(response.data.user));
-    } catch (err) {
+      dispatch(setUser(response.data?.user || null));
+    } catch {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      dispatch(logout());
+      dispatch(logoutUser());
     } finally {
       dispatch(setLoading(false));
     }
@@ -62,7 +86,7 @@ export const useAuth = () => {
     loading,
     error,
     login,
-    logout: logoutUser,
+    logout,
     checkAuth,
   };
 };
