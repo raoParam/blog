@@ -13,6 +13,7 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/feed/HomePage";
+import ProfilePage from "../pages/user/ProfilePage";
 
 const AppRoutes = () => {
   const { checkAuth } = useAuth();
@@ -64,6 +65,11 @@ const AppRoutes = () => {
       <Route path="/home" element={
         <ProtectedRoute>
           <HomePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <ProfilePage />
         </ProtectedRoute>
       } />
     </Routes>

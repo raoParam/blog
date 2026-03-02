@@ -3,8 +3,12 @@ import OTP from '../models/otp.js'
 import RefreshToken from '../models/refreshToken.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { randomUUID } from 'crypto'
 import { generateOTP, saveOTP } from './otp.service.js'
 import { sendOTPEmail } from './email.service.js'
+
+const RESEND_COOLDOWN_SECONDS = 30
+const MAX_RESEND_ATTEMPTS = 3
 
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
@@ -25,7 +29,8 @@ export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = ''
     const token = jwt.sign(
         { 
             _id: user._id,
-            version: user.refreshTokenVersion 
+            version: user.refreshTokenVersion,
+            jti: randomUUID()
         },
         process.env.JWT_SECRET + user.refreshTokenVersion, // Extra security
         { expiresIn: '7d' } // 7 days
@@ -65,18 +70,29 @@ export const verifyRefreshToken = async (token) => {
         // If token verification fails, invalidate it
         refreshToken.isValid = false
         await refreshToken.save()
-        throw error
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
     }
 }
 
 // Get new access token using refresh token
 export const refreshAccessToken = async (refreshTokenStr) => {
     const { user, refreshToken } = await verifyRefreshToken(refreshTokenStr)
-    
+
+    // Rotate refresh token on every refresh call for better security.
+    refreshToken.isValid = false
+    await refreshToken.save()
+    const newRefreshToken = await generateRefreshToken(
+        user,
+        refreshToken.deviceInfo || '',
+        refreshToken.ipAddress || ''
+    )
+
     // Generate new access token
     const accessToken = generateAccessToken(user)
-    
-    return { accessToken, user }
+
+    return { accessToken, refreshToken: newRefreshToken, user }
 }
 
 // Invalidate all refresh tokens for a user (logout from all devices)
@@ -151,15 +167,23 @@ export async function logoutUser(userId, refreshToken) {
 
 // Rest of your existing functions remain the same...
 export async function createUser(userData) {
+    const normalizedEmail = userData.emailId?.trim().toLowerCase()
+    const normalizedUserName = userData.userName?.trim()
+
     // Check if user exists
     const existingUser = await User.findOne({
         $or: [
-            { emailId: userData.emailId },
-            { userName: userData.userName }
+            { emailId: normalizedEmail },
+            { userName: normalizedUserName }
         ]
     })
 
     if (existingUser) {
+        // Existing account with unverified email should continue verification flow.
+        if (existingUser.emailId === normalizedEmail && !existingUser.isEmailVerified) {
+            return { user: existingUser, requiresEmailVerification: true, isNewUser: false }
+        }
+
         const err = new Error('User already exists')
         err.statusCode = 409
         throw err
@@ -175,8 +199,8 @@ export async function createUser(userData) {
     const user = await User.create({
         firstName: userData.firstName,
         lastName: userData.lastName,
-        emailId: userData.emailId,
-        userName: userData.userName,
+        emailId: normalizedEmail,
+        userName: normalizedUserName,
         password: hashedPassword,
         role: 'user',
         avatar: '',
@@ -190,7 +214,7 @@ export async function createUser(userData) {
         refreshTokenVersion: 0
     })
 
-    return user
+    return { user, requiresEmailVerification: false, isNewUser: true }
 }
 
 export async function verifyEmailOTP(emailId, otp) {
@@ -258,6 +282,36 @@ export async function resendEmailVerificationOTP(emailId) {
         throw err
     }
 
+    // Enforce cooldown between requests.
+    const latestOtp = await OTP.findOne({
+        emailId,
+        type: 'email_verification'
+    }).sort({ createdAt: -1 })
+
+    if (latestOtp) {
+        const secondsSinceLastOtp = Math.floor((Date.now() - latestOtp.createdAt.getTime()) / 1000)
+        if (secondsSinceLastOtp < RESEND_COOLDOWN_SECONDS) {
+            const waitSeconds = RESEND_COOLDOWN_SECONDS - secondsSinceLastOtp
+            const err = new Error(`Please wait ${waitSeconds}s before requesting a new OTP`)
+            err.statusCode = 429
+            throw err
+        }
+    }
+
+    // Allow initial OTP + max 3 resends within active OTP window (10 minutes).
+    const activeWindowStart = new Date(Date.now() - 10 * 60 * 1000)
+    const sentOtpCountInWindow = await OTP.countDocuments({
+        emailId,
+        type: 'email_verification',
+        createdAt: { $gte: activeWindowStart }
+    })
+
+    if (sentOtpCountInWindow >= MAX_RESEND_ATTEMPTS + 1) {
+        const err = new Error('Maximum resend attempts reached. Please try again later.')
+        err.statusCode = 429
+        throw err
+    }
+
     // Generate new OTP
     const otp = generateOTP()
 
@@ -271,8 +325,10 @@ export async function resendEmailVerificationOTP(emailId) {
 }
 
 export async function sendPasswordResetOTP(emailId) {
+    const normalizedEmail = emailId.trim().toLowerCase()
+
     // Check if user exists
-    const user = await User.findOne({ emailId })
+    const user = await User.findOne({ emailId: normalizedEmail })
     
     if (!user) {
         const err = new Error('User not found with this email')
@@ -280,14 +336,44 @@ export async function sendPasswordResetOTP(emailId) {
         throw err
     }
 
+    // Enforce cooldown between requests.
+    const latestOtp = await OTP.findOne({
+        emailId: normalizedEmail,
+        type: 'password_reset'
+    }).sort({ createdAt: -1 })
+
+    if (latestOtp) {
+        const secondsSinceLastOtp = Math.floor((Date.now() - latestOtp.createdAt.getTime()) / 1000)
+        if (secondsSinceLastOtp < RESEND_COOLDOWN_SECONDS) {
+            const waitSeconds = RESEND_COOLDOWN_SECONDS - secondsSinceLastOtp
+            const err = new Error(`Please wait ${waitSeconds}s before requesting a new OTP`)
+            err.statusCode = 429
+            throw err
+        }
+    }
+
+    // Allow initial OTP + max 3 resends within active OTP window (10 minutes).
+    const activeWindowStart = new Date(Date.now() - 10 * 60 * 1000)
+    const sentOtpCountInWindow = await OTP.countDocuments({
+        emailId: normalizedEmail,
+        type: 'password_reset',
+        createdAt: { $gte: activeWindowStart }
+    })
+
+    if (sentOtpCountInWindow >= MAX_RESEND_ATTEMPTS + 1) {
+        const err = new Error('Maximum resend attempts reached. Please try again later.')
+        err.statusCode = 429
+        throw err
+    }
+
     // Generate OTP
     const otp = generateOTP()
 
     // Save to database (marks old unused password reset OTPs as used)
-    await saveOTP(emailId, otp, 'password_reset')
+    await saveOTP(normalizedEmail, otp, 'password_reset')
 
     // Send email
-    await sendOTPEmail(emailId, otp, 'password_reset')
+    await sendOTPEmail(normalizedEmail, otp, 'password_reset')
 
     return true
 }

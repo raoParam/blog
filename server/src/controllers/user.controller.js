@@ -186,7 +186,7 @@ export async function getFollowers(req, res, next) {
         const page = parseInt(req.query.page) || 1
         const limit = parseInt(req.query.limit) || 20
 
-        const result = await getFollowersList(userId, page, limit)
+        const result = await getFollowersList(userId, page, limit, req.user?._id)
 
         res.status(200).json({
             followers: result.followers,
@@ -205,7 +205,7 @@ export async function getFollowing(req, res, next) {
         const page = parseInt(req.query.page) || 1
         const limit = parseInt(req.query.limit) || 20
 
-        const result = await getFollowingList(userId, page, limit)
+        const result = await getFollowingList(userId, page, limit, req.user?._id)
 
         res.status(200).json({
             following: result.following,

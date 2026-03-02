@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Flag } from "lucide-react";
-import api from "../../services/axiosInstance";
+import { authService } from "../../services/auth.service";
 
 const ForgotPasswordPage = () => {
   const location = useLocation();
@@ -39,7 +39,7 @@ const ForgotPasswordPage = () => {
 
     try {
       setSubmitting(true);
-      await api.post("/auth/forgot-password", { emailId: emailId.trim() });
+      await authService.forgotPassword({ emailId: emailId.trim() });
       sessionStorage.setItem("allow_reset_password", emailId.trim().toLowerCase());
       navigate(`/reset-password?email=${encodeURIComponent(emailId.trim())}`);
     } catch (err) {

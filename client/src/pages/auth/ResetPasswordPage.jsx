@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Flag } from "lucide-react";
-import api from "../../services/axiosInstance";
+import { authService } from "../../services/auth.service";
 import SuccessPopup from "../../components/common/SuccessPopup";
 
 const ResetPasswordPage = () => {
@@ -19,9 +19,12 @@ const ResetPasswordPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resendCount, setResendCount] = useState(0);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const maxResendAttempts = 3;
 
   useEffect(() => {
     const allowedEmail = sessionStorage.getItem("allow_reset_password");
@@ -37,6 +40,21 @@ const ResetPasswordPage = () => {
       navigate("/forgot-password", { replace: true });
     }
   }, [formData.emailId, navigate]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const validate = () => {
     if (!formData.emailId.trim()) return "Email is required";
@@ -61,7 +79,7 @@ const ResetPasswordPage = () => {
 
     try {
       setSubmitting(true);
-      await api.post("/auth/reset-password", {
+      await authService.resetPassword({
         emailId: formData.emailId.trim(),
         otp: formData.otp.trim(),
         newPassword: formData.newPassword,
@@ -83,16 +101,32 @@ const ResetPasswordPage = () => {
       setError("Enter email first to resend OTP");
       return;
     }
+    if (resendCooldown > 0) {
+      setError(`Please wait ${resendCooldown}s before requesting again.`);
+      return;
+    }
+    if (resendCount >= maxResendAttempts) {
+      setError("You have reached the maximum resend attempts (3).");
+      return;
+    }
 
     setError("");
     setInfo("");
 
     try {
       setResending(true);
-      await api.post("/auth/forgot-password", {
+      await authService.forgotPassword({
         emailId: formData.emailId.trim(),
       });
-      setInfo("A new OTP has been sent to your email.");
+      const nextCount = resendCount + 1;
+      const attemptsLeft = Math.max(0, maxResendAttempts - nextCount);
+      setResendCount(nextCount);
+      setResendCooldown(30);
+      setInfo(
+        attemptsLeft > 0
+          ? `A new OTP has been sent. You can resend ${attemptsLeft} more time${attemptsLeft > 1 ? "s" : ""}.`
+          : "A new OTP has been sent. You have used all resend attempts."
+      );
     } catch (err) {
       const message = err.response?.data?.message || "Unable to resend OTP";
       setError(message);
@@ -209,11 +243,21 @@ const ResetPasswordPage = () => {
           <button
             type="button"
             onClick={handleResendOtp}
-            disabled={resending}
+            disabled={resending || resendCooldown > 0 || resendCount >= maxResendAttempts}
             className="w-full rounded-xl border border-[#333333] bg-[#0B0B0B] py-2.5 text-sm font-medium text-[#EAEAEA] hover:bg-[#111111] transition disabled:opacity-50"
           >
-            {resending ? "Resending OTP..." : "Resend OTP"}
+            {resending
+              ? "Resending OTP..."
+              : resendCount >= maxResendAttempts
+                ? "Resend limit reached"
+                : resendCooldown > 0
+                  ? `Resend OTP in ${resendCooldown}s`
+                  : "Resend OTP"}
           </button>
+
+          <p className="text-center text-xs text-[#AFAFAF]">
+            Resend available after 30 seconds. Max 3 times.
+          </p>
 
           <p className="text-center text-sm text-[#B8B8B8]">
             Back to{" "}

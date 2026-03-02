@@ -222,7 +222,7 @@ export async function unfollowUserById(currentUserId, targetUserId) {
     }
 }
 
-export async function getFollowersList(userId, page = 1, limit = 20) {
+export async function getFollowersList(userId, page = 1, limit = 20, currentUserId = null) {
     const user = await User.findById(userId)
         .populate({
             path: 'followers',
@@ -240,10 +240,25 @@ export async function getFollowersList(userId, page = 1, limit = 20) {
         throw err
     }
 
-    const totalFollowers = await User.findById(userId).then(u => u.followers.length)
+    const followersList = (user.followers || []).filter(Boolean)
+    const totalFollowers = followersList.length
+
+    let followingSet = null
+    if (currentUserId) {
+        const currentUser = await User.findById(currentUserId).select('following').lean()
+        followingSet = new Set((currentUser?.following || []).map((id) => id.toString()))
+    }
+
+    const followers = followersList.map((follower) => {
+        const followerId = follower._id?.toString?.() || ''
+        return {
+            ...follower.toObject(),
+            isFollowing: followingSet ? followingSet.has(followerId) : false
+        }
+    })
 
     return {
-        followers: user.followers,
+        followers,
         pagination: {
             currentPage: page,
             totalPages: Math.ceil(totalFollowers / limit),
@@ -254,7 +269,7 @@ export async function getFollowersList(userId, page = 1, limit = 20) {
     }
 }
 
-export async function getFollowingList(userId, page = 1, limit = 20) {
+export async function getFollowingList(userId, page = 1, limit = 20, currentUserId = null) {
     const user = await User.findById(userId)
         .populate({
             path: 'following',
@@ -272,10 +287,25 @@ export async function getFollowingList(userId, page = 1, limit = 20) {
         throw err
     }
 
-    const totalFollowing = await User.findById(userId).then(u => u.following.length)
+    const followingList = (user.following || []).filter(Boolean)
+    const totalFollowing = followingList.length
+
+    let followingSet = null
+    if (currentUserId) {
+        const currentUser = await User.findById(currentUserId).select('following').lean()
+        followingSet = new Set((currentUser?.following || []).map((id) => id.toString()))
+    }
+
+    const following = followingList.map((followedUser) => {
+        const followedUserId = followedUser._id?.toString?.() || ''
+        return {
+            ...followedUser.toObject(),
+            isFollowing: followingSet ? followingSet.has(followedUserId) : false
+        }
+    })
 
     return {
-        following: user.following,
+        following,
         pagination: {
             currentPage: page,
             totalPages: Math.ceil(totalFollowing / limit),

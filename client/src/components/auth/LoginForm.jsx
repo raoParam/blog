@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { authService } from "../../services/auth.service";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -17,8 +18,7 @@ const LoginForm = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const handleGoogleLogin = () => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    window.location.href = `${apiUrl}/auth/google`;
+    window.location.href = authService.getGoogleAuthUrl();
   };
 
   const validate = () => {

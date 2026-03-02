@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Flag } from "lucide-react";
-import api from "../../services/axiosInstance";
+import { authService } from "../../services/auth.service";
 import SuccessPopup from "../../components/common/SuccessPopup";
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const prefilledEmail = searchParams.get("email") || "";
+  const prefilledEmail = searchParams.get("emailId") || searchParams.get("email") || "";
 
   const [emailId, setEmailId] = useState(prefilledEmail);
   const [otp, setOtp] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resendCount, setResendCount] = useState(0);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [popup, setPopup] = useState(null);
+  const maxResendAttempts = 3;
 
   useEffect(() => {
     const rawPopup = sessionStorage.getItem("success_popup");
@@ -26,6 +29,21 @@ const VerifyEmailPage = () => {
       setPopup(null);
     }
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleClosePopup = () => {
     setPopup(null);
@@ -54,7 +72,7 @@ const VerifyEmailPage = () => {
 
     try {
       setSubmitting(true);
-      await api.post("/auth/verify-email", {
+      await authService.verifyEmail({
         emailId: emailId.trim(),
         otp: otp.trim(),
       });
@@ -75,15 +93,33 @@ const VerifyEmailPage = () => {
       return;
     }
 
+    if (resendCooldown > 0) {
+      setError(`Please wait ${resendCooldown}s before requesting again.`);
+      return;
+    }
+
+    if (resendCount >= maxResendAttempts) {
+      setError("You have reached the maximum resend attempts (3).");
+      return;
+    }
+
     setError("");
     setInfo("");
 
     try {
       setResending(true);
-      await api.post("/auth/resend-verification", {
+      await authService.resendVerification({
         emailId: emailId.trim(),
       });
-      setInfo("OTP sent again. Please check your email.");
+      const nextCount = resendCount + 1;
+      const attemptsLeft = Math.max(0, maxResendAttempts - nextCount);
+      setResendCount(nextCount);
+      setResendCooldown(30);
+      setInfo(
+        attemptsLeft > 0
+          ? `OTP sent again. You can resend ${attemptsLeft} more time${attemptsLeft > 1 ? "s" : ""}.`
+          : "OTP sent again. You have used all resend attempts."
+      );
     } catch (err) {
       const message = err.response?.data?.message || "Unable to resend OTP";
       setError(message);
@@ -161,11 +197,21 @@ const VerifyEmailPage = () => {
           <button
             type="button"
             onClick={handleResend}
-            disabled={resending}
+            disabled={resending || resendCooldown > 0 || resendCount >= maxResendAttempts}
             className="w-full rounded-xl border border-[#333333] bg-[#0B0B0B] py-2.5 text-sm font-medium text-[#EAEAEA] hover:bg-[#111111] transition disabled:opacity-50"
           >
-            {resending ? "Resending OTP..." : "Resend OTP"}
+            {resending
+              ? "Resending OTP..."
+              : resendCount >= maxResendAttempts
+                ? "Resend limit reached"
+                : resendCooldown > 0
+                  ? `Resend OTP in ${resendCooldown}s`
+                  : "Resend OTP"}
           </button>
+
+          <p className="text-center text-xs text-[#AFAFAF]">
+            Resend available after 30 seconds. Max 3 times.
+          </p>
 
             <p className="text-center text-sm text-[#B8B8B8]">
               Back to{" "}

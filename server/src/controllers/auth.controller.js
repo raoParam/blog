@@ -5,18 +5,26 @@ import { createUser , loginUser , verifyEmailOTP , sendEmailVerificationOTP , re
 export async function register(req, res, next) {
     try {
         validate(req.body)
-        const user = await createUser(req.body)
-        await sendEmailVerificationOTP(user.emailId)
+        const { user, requiresEmailVerification, isNewUser } = await createUser(req.body)
+        if (requiresEmailVerification) {
+            await resendEmailVerificationOTP(user.emailId)
+        } else {
+            await sendEmailVerificationOTP(user.emailId)
+        }
         
-        res.status(201).json({
+        res.status(isNewUser ? 201 : 200).json({
             user: {
                 _id: user._id,
                 userName: user.userName,
                 emailId: user.emailId,
                 isEmailVerified: false
             },
+            requiresEmailVerification: true,
+            isNewUser,
             Status: "success",
-            Message: "User registered successfully. Please verify your email."
+            Message: isNewUser
+                ? "User registered successfully. Please verify your email."
+                : "Account already exists but email is not verified. OTP sent again."
         })
     } catch (err) {
         next(err)
@@ -229,7 +237,7 @@ export async function refreshToken(req, res, next) {
             throw err
         }
 
-        const { accessToken, user } = await refreshAccessToken(refreshToken)
+        const { accessToken, refreshToken: newRefreshToken, user } = await refreshAccessToken(refreshToken)
 
         res.cookie('token', accessToken, {
             httpOnly: true,
@@ -240,6 +248,7 @@ export async function refreshToken(req, res, next) {
 
         res.status(200).json({
             accessToken,
+            refreshToken: newRefreshToken,
             user,
             Status: "success",
             Message: "Token refreshed successfully"

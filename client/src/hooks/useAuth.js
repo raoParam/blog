@@ -6,7 +6,7 @@ import {
   setError,
   logoutUser,
 } from "../store/slices/authSlice";
-import api from "../services/axiosInstance";
+import { authService } from "../services/auth.service";
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -15,12 +15,12 @@ export const useAuth = () => {
   const login = async (email, password) => {
     try {
       dispatch(setError(null));
-      const response = await api.post("/auth/login", { 
-        emailId: email, 
-        password 
+      const data = await authService.login({
+        emailId: email,
+        password,
       });
-      
-      const { accessToken, refreshToken, user } = response.data;
+
+      const { accessToken, refreshToken, user } = data;
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
@@ -34,7 +34,7 @@ export const useAuth = () => {
       
       return { 
         success: true, 
-        data: response.data 
+        data
       };
     } catch (err) {
       // Extract error message from backend response
@@ -52,7 +52,7 @@ export const useAuth = () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
-        await api.post("/auth/logout", { refreshToken });
+        await authService.logout({ refreshToken });
       }
     } catch {
       // Continue logout cleanup even if server logout fails
@@ -69,8 +69,8 @@ export const useAuth = () => {
 
     try {
       dispatch(setLoading(true));
-      const response = await api.get("/user/me");
-      dispatch(setUser(response.data?.user || null));
+      const data = await authService.getCurrentUser();
+      dispatch(setUser(data?.user || null));
     } catch {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");

@@ -50,6 +50,13 @@ export default async function auth(req, res, next) {
         req.user = user
         next()
     } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            err.statusCode = 401
+            err.message = 'jwt expired'
+        } else if (err.name === 'JsonWebTokenError') {
+            err.statusCode = 401
+            err.message = 'Invalid token'
+        }
         next(err)
     }
 }

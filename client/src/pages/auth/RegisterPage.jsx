@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Flag } from "lucide-react";
-import api from "../../services/axiosInstance";
+import { authService } from "../../services/auth.service";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const RegisterPage = () => {
 
     try {
       setSubmitting(true);
-      await api.post("/auth/register", {
+      const response = await authService.register({
         userName: formData.userName.trim(),
         emailId: formData.emailId.trim(),
         password: formData.password,
@@ -57,11 +57,11 @@ const RegisterPage = () => {
       sessionStorage.setItem(
         "success_popup",
         JSON.stringify({
-          title: "Registration Successful",
-          message: "OTP has been sent to your email for verification.",
+          title: "Verify Your Email",
+          message: response?.Message || "OTP has been sent to your email. Please verify your email to continue.",
         })
       );
-      navigate(`/verify-email?email=${encodeURIComponent(formData.emailId.trim())}`);
+      navigate(`/verify-email?emailId=${encodeURIComponent(formData.emailId.trim())}`);
     } catch (err) {
       const message = err.response?.data?.message || "Unable to create account";
       setServerError(message);

@@ -1,49 +1,45 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Twitter, Github, MessageCircle, Heart } from "lucide-react";
+import { Twitter, Github, MessageCircle, Heart, Copyright } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-surface-0 border-t border-border-subtle pt-16 pb-8 overflow-hidden">
-      {/* Subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-accent/5 via-transparent to-transparent pointer-events-none" />
+    <footer className="relative overflow-hidden border-t border-border-subtle bg-surface-0 pt-16 pb-8 font-['Arial']">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-accent/5 via-transparent to-transparent" />
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-          
-          {/* Brand Column */}
+      <div className="relative mx-auto max-w-7xl px-6">
+        <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4 group">
-              <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
-                <span className="text-white font-bold text-sm">F</span>
+            <Link to="/" className="group mb-4 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent shadow-md transition group-hover:scale-105">
+                <span className="text-sm font-bold text-white">F</span>
               </div>
-              <span className="font-semibold text-text-primary text-lg">Flagger</span>
+              <span className="text-lg font-semibold text-text-primary">Flagger</span>
             </Link>
-            <p className="text-text-secondary text-sm leading-relaxed mb-4">
-              A modern platform for developers to write, share ideas, 
+            <p className="mb-4 text-sm leading-relaxed text-text-secondary">
+              A modern platform for developers to write, share ideas,
               and grow together through meaningful discussions.
             </p>
             <div className="flex items-center gap-3">
-              <a 
-                href="#" 
-                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+              <a
+                href="#"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle bg-surface-1 text-text-secondary transition-all hover:border-accent/30 hover:text-accent"
                 aria-label="Twitter"
               >
                 <Twitter size={16} />
               </a>
-              <a 
-                href="#" 
-                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+              <a
+                href="#"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle bg-surface-1 text-text-secondary transition-all hover:border-accent/30 hover:text-accent"
                 aria-label="GitHub"
               >
                 <Github size={16} />
               </a>
-              <a 
-                href="#" 
-                className="w-9 h-9 rounded-full bg-surface-1 flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/30 border border-border-subtle transition-all"
+              <a
+                href="#"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle bg-surface-1 text-text-secondary transition-all hover:border-accent/30 hover:text-accent"
                 aria-label="Discord"
               >
                 <MessageCircle size={16} />
@@ -51,76 +47,73 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Quick Links</h3>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-primary">Quick Links</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/explore" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/explore" className="text-sm text-text-secondary transition hover:text-accent">
                   Explore
                 </Link>
               </li>
               <li>
-                <Link to="/topics" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/topics" className="text-sm text-text-secondary transition hover:text-accent">
                   Topics
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/about" className="text-sm text-text-secondary transition hover:text-accent">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/contact" className="text-sm text-text-secondary transition hover:text-accent">
                   Contact
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Community */}
           <div>
-            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Community</h3>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-primary">Community</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/guidelines" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/guidelines" className="text-sm text-text-secondary transition hover:text-accent">
                   Guidelines
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/faq" className="text-sm text-text-secondary transition hover:text-accent">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link to="/support" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/support" className="text-sm text-text-secondary transition hover:text-accent">
                   Support
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/feedback" className="text-sm text-text-secondary transition hover:text-accent">
                   Feedback
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h3 className="text-text-primary font-semibold mb-4 text-sm uppercase tracking-wider">Legal</h3>
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-text-primary">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <Link to="/privacy" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/privacy" className="text-sm text-text-secondary transition hover:text-accent">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/terms" className="text-sm text-text-secondary transition hover:text-accent">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/cookies" className="text-text-secondary hover:text-accent transition text-sm">
+                <Link to="/cookies" className="text-sm text-text-secondary transition hover:text-accent">
                   Cookie Policy
                 </Link>
               </li>
@@ -128,24 +121,24 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-text-secondary text-xs">
-            © {currentYear} Flagger. All rights reserved.
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-border-subtle pt-8 md:flex-row">
+          <p className="inline-flex items-center gap-1 text-xs text-text-secondary">
+            <Copyright size={12} />
+            <span>{currentYear} Flagger. All rights reserved.</span>
           </p>
-          
-          <div className="flex items-center gap-1 text-text-secondary text-xs">
-            Built with <Heart size={12} className="text-accent mx-1" /> for developers
+
+          <div className="flex items-center gap-1 text-xs text-text-secondary">
+            Built with <Heart size={12} className="mx-1 text-accent" /> for developers
           </div>
 
           <div className="flex items-center gap-6">
-            <Link to="/privacy" className="text-text-secondary hover:text-accent transition text-xs">
+            <Link to="/privacy" className="text-xs text-text-secondary transition hover:text-accent">
               Privacy
             </Link>
-            <Link to="/terms" className="text-text-secondary hover:text-accent transition text-xs">
+            <Link to="/terms" className="text-xs text-text-secondary transition hover:text-accent">
               Terms
             </Link>
-            <Link to="/cookies" className="text-text-secondary hover:text-accent transition text-xs">
+            <Link to="/cookies" className="text-xs text-text-secondary transition hover:text-accent">
               Cookies
             </Link>
           </div>
