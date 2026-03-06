@@ -3,12 +3,21 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import User from '../models/user.js'
 
 const fallbackBackendUrl = 'https://blog-6isi.onrender.com'
-const backendUrl = process.env.BACKEND_URL || fallbackBackendUrl
-const callbackFromEnv = process.env.GOOGLE_CALLBACK_URL
-const callbackURL =
-  process.env.NODE_ENV === 'production' && callbackFromEnv?.includes('localhost')
-    ? `${backendUrl}/api/auth/google/callback`
-    : callbackFromEnv || `${backendUrl}/api/auth/google/callback`
+const backendUrlFromEnv = process.env.BACKEND_URL?.trim()
+const backendUrl =
+  backendUrlFromEnv && !backendUrlFromEnv.includes('localhost')
+    ? backendUrlFromEnv.replace(/\/+$/, '')
+    : fallbackBackendUrl
+
+const safeFallbackCallbackURL = `${backendUrl}/api/auth/google/callback`
+const callbackFromEnv = process.env.GOOGLE_CALLBACK_URL?.trim()
+
+const isUnsafeCallbackUrl =
+  !callbackFromEnv ||
+  callbackFromEnv.includes('localhost') ||
+  !callbackFromEnv.includes('/api/auth/google/callback')
+
+const callbackURL = isUnsafeCallbackUrl ? safeFallbackCallbackURL : callbackFromEnv
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,

@@ -2,11 +2,11 @@ import passport from 'passport'
 import { handleOAuthLogin } from '../services/oauth.service.js'
 
 const fallbackClientUrl = 'https://flagger-fawn.vercel.app'
-const clientUrlFromEnv = process.env.CLIENT_URL
+const clientUrlFromEnv = process.env.CLIENT_URL?.trim()
 const clientUrl =
-  process.env.NODE_ENV === 'production' && clientUrlFromEnv?.includes('localhost')
-    ? fallbackClientUrl
-    : clientUrlFromEnv || fallbackClientUrl
+  clientUrlFromEnv && !clientUrlFromEnv.includes('localhost')
+    ? clientUrlFromEnv.replace(/\/+$/, '')
+    : fallbackClientUrl
 
 // Initiate Google OAuth login
 export const googleAuth = passport.authenticate('google', {
