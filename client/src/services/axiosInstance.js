@@ -9,6 +9,30 @@ const axiosInstance = axios.create({
   },
 });
 
+let refreshPromise = null;
+
+const requestTokenRefresh = async () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) {
+    throw new Error("Refresh token missing");
+  }
+
+  const response = await axiosInstance.post("/auth/refresh-token", { refreshToken });
+  const newAccessToken = response.data?.accessToken;
+  const newRefreshToken = response.data?.refreshToken;
+
+  if (!newAccessToken) {
+    throw new Error("Access token missing in refresh response");
+  }
+
+  localStorage.setItem("accessToken", newAccessToken);
+  if (newRefreshToken) {
+    localStorage.setItem("refreshToken", newRefreshToken);
+  }
+
+  return newAccessToken;
+};
+
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -27,26 +51,25 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const requestUrl = originalRequest?.url || "";
+    const isUnauthorized = error.response?.status === 401;
     const isAuthEndpoint =
       requestUrl.includes("/auth/login") ||
       requestUrl.includes("/auth/refresh-token");
 
-    if (error.response?.status === 401 && !originalRequest?._retry && !isAuthEndpoint) {
+    if (isUnauthorized && !originalRequest?._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          return Promise.reject(error);
+        if (!refreshPromise) {
+          refreshPromise = requestTokenRefresh().finally(() => {
+            refreshPromise = null;
+          });
         }
-        const response = await axiosInstance.post("/auth/refresh-token", {
-          refreshToken,
-        });
 
-        localStorage.setItem("accessToken", response.data.accessToken);
-        if (response.data.refreshToken) {
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
+        const freshAccessToken = await refreshPromise;
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${freshAccessToken}`;
+
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem("accessToken");
