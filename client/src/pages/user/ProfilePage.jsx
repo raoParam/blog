@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarDays, Camera, Edit3, ShieldCheck, Users, X } from "lucide-react";
+import { Camera, Edit3, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { setUser } from "../../store/slices/authSlice";
 import FeedPostCard from "../../components/feed/FeedPostCard";
@@ -41,6 +41,7 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
   const avatar = person?.avatar?.trim();
   const fullName = `${person?.firstName || ""} ${person?.lastName || ""}`.trim() || person?.userName || "User";
   const isSelf = String(person?._id) === String(currentUserId);
+  const isVerified = Boolean(person?.isVerified || person?.isVerifiedBadge);
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#1F2634] bg-[#07080D] px-3 py-2.5">
@@ -53,7 +54,10 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#EDF3FF]">{fullName}</p>
+          <div className="flex items-center gap-1">
+            <p className="truncate text-sm font-semibold text-[#EDF3FF]">{fullName}</p>
+            {isVerified && <ShieldCheck size={13} className="text-[#5CA6FF]" />}
+          </div>
           <p className="truncate text-xs text-[#97A2B7]">@{person?.userName || "user"}</p>
         </div>
       </div>
@@ -113,8 +117,6 @@ const ProfilePage = () => {
     avatarPreview: "",
   });
 
-  const [unsavingPostId, setUnsavingPostId] = useState("");
-
   const profileFullName = useMemo(() => {
     if (!profile) return "";
     return `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
@@ -143,7 +145,8 @@ const ProfilePage = () => {
       avatar: me.avatar,
       firstName: me.firstName,
       lastName: me.lastName,
-      isVerifiedBadge: me.isVerifiedBadge,
+      isVerified: me.isVerified || me.isVerifiedBadge,
+      isVerifiedBadge: me.isVerifiedBadge || me.isVerified,
     };
   };
 
@@ -280,20 +283,18 @@ const ProfilePage = () => {
 
   const handleUnsavePost = async (post) => {
     if (!post?._id) return;
-    setUnsavingPostId(String(post._id));
     try {
       await profileService.unsavePost(post._id);
       setSavedPosts((prev) => prev.filter((entry) => String(entry._id) !== String(post._id)));
     } catch {
       // ignore
-    } finally {
-      setUnsavingPostId("");
     }
   };
 
   const avatar = profile?.avatar?.trim();
   const joinedText = formatJoinedDate(profile?.createdAt || profile?.joinedAt);
   const userName = profile?.userName || user?.userName || "user";
+  const isVerifiedUser = Boolean(profile?.isVerified || profile?.isVerifiedBadge);
 
   return (
     <div className="min-h-screen bg-[#020307] text-[#E9EDF3]">
@@ -301,6 +302,7 @@ const ProfilePage = () => {
         user={profile || user}
         onLogout={handleLogout}
         onToggleMobileMenu={() => setMenuOpen((prev) => !prev)}
+        onWrite={() => navigate("/write")}
       />
 
       {menuOpen && (
@@ -323,6 +325,10 @@ const ProfilePage = () => {
           onSelectCategory={() => {}}
           onClearCategory={() => {}}
           onCloseMenu={() => setMenuOpen(false)}
+          onHomeClick={() => navigate("/home")}
+          onWriteClick={() => navigate("/write")}
+          selectedMenuItem="profile"
+          hideCategories
         />
       </aside>
 
@@ -376,7 +382,10 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <p className="text-sm text-[#8C95A7]">@{userName}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm text-[#8C95A7]">@{userName}</p>
+                {isVerifiedUser && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+              </div>
               <p className="text-base font-semibold text-[#F3F7FF]">
                 {profile?.firstName || profile?.lastName ? `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() : ""}
               </p>
@@ -437,7 +446,7 @@ const ProfilePage = () => {
               ) : (
                 <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-8 text-center">
                   <Link
-                    to="/home"
+                    to="/write"
                     className="inline-flex rounded-full bg-[#5CA6FF] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#6CB0FF]"
                   >
                     Write a Post

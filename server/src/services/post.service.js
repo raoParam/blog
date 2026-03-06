@@ -22,7 +22,7 @@ export async function fetchPosts(postData, currentUserId) {
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate('author', 'userName avatar firstName lastName')
+    .populate('author', 'userName avatar firstName lastName isVerifiedBadge')
     .lean()
 
     const sanitizedBlogs = blogs.map(blog => {
@@ -52,7 +52,7 @@ export async function fetchPost(postId) {
     .select('title content excerpt likes visibility createdAt images')
     .populate({
         path : "author",
-        select : "userName avatar firstName lastName"
+        select : "userName avatar firstName lastName isVerifiedBadge"
     })
     .lean()
     
@@ -214,7 +214,7 @@ export async function fetchTrendingPosts(currentUserId, page = 1, limit = 10) {
     .sort({ likes: -1, createdAt: -1 })  // Most likes first, then newest
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate('author', 'userName avatar firstName lastName')
+    .populate('author', 'userName avatar firstName lastName isVerifiedBadge')
     .lean()
 
     // Apply anonymous hiding (though trending only shows public)
@@ -254,7 +254,7 @@ export async function fetchFollowingFeed(currentUserId, page = 1, limit = 10) {
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
-    .populate('author', 'userName avatar firstName lastName')
+    .populate('author', 'userName avatar firstName lastName isVerifiedBadge')
     .lean()
 
     const sanitizedBlogs = blogs.map(blog => {
@@ -314,7 +314,7 @@ export async function getPostsByCategoryName(categoryName, currentUserId, page =
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate('author', 'userName avatar firstName lastName')
+        .populate('author', 'userName avatar firstName lastName isVerifiedBadge')
         .populate('category', 'name slug')
         .lean()
     

@@ -220,6 +220,7 @@ const HomePage = () => {
           user={currentUser || user}
           onLogout={handleLogout}
           onToggleMobileMenu={() => setMenuOpen((prev) => !prev)}
+          onWrite={() => navigate("/write")}
         />
 
         {menuOpen && (
@@ -250,7 +251,7 @@ const HomePage = () => {
             }}
             onWriteClick={() => {
               setMenuOpen(false);
-              navigate("/home");
+              navigate("/write");
             }}
             selectedMenuItem="home"
           />

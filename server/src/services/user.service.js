@@ -392,7 +392,7 @@ export async function getSavedPostsList(userId, page = 1, limit = 10) {
             path: 'savedPosts',
             populate: {
                 path: 'author',
-                select: 'userName avatar firstName lastName'
+                select: 'userName avatar firstName lastName isVerifiedBadge'
             },
             options: {
                 skip: (page - 1) * limit,

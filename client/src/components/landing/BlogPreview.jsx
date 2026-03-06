@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Heart, MessageCircle, Bookmark, ArrowRight } from "lucide-react";
+import { motion as Motion } from "framer-motion";
+import { Heart, MessageCircle, ArrowRight, ShieldCheck } from "lucide-react";
 import { publicService } from "../../services/public.service";
 
 const BlogPreview = () => {
@@ -135,7 +135,7 @@ const BlogPreview = () => {
 
       <div className="relative max-w-7xl mx-auto px-6">
         {/* Header */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -149,10 +149,10 @@ const BlogPreview = () => {
           >
             View all <ArrowRight size={16} />
           </Link>
-        </motion.div>
+        </Motion.div>
 
         {/* Posts Grid */}
-        <motion.div
+        <Motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -160,7 +160,7 @@ const BlogPreview = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {displayPosts.slice(0, 3).map((post) => (
-            <motion.div
+            <Motion.div
               key={post._id}
               variants={itemVariants}
               whileHover={{ y: -5 }}
@@ -181,8 +181,8 @@ const BlogPreview = () => {
                             <span className="text-text-primary font-medium text-sm">
                               @{post.author.userName}
                             </span>
-                            {post.author.isVerifiedBadge && (
-                              <span className="text-accent text-xs">✓</span>
+                            {(post.author?.isVerified || post.author?.isVerifiedBadge) && (
+                              <ShieldCheck size={13} className="text-accent" />
                             )}
                           </div>
                           <span className="text-text-secondary text-xs">
@@ -220,7 +220,7 @@ const BlogPreview = () => {
                   <div className="flex items-center gap-4 text-text-secondary">
                     <div className="flex items-center gap-1.5">
                       <Heart size={16} className="group-hover:text-accent transition-colors" />
-                      <span className="text-sm">{post.likes.length || 0}</span>
+                      <span className="text-sm">{Array.isArray(post.likes) ? post.likes.length : post.likes || 0}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <MessageCircle size={16} className="group-hover:text-accent transition-colors" />
@@ -229,9 +229,9 @@ const BlogPreview = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </Motion.div>
           ))}
-        </motion.div>
+        </Motion.div>
 
         {/* Mobile View All (visible only on mobile) */}
         <div className="mt-8 text-center md:hidden">

@@ -64,11 +64,14 @@ export const useAuth = () => {
   };
 
   const checkAuth = async () => {
+    dispatch(setLoading(true));
     const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    if (!token) {
+      dispatch(setLoading(false));
+      return;
+    }
 
     try {
-      dispatch(setLoading(true));
       const data = await authService.getCurrentUser();
       dispatch(setUser(data?.user || null));
     } catch {

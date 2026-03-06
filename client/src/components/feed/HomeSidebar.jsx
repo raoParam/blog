@@ -39,7 +39,7 @@ const HomeSidebar = ({
           className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "home"
               ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-[#D5DDE7]/25 bg-[#111722] text-[#EEF3FA]"
+              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
           }`}
           title="Home"
         >
@@ -67,7 +67,11 @@ const HomeSidebar = ({
         <Link
           to="/profile"
           onClick={onCloseMenu}
-          className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3.5 py-2.5 text-[15px] text-[#D8DEE8] transition hover:bg-[#101927]"
+          className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] transition ${
+            selectedMenuItem === "profile"
+              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
+              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+          }`}
           title="Profile"
         >
           <User size={16} />

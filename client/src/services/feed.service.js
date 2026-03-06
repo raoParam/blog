@@ -47,5 +47,23 @@ export const feedService = {
     const response = await axiosInstance.get("/user/me");
     return response.data;
   },
-};
 
+  createPost: async ({ title, excerpt, content, visibility = "public", images = [] }) => {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("excerpt", excerpt || "");
+    formData.append("content", content);
+    formData.append("visibility", visibility);
+
+    images.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    const response = await axiosInstance.post("/post", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+};

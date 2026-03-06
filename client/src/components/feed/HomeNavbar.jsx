@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Flag, LogOut, Search, ChevronDown, Menu, User, PenSquare } from "lucide-react";
+import { Flag, LogOut, Search, ChevronDown, Menu, User, PenSquare, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const HomeNavbar = ({ user, onLogout, onToggleMobileMenu }) => {
+const HomeNavbar = ({ user, onLogout, onToggleMobileMenu, onWrite }) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
@@ -21,6 +21,7 @@ const HomeNavbar = ({ user, onLogout, onToggleMobileMenu }) => {
   const fallbackInitial = user?.firstName?.trim()?.charAt(0)?.toUpperCase() || "U";
   const displayName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User";
   const displayUserName = user?.userName ? `@${user.userName}` : "@user";
+  const isVerifiedUser = Boolean(user?.isVerified || user?.isVerifiedBadge);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#252A33] bg-[#090B10]/95 backdrop-blur">
@@ -55,6 +56,7 @@ const HomeNavbar = ({ user, onLogout, onToggleMobileMenu }) => {
         <div className="relative ml-auto flex items-center gap-3" ref={profileRef}>
           <button
             type="button"
+            onClick={onWrite}
             className="hidden items-center gap-1.5 rounded-xl bg-[#2A4D89] px-4 py-2 text-sm font-semibold text-white sm:inline-flex"
           >
             <PenSquare size={15} />
@@ -83,7 +85,10 @@ const HomeNavbar = ({ user, onLogout, onToggleMobileMenu }) => {
             <div className="absolute right-0 top-12 w-56 rounded-2xl border border-[#2D3340] bg-[#131822] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
               <div className="border-b border-[#242A35] px-2 py-2">
                 <p className="text-lg font-semibold text-[#E8EDF6]">{displayName}</p>
-                <p className="text-sm text-[#8F98AA]">{displayUserName}</p>
+                <p className="flex items-center gap-1 text-sm text-[#8F98AA]">
+                  <span>{displayUserName}</span>
+                  {isVerifiedUser && <ShieldCheck size={13} className="text-[#5CA6FF]" />}
+                </p>
               </div>
               <Link
                 to="/profile"

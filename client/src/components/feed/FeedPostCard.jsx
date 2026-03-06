@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, Heart, MessageCircle, ShieldCheck, CircleUserRound } from "lucide-react";
 
 const formatRelativeTime = (dateString) => {
@@ -17,9 +17,11 @@ const formatRelativeTime = (dateString) => {
 };
 
 const FeedPostCard = ({ post, onBookmarkClick }) => {
+  const navigate = useNavigate();
   const isAnonymous = !post.author;
   const authorName = !isAnonymous && post.author.userName ? post.author.userName : "Anonymous";
   const authorAvatar = !isAnonymous && post.author.avatar ? post.author.avatar.trim() : "";
+  const isAuthorVerified = !isAnonymous && Boolean(post.author?.isVerified || post.author?.isVerifiedBadge);
   const previewText =
     post.excerpt?.trim() ||
     post.summary?.trim() ||
@@ -30,6 +32,13 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
     event.preventDefault();
     event.stopPropagation();
     onBookmarkClick(post);
+  };
+
+  const handleAuthorClick = (event) => {
+    if (isAnonymous || !authorName) return;
+    event.preventDefault();
+    event.stopPropagation();
+    navigate(`/profile/${authorName}`);
   };
 
   return (
@@ -45,18 +54,21 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
                   <CircleUserRound size={16} />
                 )}
               </span>
-              <span className="font-semibold text-[#D9E1F2]">@{authorName}</span>
-              {!isAnonymous && post.author.isVerifiedBadge && (
-                <ShieldCheck size={14} className="text-[#5CA6FF]" />
-              )}
-              <span className="text-[#8A93A6]">·</span>
+              <button
+                type="button"
+                onClick={handleAuthorClick}
+                disabled={isAnonymous}
+                className={`font-semibold ${isAnonymous ? "text-[#D9E1F2]" : "text-[#D9E1F2] hover:text-[#8FB3FF]"}`}
+              >
+                @{authorName}
+              </button>
+              {isAuthorVerified && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+              <span className="text-[#8A93A6]">�</span>
               <span className="text-[#8A93A6]">{formatRelativeTime(post.createdAt)}</span>
             </div>
 
             <h2 className="mt-2 text-lg font-semibold text-[#F7FAFF] line-clamp-2">{post.title}</h2>
-            {previewText && (
-              <p className="mt-1 text-sm leading-6 text-[#A7B0C1] line-clamp-2">{previewText}</p>
-            )}
+            {previewText && <p className="mt-1 text-sm leading-6 text-[#A7B0C1] line-clamp-2">{previewText}</p>}
 
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#C4CCD9]">
               <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5">
@@ -86,7 +98,7 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
             }`}
             aria-label={post.isSaved ? "Remove save" : "Save post"}
           >
-            <Bookmark size={16} className="pointer-events-none" />
+            <Bookmark size={16} className={`pointer-events-none ${post.isSaved ? "fill-current" : ""}`} />
           </button>
         </div>
       </article>

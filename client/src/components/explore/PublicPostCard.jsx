@@ -1,9 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Heart, MessageCircle } from "lucide-react";
+import { motion as Motion } from "framer-motion";
+import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 
 const PublicPostCard = ({ post }) => {
+  const isAuthorVerified = Boolean(post.author?.isVerified || post.author?.isVerifiedBadge);
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -18,7 +19,6 @@ const PublicPostCard = ({ post }) => {
     });
   };
 
-  // Get initial for avatar fallback
   const getInitial = (author) => {
     if (!author) return "?";
     if (author.firstName) return author.firstName[0].toUpperCase();
@@ -26,21 +26,18 @@ const PublicPostCard = ({ post }) => {
     return "U";
   };
 
-  // Handle card click - redirect to login
   const handleCardClick = () => {
     window.location.href = "/login";
   };
 
   return (
-    <motion.div
+    <Motion.div
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
       className="cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="h-full bg-[#0E0F14] border border-[#26292E] rounded-2xl p-6 transition-all duration-300 hover:border-[#3b6ff0] hover:shadow-xl group">
-        
-        {/* Author Info */}
         <div className="flex items-center gap-3 mb-4">
           {post.author ? (
             <>
@@ -57,52 +54,35 @@ const PublicPostCard = ({ post }) => {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[#E8E9EA] font-medium text-sm">
-                    @{post.author.userName}
-                  </span>
-                  {post.author.isVerifiedBadge && (
-                    <span className="text-[#3b6ff0] text-xs">✓</span>
-                  )}
+                  <span className="text-[#E8E9EA] font-medium text-sm">@{post.author.userName}</span>
+                  {isAuthorVerified && <ShieldCheck size={13} className="text-[#3b6ff0]" />}
                 </div>
-                <span className="text-[#8B8F96] text-xs">
-                  {formatDate(post.createdAt)}
-                </span>
+                <span className="text-[#8B8F96] text-xs">{formatDate(post.createdAt)}</span>
               </div>
             </>
           ) : (
             <>
               <div className="w-10 h-10 rounded-full bg-[#1A1D24] flex items-center justify-center text-lg">
-                🕶️
+                <span>Anon</span>
               </div>
               <div>
                 <span className="text-[#E8E9EA] text-sm">Anonymous</span>
-                <div className="text-[#8B8F96] text-xs">
-                  {formatDate(post.createdAt)}
-                </div>
+                <div className="text-[#8B8F96] text-xs">{formatDate(post.createdAt)}</div>
               </div>
             </>
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="text-xl font-semibold text-[#E8E9EA] mb-3 line-clamp-2">
-          {post.title}
-        </h3>
+        <h3 className="text-xl font-semibold text-[#E8E9EA] mb-3 line-clamp-2">{post.title}</h3>
 
-        {/* Excerpt */}
         {post.excerpt && (
-          <p className="text-[#8B8F96] text-sm mb-4 line-clamp-3 leading-relaxed">
-            {post.excerpt}
-          </p>
+          <p className="text-[#8B8F96] text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
         )}
 
-        {/* Engagement Stats - Always visible */}
         <div className="flex items-center gap-4 text-[#8B8F96] mt-2">
           <div className="flex items-center gap-1.5">
             <Heart size={16} className="text-[#8B8F96]" />
-            <span className="text-xs">
-              {Array.isArray(post.likes) ? post.likes.length : post.likes || 0}
-            </span>
+            <span className="text-xs">{Array.isArray(post.likes) ? post.likes.length : post.likes || 0}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <MessageCircle size={16} className="text-[#8B8F96]" />
@@ -110,12 +90,9 @@ const PublicPostCard = ({ post }) => {
           </div>
         </div>
 
-        {/* Subtle indicator that card is clickable */}
-        <div className="mt-4 text-[#8B8F96] text-xs opacity-0 group-hover:opacity-100 transition">
-          Click to read →
-        </div>
+        <div className="mt-4 text-[#8B8F96] text-xs opacity-0 group-hover:opacity-100 transition">Click to read</div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 };
 

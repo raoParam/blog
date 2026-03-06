@@ -14,6 +14,8 @@ import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/feed/HomePage";
 import ProfilePage from "../pages/user/ProfilePage";
+import UserProfilePage from "../pages/user/UserProfilePage";
+import WritePage from "../pages/write/WritePage";
 
 const AppRoutes = () => {
   const { checkAuth } = useAuth();
@@ -70,6 +72,16 @@ const AppRoutes = () => {
       <Route path="/profile" element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile/:username" element={
+        <ProtectedRoute>
+          <UserProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/write" element={
+        <ProtectedRoute>
+          <WritePage />
         </ProtectedRoute>
       } />
     </Routes>

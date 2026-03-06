@@ -16,13 +16,25 @@ export const profileService = {
     return response.data;
   },
 
-  getFollowers: async ({ page = 1, limit = 20 } = {}) => {
-    const response = await axiosInstance.get("/user/followers", { params: { page, limit } });
+  getFollowers: async ({ page = 1, limit = 20, userId } = {}) => {
+    const response = await axiosInstance.get("/user/followers", { params: { page, limit, userId } });
     return response.data;
   },
 
-  getFollowing: async ({ page = 1, limit = 20 } = {}) => {
-    const response = await axiosInstance.get("/user/following", { params: { page, limit } });
+  getFollowing: async ({ page = 1, limit = 20, userId } = {}) => {
+    const response = await axiosInstance.get("/user/following", { params: { page, limit, userId } });
+    return response.data;
+  },
+
+  getUserProfile: async (username) => {
+    const response = await axiosInstance.get(`/user/${encodeURIComponent(username)}`);
+    return response.data;
+  },
+
+  getUserPosts: async (username, { page = 1, limit = 20 } = {}) => {
+    const response = await axiosInstance.get(`/user/${encodeURIComponent(username)}/posts`, {
+      params: { page, limit },
+    });
     return response.data;
   },
 

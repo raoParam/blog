@@ -182,7 +182,7 @@ export async function unfollowUser(req, res, next) {
 
 export async function getFollowers(req, res, next) {
     try {
-        const userId = req.user._id
+        const userId = req.query.userId || req.user._id
         const page = parseInt(req.query.page) || 1
         const limit = parseInt(req.query.limit) || 20
 
@@ -201,7 +201,7 @@ export async function getFollowers(req, res, next) {
 
 export async function getFollowing(req, res, next) {
     try {
-        const userId = req.user._id
+        const userId = req.query.userId || req.user._id
         const page = parseInt(req.query.page) || 1
         const limit = parseInt(req.query.limit) || 20
 
