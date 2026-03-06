@@ -13,7 +13,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'flagged/avatars',
+        folder: 'flagger/avatars',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
         transformation: [{ width: 500, height: 500, crop: 'limit' }],
         public_id: (req, file) => {

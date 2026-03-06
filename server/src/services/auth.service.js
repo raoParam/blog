@@ -204,7 +204,7 @@ export async function createUser(userData) {
         password: hashedPassword,
         role: 'user',
         avatar: '',
-        bio: 'Hey there! I am using Flagged',
+        bio: 'Hey there! I am using Flagger',
         isEmailVerified: false,  
         isVerifiedBadge: false,
         accountStatus: 'active',

@@ -7,7 +7,6 @@ import { feedService } from "../../services/feed.service";
 import { profileService } from "../../services/profile.service";
 import HomeNavbar from "../../components/feed/HomeNavbar";
 import HomeSidebar from "../../components/feed/HomeSidebar";
-import LoaderRing from "../../components/common/LoaderRing";
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "";
@@ -15,6 +14,32 @@ const formatDate = (dateValue) => {
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };
+
+const BlogPageSkeleton = () => (
+  <div className="space-y-5 animate-pulse">
+    <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-5">
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 rounded-full bg-[#171920]" />
+        <div className="space-y-2">
+          <div className="h-3 w-28 rounded bg-[#171920]" />
+          <div className="h-3 w-20 rounded bg-[#171920]" />
+        </div>
+      </div>
+      <div className="mt-4 h-7 w-3/4 rounded bg-[#171920]" />
+    </section>
+
+    <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
+      <div className="h-[220px] rounded-xl bg-[#171920] sm:h-[320px] lg:h-[420px]" />
+    </section>
+
+    <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-6">
+      <div className="h-4 w-full rounded bg-[#171920]" />
+      <div className="mt-3 h-4 w-full rounded bg-[#171920]" />
+      <div className="mt-3 h-4 w-5/6 rounded bg-[#171920]" />
+      <div className="mt-3 h-4 w-4/6 rounded bg-[#171920]" />
+    </section>
+  </div>
+);
 
 const BlogPage = () => {
   const { postId } = useParams();
@@ -361,9 +386,7 @@ const BlogPage = () => {
 
       <main className="mx-auto w-full max-w-[980px] px-4 py-6 sm:px-6">
         {loading ? (
-          <div className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-8 text-center text-[#BFC0C5]">
-            <LoaderRing className="mx-auto" />
-          </div>
+          <BlogPageSkeleton />
         ) : error ? (
           <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-8 text-center text-red-300">{error}</div>
         ) : !post ? (

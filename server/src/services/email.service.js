@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
 export const sendOTPEmail = async (emailId, otp, type) => {
     // Set email subject based on type
     const subject = type === 'email_verification' 
-        ? 'Verify Your Email - Flagged' 
-        : 'Reset Your Password - Flagged'  
+        ? 'Verify Your Email - Flagger' 
+        : 'Reset Your Password - Flagger'  
 
     const message = type === 'email_verification'
         ? `Your OTP for email verification is: ${otp}. It expires in 5 minutes.`
@@ -25,7 +25,7 @@ export const sendOTPEmail = async (emailId, otp, type) => {
     const htmlTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #3B82F6; margin: 0;">Flagged</h1>
+                <h1 style="color: #3B82F6; margin: 0;">Flagger</h1>
                 <p style="color: #666; margin: 5px 0 0;">Blog Platform</p>
             </div>
             
@@ -39,13 +39,13 @@ export const sendOTPEmail = async (emailId, otp, type) => {
             
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
                 <p>If you didn't request this, please ignore this email.</p>
-                <p>&copy; ${new Date().getFullYear()} Flagged. All rights reserved.</p>
+                <p>&copy; ${new Date().getFullYear()} Flagger. All rights reserved.</p>
             </div>
         </div>
     `
 
     const mailOptions = {
-        from: `"Flagged" <${process.env.EMAIL_USER}>`,
+        from: `"Flagger" <${process.env.EMAIL_USER}>`,
         to: emailId,
         subject: subject,
         text: message,

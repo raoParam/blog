@@ -104,9 +104,12 @@ export async function updateUserProfile(userId, updates) {
             // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567/folder/public_id.jpg
             const urlParts = user.avatar.split('/')
             const publicIdWithExtension = urlParts[urlParts.length - 1]
-            const publicId = `flagged/avatars/${publicIdWithExtension.split('.')[0]}`
-            
-            await cloudinary.uploader.destroy(publicId)
+            const imageId = publicIdWithExtension.split('.')[0]
+            const currentPublicId = `flagger/avatars/${imageId}`
+            const legacyPublicId = `flagged/avatars/${imageId}`
+
+            await cloudinary.uploader.destroy(currentPublicId)
+            await cloudinary.uploader.destroy(legacyPublicId)
             console.log('Old avatar deleted from Cloudinary')
         } catch (error) {
             console.error('Error deleting old avatar:', error)

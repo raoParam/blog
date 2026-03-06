@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Flag, LogOut, Search, ChevronDown, Menu, User, PenSquare, ShieldCheck } from "lucide-react";
+import { LogOut, Search, ChevronDown, Menu, User, PenSquare, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import BrandMark from "../common/BrandMark";
 
 const HomeNavbar = ({ user, onLogout, onToggleMobileMenu, onWrite }) => {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -36,9 +37,7 @@ const HomeNavbar = ({ user, onLogout, onToggleMobileMenu, onWrite }) => {
         </button>
 
         <Link to="/home" className="flex items-center gap-1.5">
-          <span className="leading-none text-[#6F98E8]">
-            <Flag size={17} />
-          </span>
+          <BrandMark size="sm" />
           <span className="text-lg font-semibold tracking-wide text-[#E8ECF4]">Flagger</span>
         </Link>
 

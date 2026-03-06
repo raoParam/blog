@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+ï»¿import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, Heart, MessageCircle, ShieldCheck, CircleUserRound } from "lucide-react";
 
 const formatRelativeTime = (dateString) => {
@@ -20,6 +20,8 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
   const navigate = useNavigate();
   const isAnonymous = !post.author;
   const authorName = !isAnonymous && post.author.userName ? post.author.userName : "Anonymous";
+  const safeAuthorName = String(authorName || "Anonymous").trim() || "Anonymous";
+  const relativeTime = formatRelativeTime(post.createdAt);
   const authorAvatar = !isAnonymous && post.author.avatar ? post.author.avatar.trim() : "";
   const isAuthorVerified = !isAnonymous && Boolean(post.author?.isVerified || post.author?.isVerifiedBadge);
   const previewText =
@@ -35,10 +37,10 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
   };
 
   const handleAuthorClick = (event) => {
-    if (isAnonymous || !authorName) return;
+    if (isAnonymous || !safeAuthorName) return;
     event.preventDefault();
     event.stopPropagation();
-    navigate(`/profile/${authorName}`);
+    navigate(`/profile/${safeAuthorName}`);
   };
 
   return (
@@ -49,7 +51,7 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
             <div className="flex items-center gap-1 text-sm text-[#BBC8DD]">
               <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1A1F2C] bg-[#04050C] text-[#E9EFF9]">
                 {authorAvatar ? (
-                  <img src={authorAvatar} alt={authorName} className="h-full w-full rounded-full object-cover" />
+                  <img src={authorAvatar} alt={safeAuthorName} className="h-full w-full rounded-full object-cover" />
                 ) : (
                   <CircleUserRound size={16} />
                 )}
@@ -58,13 +60,18 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
                 type="button"
                 onClick={handleAuthorClick}
                 disabled={isAnonymous}
-                className={`font-semibold ${isAnonymous ? "text-[#D9E1F2]" : "text-[#D9E1F2] hover:text-[#8FB3FF]"}`}
+                className={`max-w-[180px] truncate font-semibold ${isAnonymous ? "text-[#D9E1F2]" : "text-[#D9E1F2] hover:text-[#8FB3FF]"}`}
+                title={`@${safeAuthorName}`}
               >
-                @{authorName}
+                @{safeAuthorName}
               </button>
               {isAuthorVerified && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
-              <span className="text-[#8A93A6]">·</span>
-              <span className="text-[#8A93A6]">{formatRelativeTime(post.createdAt)}</span>
+              {relativeTime && (
+                <>
+                  <span className="text-[#8A93A6]">.</span>
+                  <span className="text-[#8A93A6]">{relativeTime}</span>
+                </>
+              )}
             </div>
 
             <h2 className="mt-2 text-lg font-semibold text-[#F7FAFF] line-clamp-2">{post.title}</h2>

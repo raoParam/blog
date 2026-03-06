@@ -52,7 +52,7 @@ passport.use(new GoogleStrategy({
             avatar: profile.photos[0]?.value || '',
             isEmailVerified: true, // Google emails are pre-verified
             role: 'user',
-            bio: 'Hey there! I am using Flagged',
+            bio: 'Hey there! I am using Flagger',
             accountStatus: 'active',
             followers: [],
             following: [],

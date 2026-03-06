@@ -49,7 +49,7 @@ const userSchema = new Schema({
         type: String,
         minLength: 3,
         maxLength: 500,
-        default: 'Hey there! I am using Flagged'
+        default: 'Hey there! I am using Flagger'
     },
     followers: [
         { type: Schema.Types.ObjectId, ref: 'User' }
