@@ -2,10 +2,18 @@ import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import User from '../models/user.js'
 
+const fallbackBackendUrl = 'https://blog-6isi.onrender.com'
+const backendUrl = process.env.BACKEND_URL || fallbackBackendUrl
+const callbackFromEnv = process.env.GOOGLE_CALLBACK_URL
+const callbackURL =
+  process.env.NODE_ENV === 'production' && callbackFromEnv?.includes('localhost')
+    ? `${backendUrl}/api/auth/google/callback`
+    : callbackFromEnv || `${backendUrl}/api/auth/google/callback`
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL
+    callbackURL
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         // Check if user exists with this googleId

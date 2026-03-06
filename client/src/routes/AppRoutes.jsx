@@ -12,6 +12,7 @@ import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import OAuthCallbackPage from "../pages/auth/OAuthCallbackPage";
 import HomePage from "../pages/feed/HomePage";
 import BlogPage from "../pages/feed/BlogPage";
 import ProfilePage from "../pages/user/ProfilePage";
@@ -63,6 +64,7 @@ const AppRoutes = () => {
           <VerifyEmailPage />
         </PublicOnlyRoute>
       } />
+      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
       {/* Protected Routes - accessible only when logged in */}
       <Route path="/home" element={

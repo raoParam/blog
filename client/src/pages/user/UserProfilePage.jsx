@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import FeedPostCard from "../../components/feed/FeedPostCard";
 import HomeNavbar from "../../components/feed/HomeNavbar";
 import HomeSidebar from "../../components/feed/HomeSidebar";
+import LoaderRing from "../../components/common/LoaderRing";
 import { profileService } from "../../services/profile.service";
 
 const formatJoinedDate = (dateValue) => {
@@ -75,6 +76,33 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
     </div>
   );
 };
+
+const UserProfileSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="rounded-3xl border border-[#10131B] bg-[#020307] p-5 sm:p-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="h-24 w-24 rounded-full bg-[#111827]" />
+        <div className="flex flex-1 flex-wrap gap-3">
+          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
+          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
+          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
+        </div>
+      </div>
+      <div className="mt-5 space-y-2">
+        <div className="h-4 w-32 rounded bg-[#111827]" />
+        <div className="h-5 w-48 rounded bg-[#111827]" />
+        <div className="h-3 w-28 rounded bg-[#111827]" />
+      </div>
+    </div>
+    {[1, 2].map((item) => (
+      <div key={item} className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-5">
+        <div className="h-4 w-1/3 rounded bg-[#111827]" />
+        <div className="mt-3 h-3 w-full rounded bg-[#111827]" />
+        <div className="mt-2 h-3 w-5/6 rounded bg-[#111827]" />
+      </div>
+    ))}
+  </div>
+);
 
 const UserProfilePage = () => {
   const { username } = useParams();
@@ -383,9 +411,7 @@ const UserProfilePage = () => {
 
           <div className="mt-5">
             {loadingPage ? (
-              <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-8 text-center text-sm text-[#8C99B3]">
-                Loading profile...
-              </div>
+              <UserProfileSkeleton />
             ) : activeTab === "posts" ? (
               posts.length ? (
                 <div className="space-y-3">
@@ -434,7 +460,9 @@ const UserProfilePage = () => {
             </div>
 
             {listModal.loading ? (
-              <p className="text-sm text-[#9EA9C1]">Loading...</p>
+              <div className="flex items-center justify-center py-4">
+                <LoaderRing />
+              </div>
             ) : listModal.error ? (
               <p className="text-sm text-red-300">{listModal.error}</p>
             ) : listModal.users.length === 0 ? (

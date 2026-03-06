@@ -9,6 +9,7 @@ import FeedTabs from "../../components/feed/FeedTabs";
 import FeedPostCard from "../../components/feed/FeedPostCard";
 import FeedSkeleton from "../../components/feed/FeedSkeleton";
 import Footer from "../../components/layout/Footer";
+import LoaderRing from "../../components/common/LoaderRing";
 
 const FEED_LIMIT = 10;
 
@@ -295,7 +296,7 @@ const HomePage = () => {
 
                 {loadingMore && (
                   <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
-                    Loading more...
+                    <LoaderRing className="mx-auto" />
                   </div>
                 )}
 

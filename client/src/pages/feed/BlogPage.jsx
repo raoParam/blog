@@ -7,6 +7,7 @@ import { feedService } from "../../services/feed.service";
 import { profileService } from "../../services/profile.service";
 import HomeNavbar from "../../components/feed/HomeNavbar";
 import HomeSidebar from "../../components/feed/HomeSidebar";
+import LoaderRing from "../../components/common/LoaderRing";
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "";
@@ -360,7 +361,9 @@ const BlogPage = () => {
 
       <main className="mx-auto w-full max-w-[980px] px-4 py-6 sm:px-6">
         {loading ? (
-          <div className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-8 text-center text-[#BFC0C5]">Loading blog...</div>
+          <div className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-8 text-center text-[#BFC0C5]">
+            <LoaderRing className="mx-auto" />
+          </div>
         ) : error ? (
           <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-8 text-center text-red-300">{error}</div>
         ) : !post ? (

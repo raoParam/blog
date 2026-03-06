@@ -1,6 +1,13 @@
 import passport from 'passport'
 import { handleOAuthLogin } from '../services/oauth.service.js'
 
+const fallbackClientUrl = 'https://flagger-fawn.vercel.app'
+const clientUrlFromEnv = process.env.CLIENT_URL
+const clientUrl =
+  process.env.NODE_ENV === 'production' && clientUrlFromEnv?.includes('localhost')
+    ? fallbackClientUrl
+    : clientUrlFromEnv || fallbackClientUrl
+
 // Initiate Google OAuth login
 export const googleAuth = passport.authenticate('google', {
     scope: ['profile', 'email']
@@ -11,7 +18,7 @@ export const googleAuthCallback = (req, res, next) => {
     passport.authenticate('google', { session: false }, async (err, user, info) => {
         try {
             if (err || !user) {
-                return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`)
+                return res.redirect(`${clientUrl}/login?error=oauth_failed`)
             }
 
             // Get device info
@@ -30,7 +37,7 @@ export const googleAuthCallback = (req, res, next) => {
             })
 
             // Redirect to frontend with tokens
-            const redirectUrl = `${process.env.CLIENT_URL}/oauth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
+            const redirectUrl = `${clientUrl}/oauth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
             res.redirect(redirectUrl)
 
         } catch (error) {
