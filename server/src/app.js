@@ -1,7 +1,7 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
-import cookieParser from 'cookie-parser' // Add this import
+import cookieParser from 'cookie-parser'
 import connectDB from './config/db.js'
 import authRouter from './routes/auth.routes.js'
 import userRouter from './routes/user.routes.js'
@@ -13,14 +13,16 @@ import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
 import compression from 'compression'
 import morgan from 'morgan'
-import passport from './config/passport.js'  
+import passport from './config/passport.js'
 
 dotenv.config()
 
 const app = express()
+const PORT = process.env.PORT || 5000
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-app.use(cookieParser()) 
+app.use(cookieParser())
 app.use(passport.initialize())
 
 if (process.env.NODE_ENV === 'development') {
@@ -28,8 +30,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const allowedOrigins = [
-  process.env.CLIENT_ORIGIN || 'https://flagger-fawn.vercel.app',
-]
+  'http://localhost:5173',
+  'https://flagger-fawn.vercel.app',
+  process.env.CLIENT_ORIGIN,
+  process.env.VERCEL_FRONTEND_URL,
+].filter(Boolean)
 
 app.use(
   cors({
@@ -41,7 +46,7 @@ app.use(
       return callback(new Error('Not allowed by CORS'))
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    credentials: true, 
+    credentials: true,
   }),
 )
 
@@ -51,6 +56,10 @@ app.use('/api/user', userRouter)
 app.use('/api/post', postRouter)
 app.use('/api/public', publicRouter)
 app.use('/api/admin', adminRouter)
+
+app.get('/', (req, res) => {
+  res.send('Backend running')
+})
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' })
@@ -65,10 +74,12 @@ app.use(/.*/, (req, res) => {
 
 app.use(errorHandler)
 
+let server
+
 connectDB()
   .then(() => {
-    const server = app.listen(process.env.PORT,() => {
-      console.log(`Server running on port ${process.env.PORT}`)
+    server = app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`)
     })
   })
   .catch((err) => {
@@ -77,8 +88,13 @@ connectDB()
 
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, closing gracefully')
+  if (!server) {
+    process.exit(0)
+    return
+  }
+
   server.close(() => {
-    mongoose.connection.close()
     console.log('Process terminated')
+    process.exit(0)
   })
 })

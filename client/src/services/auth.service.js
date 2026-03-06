@@ -1,6 +1,5 @@
 import axiosInstance from "./axiosInstance";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import API_BASE_URL from "../config/api";
 
 export const authService = {
   login: async ({ emailId, password }) => {
@@ -52,5 +51,5 @@ export const authService = {
     return response.data;
   },
 
-  getGoogleAuthUrl: () => `${API_URL}/auth/google`,
+  getGoogleAuthUrl: () => `${API_BASE_URL}/api/auth/google`,
 };
