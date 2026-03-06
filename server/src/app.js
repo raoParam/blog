@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const allowedOrigins = [
-  process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  process.env.CLIENT_ORIGIN || 'https://flagger-fawn.vercel.app',
 ]
 
 app.use(
@@ -67,7 +67,7 @@ app.use(errorHandler)
 
 connectDB()
   .then(() => {
-    const server = app.listen(process.env.PORT, "0.0.0.0",() => {
+    const server = app.listen(process.env.PORT,() => {
       console.log(`Server running on port ${process.env.PORT}`)
     })
   })
