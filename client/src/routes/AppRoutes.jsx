@@ -13,6 +13,7 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/feed/HomePage";
+import BlogPage from "../pages/feed/BlogPage";
 import ProfilePage from "../pages/user/ProfilePage";
 import UserProfilePage from "../pages/user/UserProfilePage";
 import WritePage from "../pages/write/WritePage";
@@ -67,6 +68,11 @@ const AppRoutes = () => {
       <Route path="/home" element={
         <ProtectedRoute>
           <HomePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/blog/:postId" element={
+        <ProtectedRoute>
+          <BlogPage />
         </ProtectedRoute>
       } />
       <Route path="/profile" element={

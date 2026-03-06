@@ -48,6 +48,31 @@ export const feedService = {
     return response.data;
   },
 
+  getPostById: async (postId) => {
+    const response = await axiosInstance.get(`/post/${postId}`);
+    return response.data;
+  },
+
+  getComments: async (postId, { page = 1, limit = 50 } = {}) => {
+    const response = await axiosInstance.get(`/post/${postId}/comments`, { params: { page, limit } });
+    return response.data;
+  },
+
+  addComment: async (postId, content) => {
+    const response = await axiosInstance.post(`/post/${postId}/comments`, { content });
+    return response.data;
+  },
+
+  updatePost: async (postId, { title, content, excerpt }) => {
+    const response = await axiosInstance.put(`/post/${postId}`, { title, content, excerpt });
+    return response.data;
+  },
+
+  deletePost: async (postId) => {
+    const response = await axiosInstance.delete(`/post/${postId}`);
+    return response.data;
+  },
+
   createPost: async ({ title, excerpt, content, visibility = "public", images = [] }) => {
     const formData = new FormData();
     formData.append("title", title);
