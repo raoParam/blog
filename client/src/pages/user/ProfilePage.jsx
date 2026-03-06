@@ -10,6 +10,8 @@ import HomeSidebar from "../../components/feed/HomeSidebar";
 import LoaderRing from "../../components/common/LoaderRing";
 import { profileService } from "../../services/profile.service";
 
+const NAME_REGEX = /^[A-Za-z_]+$/;
+
 const formatJoinedDate = (dateValue) => {
   if (!dateValue) return "";
   const date = new Date(dateValue);
@@ -287,10 +289,25 @@ const ProfilePage = () => {
     setSavingProfile(true);
     setEditError("");
 
+    const normalizedFirstName = (editForm.firstName || "").trim();
+    const normalizedLastName = (editForm.lastName || "").trim();
+
+    if (normalizedFirstName && !NAME_REGEX.test(normalizedFirstName)) {
+      setSavingProfile(false);
+      setEditError("First name can only contain letters (a-z, A-Z) and underscore (_).");
+      return;
+    }
+
+    if (normalizedLastName && !NAME_REGEX.test(normalizedLastName)) {
+      setSavingProfile(false);
+      setEditError("Last name can only contain letters (a-z, A-Z) and underscore (_).");
+      return;
+    }
+
     try {
       const response = await profileService.updateProfile({
-        firstName: editForm.firstName,
-        lastName: editForm.lastName,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
         bio: editForm.bio,
         avatarFile: editForm.avatarFile,
       });

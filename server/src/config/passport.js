@@ -2,6 +2,59 @@ import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import User from '../models/user.js'
 
+const USERNAME_ALLOWED_REGEX = /^[a-z_]+$/
+
+const randomLetters = (length = 4) => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
+}
+
+const buildOauthUsername = async (profile) => {
+    const emailPrefix = profile?.emails?.[0]?.value?.split('@')?.[0] || ''
+    const givenName = profile?.name?.givenName || ''
+
+    let base = (emailPrefix || givenName)
+        .toLowerCase()
+        .replace(/[^a-z_]/g, '')
+
+    if (base.length < 5) {
+        base = `${base}_user`
+    }
+    if (!base) {
+        base = 'user_name'
+    }
+    base = base.slice(0, 40)
+
+    if (!USERNAME_ALLOWED_REGEX.test(base)) {
+        base = 'user_name'
+    }
+
+    let candidate = base
+    let exists = await User.exists({ userName: candidate })
+    let attempts = 0
+
+    while (exists && attempts < 20) {
+        const suffix = `_${randomLetters(4)}`
+        const maxBaseLen = 40 - suffix.length
+        candidate = `${base.slice(0, maxBaseLen)}${suffix}`
+        exists = await User.exists({ userName: candidate })
+        attempts += 1
+    }
+
+    if (exists) {
+        const fallbackSuffix = `_${randomLetters(6)}`
+        const maxBaseLen = 40 - fallbackSuffix.length
+        candidate = `${'username'.slice(0, maxBaseLen)}${fallbackSuffix}`
+    }
+
+    return candidate
+}
+
+const sanitizeName = (value = '') => {
+    const cleaned = value.trim().replace(/[^A-Za-z_]/g, '')
+    return cleaned.length >= 3 ? cleaned : undefined
+}
+
 const fallbackBackendUrl = 'https://blog-6isi.onrender.com'
 const backendUrlFromEnv = process.env.BACKEND_URL?.trim()
 const backendUrl =
@@ -42,12 +95,14 @@ passport.use(new GoogleStrategy({
             return done(null, user)
         }
 
+        const generatedUserName = await buildOauthUsername(profile)
+
         // Create new user
         const newUser = await User.create({
-            firstName: profile.name.givenName,
-            lastName: profile.name.familyName,
+            firstName: sanitizeName(profile.name.givenName),
+            lastName: sanitizeName(profile.name.familyName),
             emailId: profile.emails[0].value,
-            userName: profile.emails[0].value.split('@')[0] + '_' + Math.floor(Math.random() * 1000),
+            userName: generatedUserName,
             googleId: profile.id,
             avatar: profile.photos[0]?.value || '',
             isEmailVerified: true, // Google emails are pre-verified

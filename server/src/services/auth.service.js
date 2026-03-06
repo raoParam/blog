@@ -9,6 +9,7 @@ import { sendOTPEmail } from './email.service.js'
 
 const RESEND_COOLDOWN_SECONDS = 30
 const MAX_RESEND_ATTEMPTS = 3
+const NAME_REGEX = /^[A-Za-z_]+$/
 
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
@@ -169,6 +170,26 @@ export async function logoutUser(userId, refreshToken) {
 export async function createUser(userData) {
     const normalizedEmail = userData.emailId?.trim().toLowerCase()
     const normalizedUserName = userData.userName?.trim()
+    const normalizedFirstName = userData.firstName?.trim()
+    const normalizedLastName = userData.lastName?.trim()
+
+    if (!NAME_REGEX.test(normalizedUserName)) {
+        const err = new Error('Username can only contain letters (a-z, A-Z) and underscore (_)')
+        err.statusCode = 400
+        throw err
+    }
+
+    if (normalizedFirstName && !NAME_REGEX.test(normalizedFirstName)) {
+        const err = new Error('First name can only contain letters (a-z, A-Z) and underscore (_)')
+        err.statusCode = 400
+        throw err
+    }
+
+    if (normalizedLastName && !NAME_REGEX.test(normalizedLastName)) {
+        const err = new Error('Last name can only contain letters (a-z, A-Z) and underscore (_)')
+        err.statusCode = 400
+        throw err
+    }
 
     // Check if user exists
     const existingUser = await User.findOne({
@@ -197,8 +218,8 @@ export async function createUser(userData) {
 
     // Create user with isEmailVerified: false
     const user = await User.create({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
         emailId: normalizedEmail,
         userName: normalizedUserName,
         password: hashedPassword,

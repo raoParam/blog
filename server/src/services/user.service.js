@@ -2,6 +2,8 @@ import Post from '../models/post.js'
 import User from '../models/user.js'
 import { cloudinary } from '../middleware/upload.js'
 
+const NAME_REGEX = /^[A-Za-z_]+$/
+
 export async function fetchPosts(userId, page = 1, limit = 10) {
     const blogs = await Post.find({ 
         author: userId,
@@ -115,6 +117,26 @@ export async function updateUserProfile(userId, updates) {
             console.error('Error deleting old avatar:', error)
             // Continue with update even if delete fails
         }
+    }
+
+    if (updates.firstName !== undefined) {
+        const firstName = updates.firstName.trim()
+        if (firstName && !NAME_REGEX.test(firstName)) {
+            const err = new Error('First name can only contain letters (a-z, A-Z) and underscore (_)')
+            err.statusCode = 400
+            throw err
+        }
+        updates.firstName = firstName
+    }
+
+    if (updates.lastName !== undefined) {
+        const lastName = updates.lastName.trim()
+        if (lastName && !NAME_REGEX.test(lastName)) {
+            const err = new Error('Last name can only contain letters (a-z, A-Z) and underscore (_)')
+            err.statusCode = 400
+            throw err
+        }
+        updates.lastName = lastName
     }
 
     // Update allowed fields

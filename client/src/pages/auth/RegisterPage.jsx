@@ -19,11 +19,14 @@ const RegisterPage = () => {
   const validate = () => {
     const nextErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const nameRegex = /^[A-Za-z_]+$/;
 
     if (!formData.userName.trim()) {
       nextErrors.userName = "Username is required";
     } else if (formData.userName.trim().length < 5 || formData.userName.trim().length > 40) {
       nextErrors.userName = "Username must be 5 to 40 characters";
+    } else if (!nameRegex.test(formData.userName.trim())) {
+      nextErrors.userName = "Use only letters (a-z, A-Z) and underscore (_)";
     }
 
     if (!formData.emailId.trim()) {

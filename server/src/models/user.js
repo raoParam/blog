@@ -6,12 +6,14 @@ const userSchema = new Schema({
     firstName: {
         type: String,
         minLength: 3,
-        maxLength: 40
+        maxLength: 40,
+        match: /^[A-Za-z_]+$/
     },
     lastName: {
         type: String,
         minLength: 3,
-        maxLength: 40
+        maxLength: 40,
+        match: /^[A-Za-z_]+$/
     },
     emailId: {
         type: String,
@@ -28,7 +30,8 @@ const userSchema = new Schema({
         lowercase: true,
         trim: true,
         minLength: 5,
-        maxLength: 40
+        maxLength: 40,
+        match: /^[a-z_]+$/
     },
     password: {
         type: String,

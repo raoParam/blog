@@ -55,9 +55,15 @@ export const profileService = {
 
   updateProfile: async ({ firstName, lastName, bio, avatarFile }) => {
     const formData = new FormData();
-    if (typeof firstName === "string") formData.append("firstName", firstName);
-    if (typeof lastName === "string") formData.append("lastName", lastName);
-    if (typeof bio === "string") formData.append("bio", bio);
+    if (typeof firstName === "string" && firstName.trim()) {
+      formData.append("firstName", firstName.trim());
+    }
+    if (typeof lastName === "string" && lastName.trim()) {
+      formData.append("lastName", lastName.trim());
+    }
+    if (typeof bio === "string" && bio.trim()) {
+      formData.append("bio", bio.trim());
+    }
     if (avatarFile) formData.append("avatar", avatarFile);
 
     const response = await axiosInstance.patch("/user/profile", formData, {

@@ -1,5 +1,7 @@
 import validator from 'validator'
 
+const NAME_REGEX = /^[A-Za-z_]+$/
+
 export default function validate(userInfo) {
     const requiredFields = ['userName', 'emailId', 'password']
 
@@ -14,9 +16,22 @@ export default function validate(userInfo) {
     }
 
     const { userName, emailId, password } = userInfo
+    const trimmedUserName = userName?.trim()
 
-    if (userName.length < 5 || userName.length > 40) {
-        const err = new Error('Username must be 5–40 characters long')
+    if (!trimmedUserName) {
+        const err = new Error('Username is required')
+        err.statusCode = 400
+        throw err
+    }
+
+    if (trimmedUserName.length < 5 || trimmedUserName.length > 40) {
+        const err = new Error('Username must be 5-40 characters long')
+        err.statusCode = 400
+        throw err
+    }
+
+    if (!NAME_REGEX.test(trimmedUserName)) {
+        const err = new Error('Username can only contain letters (a-z, A-Z) and underscore (_)')
         err.statusCode = 400
         throw err
     }
