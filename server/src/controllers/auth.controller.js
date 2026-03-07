@@ -11,8 +11,7 @@ export async function register(req, res, next) {
             user: {
                 _id: user._id,
                 userName: user.userName,
-                emailId: user.emailId,
-                isEmailVerified: user.isEmailVerified
+                emailId: user.emailId
             },
             isNewUser,
             Status: "success",

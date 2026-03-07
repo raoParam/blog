@@ -64,10 +64,6 @@ const userSchema = new Schema({
         { type: Schema.Types.ObjectId, ref: 'Post' }
     ],
     isVerifiedBadge: { type: Boolean, default: false },
-    isEmailVerified: {
-        type: Boolean,
-        default: false
-    },
     refreshTokenVersion: {
         type: Number,
         default: 0

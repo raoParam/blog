@@ -15,7 +15,6 @@ export const handleOAuthLogin = async (user, deviceInfo = '', ipAddress = '') =>
         lastName: user.lastName,
         avatar: user.avatar,
         bio: user.bio,
-        isEmailVerified: user.isEmailVerified,
         isVerifiedBadge: user.isVerifiedBadge,
         accountStatus: user.accountStatus,
         followers: user.followers,

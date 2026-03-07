@@ -57,7 +57,7 @@ const RegisterPage = () => {
 
     try {
       setSubmitting(true);
-      const response = await authService.register({
+      await authService.register({
         userName: formData.userName.trim(),
         emailId: formData.emailId.trim(),
         password: formData.password,
@@ -67,9 +67,7 @@ const RegisterPage = () => {
         "success_popup",
         JSON.stringify({
           title: "Registration Successful",
-          message:
-            response?.Message ||
-            "Your account has been created. Please sign in to continue.",
+          message: "Your account has been created. Please sign in to continue.",
         })
       );
       navigate("/login", { replace: true });
