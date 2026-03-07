@@ -21,6 +21,8 @@ export const sendOTPEmail = async (emailId, otp, type) => {
         ? `Your OTP for email verification is: ${otp}. It expires in 5 minutes.`
         : `Your OTP for password reset is: ${otp}. It expires in 5 minutes.`  
 
+    console.log(process.env.EMAIL_USER)
+    console.log(process.env.EMAIL_PASS)
     // HTML template for better looking email
     const htmlTemplate = `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">

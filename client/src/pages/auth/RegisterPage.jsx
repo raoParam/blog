@@ -20,6 +20,8 @@ const RegisterPage = () => {
     const nextErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const nameRegex = /^[A-Za-z_]+$/;
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d])[^\s]{8,}$/;
 
     if (!formData.userName.trim()) {
       nextErrors.userName = "Username is required";
@@ -37,6 +39,9 @@ const RegisterPage = () => {
 
     if (!formData.password) {
       nextErrors.password = "Password is required";
+    } else if (!strongPasswordRegex.test(formData.password)) {
+      nextErrors.password =
+        "Use at least 8 chars with uppercase, lowercase, number and symbol";
     }
 
     setErrors(nextErrors);
@@ -67,7 +72,10 @@ const RegisterPage = () => {
       );
       navigate(`/verify-email?emailId=${encodeURIComponent(formData.emailId.trim())}`);
     } catch (err) {
-      const message = err.response?.data?.message || "Unable to create account";
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.Message ||
+        "Unable to create account";
       setServerError(message);
     } finally {
       setSubmitting(false);
@@ -91,10 +99,14 @@ const RegisterPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]">
+            <label
+              htmlFor="register-username"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+            >
               Username
             </label>
             <input
+              id="register-username"
               type="text"
               value={formData.userName}
               onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
@@ -104,10 +116,14 @@ const RegisterPage = () => {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]">
+            <label
+              htmlFor="register-email"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+            >
               Email
             </label>
             <input
+              id="register-email"
               type="email"
               value={formData.emailId}
               onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
@@ -117,11 +133,15 @@ const RegisterPage = () => {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]">
+            <label
+              htmlFor="register-password"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+            >
               Password
             </label>
             <div className="relative">
               <input
+                id="register-password"
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -136,6 +156,11 @@ const RegisterPage = () => {
               </button>
             </div>
             {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+            {!errors.password && (
+              <p className="text-[#8F8F8F] text-xs mt-1">
+                Min 8 chars with uppercase, lowercase, number, and symbol.
+              </p>
+            )}
           </div>
 
           {serverError && (
