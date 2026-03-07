@@ -7,14 +7,16 @@ dns.setDefaultResultOrder('ipv4first')
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port : 587,
-    secure : false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    family : 4
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback)
+  }
 })
 
 export const sendOTPEmail = async (emailId, otp, type) => {
