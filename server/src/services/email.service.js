@@ -1,71 +1,55 @@
 import dotenv from 'dotenv'
+import { Resend } from 'resend'
+
 dotenv.config()
-import dns from 'dns'
-import nodemailer from 'nodemailer'
 
-dns.setDefaultResultOrder('ipv4first')
+const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback)
-  }
-})
+export const sendOTPEmail = async (to, otp, type = 'email_verification') => {
+  const isPasswordReset = type === 'password_reset'
 
-export const sendOTPEmail = async (emailId, otp, type) => {
-    // Set email subject based on type
-    const subject = type === 'email_verification' 
-        ? 'Verify Your Email - Flagger' 
-        : 'Reset Your Password - Flagger'  
+  const subject = isPasswordReset
+    ? 'Reset Your Password - Flagger'
+    : 'Verify Your Email - Flagger'
 
-    const message = type === 'email_verification'
-        ? `Your OTP for email verification is: ${otp}. It expires in 5 minutes.`
-        : `Your OTP for password reset is: ${otp}. It expires in 5 minutes.`  
+  const heading = isPasswordReset ? 'Password Reset' : 'Email Verification'
+  const body = isPasswordReset
+    ? 'Use the OTP below to reset your password:'
+    : 'Use the OTP below to complete your registration:'
 
-    // HTML template for better looking email
-    const htmlTemplate = `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #3B82F6; margin: 0;">Flagger</h1>
-                <p style="color: #666; margin: 5px 0 0;">Blog Platform</p>
-            </div>
-            
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
-                <h2 style="color: #333; margin: 0 0 10px 0;">Your OTP Code</h2>
-                <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #3B82F6; margin: 20px 0; padding: 10px; background: white; border-radius: 8px;">
-                    ${otp}
-                </div>
-                <p style="color: #666; font-size: 14px;">This code expires in <strong>10 minutes</strong></p>
-            </div>
-            
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
-                <p>If you didn't request this, please ignore this email.</p>
-                <p>&copy; ${new Date().getFullYear()} Flagger. All rights reserved.</p>
-            </div>
+  const { data, error } = await resend.emails.send({
+    from: 'onboarding@resend.dev',
+    to,
+    subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #3B82F6; margin: 0;">Flagger</h1>
+          <p style="color: #666; margin: 5px 0 0;">Blog Platform</p>
         </div>
-    `
 
-    const mailOptions = {
-        from: `"Flagger" <${process.env.EMAIL_USER}>`,
-        to: emailId,
-        subject: subject,
-        text: message,
-        html: htmlTemplate
-    }
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
+          <h2 style="color: #333; margin: 0 0 10px 0;">${heading}</h2>
+          <p style="color: #666;">${body}</p>
+          <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #3B82F6; margin: 20px 0; padding: 10px; background: white; border-radius: 8px;">
+            ${otp}
+          </div>
+          <p style="color: #666; font-size: 14px;">This OTP expires in <strong>5 minutes</strong></p>
+        </div>
 
-    try {
-        await transporter.sendMail(mailOptions)
-        console.log(`OTP email sent to ${emailId}`)
-    } catch (error) {
-        console.error('Email sending failed:', error)
-        throw new Error('Failed to send email. Please try again.')
-    }
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
+          <p>If you didn't request this, please ignore this email.</p>
+          <p>&copy; ${new Date().getFullYear()} Flagger. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  })
+
+  if (error) {
+    console.error('Resend email error:', error)
+    throw new Error('Failed to send email. Please try again.')
+  }
+
+  console.log(`OTP email sent to ${to}`)
+  return data
 }
-
