@@ -1,14 +1,8 @@
 import User from '../models/user.js'
-import OTP from '../models/otp.js'
 import RefreshToken from '../models/refreshToken.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { randomUUID } from 'crypto'
-import { generateOTP, saveOTP } from './otp.service.js'
-import { sendOTPEmail } from './email.service.js'
-
-const RESEND_COOLDOWN_SECONDS = 30
-const MAX_RESEND_ATTEMPTS = 3
 const NAME_REGEX = /^[A-Za-z_]+$/
 
 // Generate Access Token (short-lived)
@@ -200,11 +194,6 @@ export async function createUser(userData) {
     })
 
     if (existingUser) {
-        // Existing account with unverified email should continue verification flow.
-        if (existingUser.emailId === normalizedEmail && !existingUser.isEmailVerified) {
-            return { user: existingUser, requiresEmailVerification: true, isNewUser: false }
-        }
-
         const err = new Error('User already exists')
         err.statusCode = 409
         throw err
@@ -216,7 +205,7 @@ export async function createUser(userData) {
         Number(process.env.SALT_ROUNDS)
     )
 
-    // Create user with isEmailVerified: false
+    // OTP verification flow removed: users are marked verified on register.
     const user = await User.create({
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
@@ -226,7 +215,7 @@ export async function createUser(userData) {
         role: 'user',
         avatar: '',
         bio: 'Hey there! I am using Flagger',
-        isEmailVerified: false,  
+        isEmailVerified: true,  
         isVerifiedBadge: false,
         accountStatus: 'active',
         followers: [],
@@ -235,220 +224,7 @@ export async function createUser(userData) {
         refreshTokenVersion: 0
     })
 
-    return { user, requiresEmailVerification: false, isNewUser: true }
-}
-
-export async function verifyEmailOTP(emailId, otp) {
-    const otpRecord = await OTP.findOne({
-        emailId,
-        otp,
-        type: 'email_verification',
-        isUsed: false,
-        expiresAt: { $gt: new Date() }
-    })
-
-    // Check if OTP exists and is valid
-    if (!otpRecord) {
-        const err = new Error('Invalid or expired OTP')
-        err.statusCode = 400
-        throw err
-    }
-
-    // Mark OTP as used
-    otpRecord.isUsed = true
-    await otpRecord.save()
-
-    // Find and update user
-    const user = await User.findOne({ emailId })
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
-    // Mark email as verified
-    user.isEmailVerified = true
-    await user.save()
-
-    return user
-}
-
-export async function sendEmailVerificationOTP(emailId) {
-    // Generate 6-digit OTP
-    const otp = generateOTP()
-
-    // Save to database
-    await saveOTP(emailId, otp, 'email_verification')
-
-    // Send email
-    await sendOTPEmail(emailId, otp, 'email_verification')
-
-    return true
-}
-
-export async function resendEmailVerificationOTP(emailId) {
-    // Check if user exists
-    const user = await User.findOne({ emailId })
-    
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
-    // Check if already verified
-    if (user.isEmailVerified) {
-        const err = new Error('Email already verified')
-        err.statusCode = 400
-        throw err
-    }
-
-    // Enforce cooldown between requests.
-    const latestOtp = await OTP.findOne({
-        emailId,
-        type: 'email_verification'
-    }).sort({ createdAt: -1 })
-
-    if (latestOtp) {
-        const secondsSinceLastOtp = Math.floor((Date.now() - latestOtp.createdAt.getTime()) / 1000)
-        if (secondsSinceLastOtp < RESEND_COOLDOWN_SECONDS) {
-            const waitSeconds = RESEND_COOLDOWN_SECONDS - secondsSinceLastOtp
-            const err = new Error(`Please wait ${waitSeconds}s before requesting a new OTP`)
-            err.statusCode = 429
-            throw err
-        }
-    }
-
-    // Allow initial OTP + max 3 resends within active OTP window (10 minutes).
-    const activeWindowStart = new Date(Date.now() - 10 * 60 * 1000)
-    const sentOtpCountInWindow = await OTP.countDocuments({
-        emailId,
-        type: 'email_verification',
-        createdAt: { $gte: activeWindowStart }
-    })
-
-    if (sentOtpCountInWindow >= MAX_RESEND_ATTEMPTS + 1) {
-        const err = new Error('Maximum resend attempts reached. Please try again later.')
-        err.statusCode = 429
-        throw err
-    }
-
-    // Generate new OTP
-    const otp = generateOTP()
-
-    // Save to database (this will automatically mark old OTPs as used)
-    await saveOTP(emailId, otp, 'email_verification')
-
-    // Send email
-    await sendOTPEmail(emailId, otp, 'email_verification')
-
-    return true
-}
-
-export async function sendPasswordResetOTP(emailId) {
-    const normalizedEmail = emailId.trim().toLowerCase()
-
-    // Check if user exists
-    const user = await User.findOne({ emailId: normalizedEmail })
-    
-    if (!user) {
-        const err = new Error('User not found with this email')
-        err.statusCode = 404
-        throw err
-    }
-
-    // Enforce cooldown between requests.
-    const latestOtp = await OTP.findOne({
-        emailId: normalizedEmail,
-        type: 'password_reset'
-    }).sort({ createdAt: -1 })
-
-    if (latestOtp) {
-        const secondsSinceLastOtp = Math.floor((Date.now() - latestOtp.createdAt.getTime()) / 1000)
-        if (secondsSinceLastOtp < RESEND_COOLDOWN_SECONDS) {
-            const waitSeconds = RESEND_COOLDOWN_SECONDS - secondsSinceLastOtp
-            const err = new Error(`Please wait ${waitSeconds}s before requesting a new OTP`)
-            err.statusCode = 429
-            throw err
-        }
-    }
-
-    // Allow initial OTP + max 3 resends within active OTP window (10 minutes).
-    const activeWindowStart = new Date(Date.now() - 10 * 60 * 1000)
-    const sentOtpCountInWindow = await OTP.countDocuments({
-        emailId: normalizedEmail,
-        type: 'password_reset',
-        createdAt: { $gte: activeWindowStart }
-    })
-
-    if (sentOtpCountInWindow >= MAX_RESEND_ATTEMPTS + 1) {
-        const err = new Error('Maximum resend attempts reached. Please try again later.')
-        err.statusCode = 429
-        throw err
-    }
-
-    // Generate OTP
-    const otp = generateOTP()
-
-    // Save to database (marks old unused password reset OTPs as used)
-    await saveOTP(normalizedEmail, otp, 'password_reset')
-
-    // Send email
-    await sendOTPEmail(normalizedEmail, otp, 'password_reset')
-
-    return true
-}
-
-export async function resetUserPassword(emailId, otp, newPassword) {
-    // Find the OTP record
-    const otpRecord = await OTP.findOne({
-        emailId,
-        otp,
-        type: 'password_reset',
-        isUsed: false,
-        expiresAt: { $gt: new Date() }
-    })
-
-    // Check if OTP is valid
-    if (!otpRecord) {
-        const err = new Error('Invalid or expired OTP')
-        err.statusCode = 400
-        throw err
-    }
-
-    // Find user
-    const user = await User.findOne({ emailId }).select('+password')
-    
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(
-        newPassword,
-        Number(process.env.SALT_ROUNDS)
-    )
-
-    // Update password
-    user.password = hashedPassword
-    await user.save()
-
-    // Increment refresh token version to invalidate all existing refresh tokens
-    user.refreshTokenVersion += 1
-    await user.save()
-
-    // Invalidate all refresh tokens for security
-    await RefreshToken.updateMany(
-        { user: user._id, isValid: true },
-        { isValid: false }
-    )
-
-    otpRecord.isUsed = true
-    await otpRecord.save()
-
-    return true
+    return { user, isNewUser: true }
 }
 
 export async function changeUserPassword(userId, currentPassword, newPassword) {

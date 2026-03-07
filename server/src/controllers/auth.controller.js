@@ -1,30 +1,22 @@
 import validate from '../utils/authValidator.js'
 import validator from 'validator'
-import { createUser , loginUser , verifyEmailOTP , sendEmailVerificationOTP , resendEmailVerificationOTP , sendPasswordResetOTP , resetUserPassword , changeUserPassword, refreshAccessToken, logoutUser} from '../services/auth.service.js'
+import { createUser , loginUser , changeUserPassword, refreshAccessToken, logoutUser} from '../services/auth.service.js'
 
 export async function register(req, res, next) {
     try {
         validate(req.body)
-        const { user, requiresEmailVerification, isNewUser } = await createUser(req.body)
-        if (requiresEmailVerification) {
-            await resendEmailVerificationOTP(user.emailId)
-        } else {
-            await sendEmailVerificationOTP(user.emailId)
-        }
+        const { user, isNewUser } = await createUser(req.body)
         
         res.status(isNewUser ? 201 : 200).json({
             user: {
                 _id: user._id,
                 userName: user.userName,
                 emailId: user.emailId,
-                isEmailVerified: false
+                isEmailVerified: user.isEmailVerified
             },
-            requiresEmailVerification: true,
             isNewUser,
             Status: "success",
-            Message: isNewUser
-                ? "User registered successfully. Please verify your email."
-                : "Account already exists but email is not verified. OTP sent again."
+            Message: "User registered successfully"
         })
     } catch (err) {
         next(err)
@@ -53,111 +45,6 @@ export async function login(req, res, next) {
             Message: "User Login Successfully"
         })
     } catch(err) {
-        next(err)
-    }
-}
-
-export async function verifyEmail(req, res, next) {
-    try {
-        const { otp, emailId } = req.body
-
-        if (!otp || !emailId) {
-            const err = new Error('OTP and email are required')
-            err.statusCode = 400
-            throw err
-        }
-
-        const user = await verifyEmailOTP(emailId, otp)
-
-        res.status(200).json({
-            user: {
-                _id: user._id,
-                userName: user.userName,
-                emailId: user.emailId,
-                isEmailVerified: user.isEmailVerified,
-                isVerifiedBadge: user.isVerifiedBadge
-            },
-            Status: "success",
-            Message: "Email verified successfully"
-        })
-    } catch (err) {
-        next(err)
-    }
-}
-
-export async function resendVerificationOTP(req, res, next) {
-    try {
-        const { emailId } = req.body
-
-        if (!emailId) {
-            const err = new Error('Email is required')
-            err.statusCode = 400
-            throw err
-        }
-
-        await resendEmailVerificationOTP(emailId)
-
-        res.status(200).json({
-            expiresIn: '5 minutes',
-            Status: "success",
-            Message: "Verification OTP resent successfully"
-        })
-    } catch (err) {
-        next(err)
-    }
-}
-
-export async function forgotPassword(req, res, next) {
-    try {
-        const { emailId } = req.body
-
-        if (!emailId) {
-            const err = new Error('Email is required')
-            err.statusCode = 400
-            throw err
-        }
-
-        await sendPasswordResetOTP(emailId)
-
-        res.status(200).json({
-            expiresIn: '5 minutes',
-            Status: "success",
-            Message: "Password reset OTP sent to your email"
-        })
-    } catch (err) {
-        next(err)
-    }
-}
-
-export async function resetPassword(req, res, next) {
-    try {
-        const { emailId, otp, newPassword, confirmPassword } = req.body
-
-        if (!emailId || !otp || !newPassword || !confirmPassword) {
-            const err = new Error('All fields are required')
-            err.statusCode = 400
-            throw err
-        }
-
-        if (newPassword !== confirmPassword) {
-            const err = new Error('Passwords do not match')
-            err.statusCode = 400
-            throw err
-        }
-
-        if (!validator.isStrongPassword(newPassword)) {
-            const err = new Error('Password is not strong')
-            err.statusCode = 400
-            throw err
-        }
-
-        await resetUserPassword(emailId, otp, newPassword)
-
-        res.status(200).json({
-            Status: "success",
-            Message: "Password reset successfully. You can now login with your new password."
-        })
-    } catch (err) {
         next(err)
     }
 }
