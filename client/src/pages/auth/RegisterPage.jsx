@@ -66,11 +66,13 @@ const RegisterPage = () => {
       sessionStorage.setItem(
         "success_popup",
         JSON.stringify({
-          title: "Verify Your Email",
-          message: response?.Message || "OTP has been sent to your email. Please verify your email to continue.",
+          title: "Registration Successful",
+          message:
+            response?.Message ||
+            "Your account has been created. Please sign in to continue.",
         })
       );
-      navigate(`/verify-email?emailId=${encodeURIComponent(formData.emailId.trim())}`);
+      navigate("/login", { replace: true });
     } catch (err) {
       const message =
         err.response?.data?.message ||

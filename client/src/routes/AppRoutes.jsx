@@ -9,10 +9,6 @@ import LandingPage from "../pages/public/LandingPage";
 import ExplorePage from "../pages/public/ExplorePage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
-import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
-import OAuthCallbackPage from "../pages/auth/OAuthCallbackPage";
 import HomePage from "../pages/feed/HomePage";
 import BlogPage from "../pages/feed/BlogPage";
 import ProfilePage from "../pages/user/ProfilePage";
@@ -49,22 +45,6 @@ const AppRoutes = () => {
           <RegisterPage />
         </PublicOnlyRoute>
       } />
-      <Route path="/forgot-password" element={
-        <PublicOnlyRoute>
-          <ForgotPasswordPage />
-        </PublicOnlyRoute>
-      } />
-      <Route path="/reset-password" element={
-        <PublicOnlyRoute>
-          <ResetPasswordPage />
-        </PublicOnlyRoute>
-      } />
-      <Route path="/verify-email" element={
-        <PublicOnlyRoute>
-          <VerifyEmailPage />
-        </PublicOnlyRoute>
-      } />
-      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
       {/* Protected Routes - accessible only when logged in */}
       <Route path="/home" element={
