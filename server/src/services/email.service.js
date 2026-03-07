@@ -1,9 +1,17 @@
 import dotenv from 'dotenv'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 dotenv.config()
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_USER,
+    pass: process.env.BREVO_PASS,
+  },
+})
 
 export const sendOTPEmail = async (to, otp, type = 'email_verification') => {
   const isPasswordReset = type === 'password_reset'
@@ -17,8 +25,8 @@ export const sendOTPEmail = async (to, otp, type = 'email_verification') => {
     ? 'Use the OTP below to reset your password:'
     : 'Use the OTP below to complete your registration:'
 
-  const { data, error } = await resend.emails.send({
-    from: 'onboarding@resend.dev',
+  await transporter.sendMail({
+    from: `"Flagger" <${process.env.BREVO_USER}>`,
     to,
     subject,
     html: `
@@ -45,11 +53,5 @@ export const sendOTPEmail = async (to, otp, type = 'email_verification') => {
     `,
   })
 
-  if (error) {
-    console.error('Resend email error:', error)
-    throw new Error('Failed to send email. Please try again.')
-  }
-
   console.log(`OTP email sent to ${to}`)
-  return data
 }
