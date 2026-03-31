@@ -275,15 +275,6 @@ const WritePage = () => {
                 <option value="public">Public</option>
                 <option value="anonymous">Anonymous</option>
               </select>
-
-              <button
-                type="button"
-                onClick={handlePublish}
-                disabled={submitting}
-                className="w-full rounded-lg bg-[#1E3E73] px-4 py-2 text-sm font-semibold text-[#F8FBFF] hover:bg-[#2A4E88] disabled:opacity-60"
-              >
-                {submitting ? "Publishing..." : "Publish Post"}
-              </button>
             </section>
 
             <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
