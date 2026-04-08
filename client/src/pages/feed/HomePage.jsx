@@ -234,7 +234,7 @@ const HomePage = () => {
         )}
 
         <aside
-          className={`fixed left-0 top-16 z-40 transition-transform duration-200 ${
+          className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] overflow-hidden transition-transform duration-200 ${
             menuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

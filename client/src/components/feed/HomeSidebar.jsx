@@ -26,7 +26,7 @@ const HomeSidebar = ({
 
   return (
     <aside
-      className={`h-[calc(100vh-4rem)] w-64 overflow-y-auto border-r border-[#D0D9E5]/20 bg-[#0B0E13] p-4 font-['Arial'] ${className}`}
+      className={`flex h-[calc(100vh-4rem)] min-h-0 w-64 flex-col overflow-hidden border-r border-[#D0D9E5]/20 bg-[#0B0E13] p-4 font-['Arial'] ${className}`}
     >
       <div className="mb-5 space-y-2">
         <button
@@ -105,7 +105,7 @@ const HomeSidebar = ({
                       onSelectCategory(category.name);
                       onCloseMenu?.();
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm font-medium uppercase transition ${
                       isActive
                         ? "border-[#6A90DA] bg-[#162238] text-[#F0F5FF] shadow-[0_0_0_1px_rgba(102,150,231,0.15)]"
                         : "border-transparent text-[#BBC5D3] hover:border-[#CFD8E4]/25 hover:bg-[#141C2A] hover:text-[#E2E8F3]"
