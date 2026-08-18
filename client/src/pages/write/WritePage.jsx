@@ -1,10 +1,24 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ImagePlus, Trash2 } from "lucide-react";
+import {
+  ImagePlus,
+  Trash2,
+  Eye,
+  Edit3,
+  Columns,
+  Sparkles,
+  FileText,
+  Clock,
+  Type,
+  Layers,
+} from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { feedService } from "../../services/feed.service";
 import HomeNavbar from "../../components/feed/HomeNavbar";
 import HomeSidebar from "../../components/feed/HomeSidebar";
+import MarkdownRenderer from "../../components/common/MarkdownRenderer";
+import MarkdownToolbar from "../../components/write/MarkdownToolbar";
+import MarkdownGuideModal from "../../components/write/MarkdownGuideModal";
 
 const TITLE_MIN = 5;
 const TITLE_MAX = 100;
@@ -22,6 +36,7 @@ const getWordCount = (text) => {
 const WritePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const textareaRef = useRef(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -31,6 +46,11 @@ const WritePage = () => {
   const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Markdown Options State
+  const [editorMode, setEditorMode] = useState("write"); // "write" | "preview" | "split"
+  const [markdownEnabled, setMarkdownEnabled] = useState(true);
+  const [guideModalOpen, setGuideModalOpen] = useState(false);
 
   const wordCount = useMemo(() => getWordCount(content), [content]);
   const readMinutes = useMemo(() => Math.max(1, Math.ceil(wordCount / 200)), [wordCount]);
@@ -92,6 +112,54 @@ const WritePage = () => {
 
   const handleRemoveImage = (index) => {
     setImages((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleInsertMarkdown = (prefix, suffix = "", defaultText = "", isBlock = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setContent((prev) => `${prev}${prefix}${defaultText}${suffix}`);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const previousText = content;
+    const selectedText = previousText.substring(start, end);
+    const replacementText = selectedText || defaultText;
+
+    let before = previousText.substring(0, start);
+    const after = previousText.substring(end);
+
+    if (isBlock && before.length > 0 && !before.endsWith("\n")) {
+      before = before + "\n";
+    }
+
+    const insertion = `${prefix}${replacementText}${suffix}`;
+    const newContent = `${before}${insertion}${after}`;
+
+    setContent(newContent);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const cursorStart = before.length + prefix.length;
+      const cursorEnd = cursorStart + replacementText.length;
+      textarea.setSelectionRange(cursorStart, cursorEnd);
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+      if (e.key === "b" || e.key === "B") {
+        e.preventDefault();
+        handleInsertMarkdown("**", "**", "bold text");
+      } else if (e.key === "i" || e.key === "I") {
+        e.preventDefault();
+        handleInsertMarkdown("*", "*", "italic text");
+      } else if (e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        handleInsertMarkdown("[", "](https://example.com)", "link text");
+      }
+    }
   };
 
   const handlePublish = async () => {
@@ -165,23 +233,28 @@ const WritePage = () => {
 
       <main className="mx-auto w-full max-w-[1366px] px-4 py-6 sm:px-6">
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+          {/* Main Editing Area */}
           <section className="rounded-2xl border border-[#1E1F23] bg-[#090A0D] p-5">
-            <div className="mb-4 flex items-center justify-between border-b border-[#1C1D22] pb-4">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1C1D22] pb-4">
               <div>
                 <h1 className="text-xl font-semibold text-[#F9F9F9]">Write New Story</h1>
-                <p className="text-sm text-[#C7C7C9]">Draft your post and publish when ready.</p>
+                <p className="text-sm text-[#C7C7C9]">Draft your post with Markdown support and publish when ready.</p>
               </div>
-              <button
-                type="button"
-                onClick={handlePublish}
-                disabled={submitting}
-                className="rounded-xl bg-[#1E3E73] px-4 py-2 text-sm font-semibold text-[#F8FBFF] transition hover:bg-[#2A4E88] disabled:opacity-60"
-              >
-                {submitting ? "Publishing..." : "Publish"}
-              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={submitting}
+                  className="rounded-xl bg-[#1E3E73] px-5 py-2 text-sm font-semibold text-[#F8FBFF] shadow-sm transition hover:bg-[#2A4E88] disabled:opacity-60"
+                >
+                  {submitting ? "Publishing..." : "Publish"}
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Title Input */}
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Title</label>
                 <input
@@ -196,21 +269,155 @@ const WritePage = () => {
                 </p>
               </div>
 
+              {/* Content Editor with Markdown Mode */}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Content</label>
-                <textarea
-                  rows={16}
-                  maxLength={CONTENT_MAX}
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  placeholder="Start writing your story..."
-                  className="w-full resize-y rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 text-[15px] leading-7 text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
-                />
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <label className="block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">
+                      Content
+                    </label>
+                    {markdownEnabled && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/30 bg-indigo-950/40 px-2 py-0.5 text-[10px] font-medium text-indigo-300">
+                        <Sparkles size={10} />
+                        Markdown
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Mode Selector & Markdown Option Toggle */}
+                  <div className="flex items-center gap-2">
+                    {/* Markdown Enable/Disable Switch */}
+                    <button
+                      type="button"
+                      onClick={() => setMarkdownEnabled((prev) => !prev)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
+                        markdownEnabled
+                          ? "border-indigo-500/40 bg-indigo-950/30 text-indigo-300 hover:bg-indigo-900/40"
+                          : "border-[#2A2D35] bg-[#111319] text-[#8E93A3] hover:text-[#D1D5DB]"
+                      }`}
+                      title={markdownEnabled ? "Markdown enabled" : "Plain text mode"}
+                    >
+                      <Sparkles size={12} />
+                      <span>{markdownEnabled ? "Markdown On" : "Markdown Off"}</span>
+                    </button>
+
+                    {/* View Modes (Write / Preview / Split) */}
+                    <div className="flex items-center rounded-lg border border-[#262A36] bg-[#0F1219] p-0.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setEditorMode("write")}
+                        className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
+                          editorMode === "write"
+                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
+                            : "text-[#8E93A3] hover:text-white"
+                        }`}
+                        title="Write mode"
+                      >
+                        <Edit3 size={13} />
+                        <span>Write</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditorMode("preview")}
+                        className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
+                          editorMode === "preview"
+                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
+                            : "text-[#8E93A3] hover:text-white"
+                        }`}
+                        title="Preview mode"
+                      >
+                        <Eye size={13} />
+                        <span>Preview</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditorMode("split")}
+                        className={`hidden sm:flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
+                          editorMode === "split"
+                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
+                            : "text-[#8E93A3] hover:text-white"
+                        }`}
+                        title="Split view"
+                      >
+                        <Columns size={13} />
+                        <span>Split</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Markdown Toolbar */}
+                {markdownEnabled && (editorMode === "write" || editorMode === "split") && (
+                  <div className="mb-2">
+                    <MarkdownToolbar
+                      onInsert={handleInsertMarkdown}
+                      onOpenGuide={() => setGuideModalOpen(true)}
+                    />
+                  </div>
+                )}
+
+                {/* Editor Body */}
+                {editorMode === "write" && (
+                  <textarea
+                    ref={textareaRef}
+                    rows={16}
+                    maxLength={CONTENT_MAX}
+                    value={content}
+                    onChange={(event) => setContent(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      markdownEnabled
+                        ? "Start writing your story in Markdown (e.g. # Heading, **bold**, `code`, etc.)..."
+                        : "Start writing your story..."
+                    }
+                    className="w-full resize-y rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 font-mono text-[14.5px] leading-7 text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
+                  />
+                )}
+
+                {editorMode === "preview" && (
+                  <div className="min-h-[420px] rounded-xl border border-[#2A2C31] bg-[#0C0D11] p-5">
+                    <MarkdownRenderer content={content} />
+                  </div>
+                )}
+
+                {editorMode === "split" && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col">
+                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[#8E93A3]">
+                        <span>Markdown Editor</span>
+                        <span>Ctrl+B, Ctrl+I, Ctrl+K</span>
+                      </div>
+                      <textarea
+                        ref={textareaRef}
+                        rows={16}
+                        maxLength={CONTENT_MAX}
+                        value={content}
+                        onChange={(event) => setContent(event.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Write markdown here..."
+                        className="h-[420px] w-full resize-y rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 font-mono text-[14px] leading-7 text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[#8E93A3]">
+                        <span>Live Preview</span>
+                        <span className="text-indigo-400">Real-time</span>
+                      </div>
+                      <div className="h-[420px] overflow-y-auto rounded-xl border border-[#2A2C31] bg-[#0C0D11] p-4">
+                        <MarkdownRenderer content={content} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <p className="mt-1 text-right text-xs text-[#9A9BA1]">
                   {contentLength}/{CONTENT_MAX} (min {CONTENT_MIN})
                 </p>
               </div>
 
+              {/* Summary / Excerpt Input */}
               <div>
                 <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Summary / Excerpt</label>
                 <textarea
@@ -226,10 +433,11 @@ const WritePage = () => {
                 </p>
               </div>
 
+              {/* Images */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Images (max {MAX_IMAGES}, 10MB each)</label>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#2E3036] bg-[#101114] px-3 py-1.5 text-xs text-[#E7E7E8] hover:border-[#355D9A]">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#2E3036] bg-[#101114] px-3 py-1.5 text-xs text-[#E7E7E8] transition hover:border-[#355D9A]">
                     <ImagePlus size={14} />
                     Add Images
                     <input type="file" accept="image/*" multiple className="hidden" onChange={handlePickImages} />
@@ -238,7 +446,7 @@ const WritePage = () => {
 
                 {images.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-[#30333A] bg-[#0A0B0F] px-4 py-6 text-center text-sm text-[#A9AAB0]">
-                    No images selected.
+                    No cover or gallery images attached. You can also insert image URLs inside markdown!
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -248,7 +456,7 @@ const WritePage = () => {
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(index)}
-                          className="absolute right-1.5 top-1.5 rounded-md bg-black/70 p-1 text-white"
+                          className="absolute right-1.5 top-1.5 rounded-md bg-black/70 p-1 text-white hover:bg-black/90"
                           aria-label="Remove image"
                         >
                           <Trash2 size={12} />
@@ -262,7 +470,9 @@ const WritePage = () => {
             </div>
           </section>
 
+          {/* Sidebar Area */}
           <aside className="space-y-4">
+            {/* Post Settings */}
             <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
               <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Post Settings</h2>
 
@@ -277,24 +487,65 @@ const WritePage = () => {
               </select>
             </section>
 
+            {/* Markdown Quick Card */}
+            <section className="rounded-2xl border border-indigo-500/20 bg-[#0D101A] p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-semibold text-indigo-200">
+                  <Sparkles size={15} className="text-indigo-400" />
+                  <span>Markdown Support</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGuideModalOpen(true)}
+                  className="text-xs text-indigo-300 underline underline-offset-2 hover:text-indigo-200"
+                >
+                  Guide
+                </button>
+              </div>
+              <p className="text-xs text-[#9CA3AF] leading-relaxed">
+                Use headings, code blocks, checklists, tables, links, quotes, and more to enrich your blog post.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-[#CBD5E1]">
+                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]"># Heading</span>
+                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">**bold**</span>
+                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">`code`</span>
+                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">&gt; quote</span>
+                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">- list</span>
+              </div>
+            </section>
+
+            {/* Live Stats */}
             <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
               <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Live Stats</h2>
               <div className="space-y-2 text-sm text-[#C2C3C8]">
                 <p className="flex items-center justify-between">
-                  <span>Words</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                    <FileText size={14} /> Words
+                  </span>
                   <span className="font-semibold text-[#F1F1F2]">{wordCount}</span>
                 </p>
                 <p className="flex items-center justify-between">
-                  <span>Read Time</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                    <Type size={14} /> Characters
+                  </span>
+                  <span className="font-semibold text-[#F1F1F2]">{contentLength}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                    <Clock size={14} /> Read Time
+                  </span>
                   <span className="font-semibold text-[#F1F1F2]">{readMinutes} min</span>
                 </p>
                 <p className="flex items-center justify-between">
-                  <span>Images</span>
+                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                    <Layers size={14} /> Images
+                  </span>
                   <span className="font-semibold text-[#F1F1F2]">{images.length}/{MAX_IMAGES}</span>
                 </p>
               </div>
             </section>
 
+            {/* Constraints */}
             <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
               <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Publishing Constraints</h2>
               <div className="space-y-1.5 text-xs text-[#BFC0C5]">
@@ -308,6 +559,14 @@ const WritePage = () => {
         </div>
       </main>
 
+      {/* Markdown Guide Cheatsheet Modal */}
+      <MarkdownGuideModal
+        isOpen={guideModalOpen}
+        onClose={() => setGuideModalOpen(false)}
+        onInsertTemplate={(syntax) => handleInsertMarkdown(syntax, "", "", true)}
+      />
+
+      {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-2xl rounded-2xl border border-[#5E2A35] bg-[#120A0D] p-6 text-center shadow-[0_25px_80px_rgba(0,0,0,0.7)]">

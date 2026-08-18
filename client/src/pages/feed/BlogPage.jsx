@@ -7,6 +7,7 @@ import { feedService } from "../../services/feed.service";
 import { profileService } from "../../services/profile.service";
 import HomeNavbar from "../../components/feed/HomeNavbar";
 import HomeSidebar from "../../components/feed/HomeSidebar";
+import MarkdownRenderer from "../../components/common/MarkdownRenderer";
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "";
@@ -525,7 +526,7 @@ const BlogPage = () => {
             )}
 
             <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-6">
-              <div className="whitespace-pre-wrap text-[15px] leading-8 text-[#E3E3E5]">{post.content}</div>
+              <MarkdownRenderer content={post.content} />
               {post.excerpt && (
                 <div className="mt-6 border-t border-[#24262D] pt-4">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#B8B9BD]">Summary</h3>
