@@ -1,3 +1,29 @@
+# Dependencies
 node_modules/
+
+# Environment files
 .env
+.env.*
+!.env.example
+
+# AI agent and IDE work directories
+.agents/
+.commandcode/
+.freebuff/
 .aider*
+.gemini/
+
+# Logs and debug files
+*.log
+logs/
+server/tmp_*.log
+server/tmp_server_*.log
+
+# Documentation and design files not needed for deployment
+*.md
+server/*.md
+/error.png
+
+# Coverage and testing output
+coverage/
+.nyc_output/

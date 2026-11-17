@@ -1,6 +1,7 @@
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import { CloudinaryStorage } from 'multer-storage-cloudinary'
+import { imageFileFilter, wrapStorageWithContentValidation } from '../utils/imageValidator.js'
 
 // Configure Cloudinary
 cloudinary.config({
@@ -10,33 +11,28 @@ cloudinary.config({
 })
 
 // Configure storage
-const storage = new CloudinaryStorage({
+const baseStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'flagger/avatars',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
         transformation: [{ width: 500, height: 500, crop: 'limit' }],
         public_id: (req, file) => {
-            return `user-${req.user._id}-${Date.now()}`
+            const userId = req.user?._id || 'anon'
+            return `user-${userId}-${Date.now()}`
         }
     }
 })
 
-// File filter
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true)
-    } else {
-        cb(new Error('Only image files are allowed'), false)
-    }
-}
+const secureStorage = wrapStorageWithContentValidation(baseStorage)
 
-// Create multer upload instance
+// Create multer upload instance with strict limits and validation
 export const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
+    storage: secureStorage,
+    fileFilter: imageFileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+        files: 1
     }
 })
 

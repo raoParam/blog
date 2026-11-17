@@ -49,7 +49,7 @@ export async function fetchPosts(postData, currentUserId) {
 
 export async function fetchPost(postId) {
     const blog = await Post.findById(postId)
-    .select('title content excerpt likes visibility createdAt images')
+    .select('title content excerpt likes visibility createdAt images author')
     .populate({
         path : "author",
         select : "userName avatar firstName lastName isVerifiedBadge"

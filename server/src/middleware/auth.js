@@ -8,13 +8,13 @@ export default async function auth(req, res, next) {
         if (!token) {
             const authHeader = req.headers.authorization
 
-            if(!authHeader) {
+            if (!authHeader) {
                 const err = new Error("Token not found")
                 err.statusCode = 401
                 throw err
             }  
 
-            if(!authHeader.startsWith('Bearer ')) {
+            if (!authHeader.startsWith('Bearer ')) {
                 const err = new Error("Invalid token format")
                 err.statusCode = 401
                 throw err
@@ -23,19 +23,45 @@ export default async function auth(req, res, next) {
             token = authHeader.split(' ')[1]
         }
         
-        if(!token) {
+        if (!token) {
             const err = new Error("Token missing")
             err.statusCode = 401
+            throw err
+        }
+
+        if (!process.env.JWT_SECRET) {
+            const err = new Error("Authentication configuration missing on server")
+            err.statusCode = 500
             throw err
         }
         
         const payload = jwt.verify(token, process.env.JWT_SECRET)
         const { _id, version } = payload
+
+        if (!_id) {
+            const err = new Error("Invalid token payload")
+            err.statusCode = 401
+            throw err
+        }
+
         const user = await User.findById(_id)
         
-        if(!user) {
+        if (!user) {
             const err = new Error("User doesn't exist")
-            err.statusCode = 404
+            err.statusCode = 401
+            throw err
+        }
+
+        // Prevent suspended or deleted accounts from accessing protected routes
+        if (user.accountStatus === 'suspended') {
+            const err = new Error("Account is suspended")
+            err.statusCode = 403
+            throw err
+        }
+
+        if (user.accountStatus === 'deleted') {
+            const err = new Error("Account has been deleted")
+            err.statusCode = 403
             throw err
         }
 

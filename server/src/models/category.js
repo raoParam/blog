@@ -26,9 +26,27 @@ const categorySchema = new Schema({
     }
 }, { timestamps: true })
 
-categorySchema.pre('save', function(next) {
-    if (this.isModified('name')) {
-        this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+// Generate slug before validation to satisfy required constraint
+categorySchema.pre('validate', function() {
+    if (this.name && (!this.slug || this.isModified('name'))) {
+        this.slug = this.name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+    }
+})
+
+// Ensure slug is kept in sync on direct save
+categorySchema.pre('save', function() {
+    if (this.isModified('name') || !this.slug) {
+        if (this.name) {
+            this.slug = this.name
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+        }
     }
 })
 

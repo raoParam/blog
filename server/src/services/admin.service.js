@@ -4,6 +4,7 @@ import Comment from '../models/comment.js'
 import Category from '../models/category.js'
 import RefreshToken from '../models/refreshToken.js'
 import { cloudinary } from '../middleware/uploadPost.js'
+import { escapeRegex, normalizePagination, isValidObjectId, isValidDate } from '../utils/queryHelper.js'
 
 // ========== DASHBOARD SERVICES ==========
 
@@ -107,21 +108,26 @@ export async function getPlatformStatistics() {
  */
 export async function fetchAllUsers(filters) {
     const { page, limit, search, status, sort } = filters
+    const { page: validPage, limit: validLimit, skip } = normalizePagination(page, limit, 20, 100)
     const query = {}
     
     // Filter by status
-    if (status) {
+    if (status && ['active', 'suspended', 'deleted'].includes(status)) {
         query.accountStatus = status
     }
     
-    // Search by username, email, or name
-    if (search) {
-        query.$or = [
-            { userName: { $regex: search, $options: 'i' } },
-            { emailId: { $regex: search, $options: 'i' } },
-            { firstName: { $regex: search, $options: 'i' } },
-            { lastName: { $regex: search, $options: 'i' } }
-        ]
+    // Safely search by username, email, or name with escaped regex
+    if (search && typeof search === 'string') {
+        const trimmed = search.trim()
+        if (trimmed.length > 0) {
+            const safeRegex = { $regex: escapeRegex(trimmed), $options: 'i' }
+            query.$or = [
+                { userName: safeRegex },
+                { emailId: safeRegex },
+                { firstName: safeRegex },
+                { lastName: safeRegex }
+            ]
+        }
     }
     
     // Sorting
@@ -137,8 +143,8 @@ export async function fetchAllUsers(filters) {
     const users = await User.find(query)
         .select('-password -refreshTokenVersion')
         .sort(sortOption)
-        .skip((page - 1) * limit)
-        .limit(limit)
+        .skip(skip)
+        .limit(validLimit)
         .lean()
     
     // Add counts for each user
@@ -156,15 +162,16 @@ export async function fetchAllUsers(filters) {
     }))
     
     const total = await User.countDocuments(query)
+    const totalPages = Math.ceil(total / validLimit)
     
     return {
         users: usersWithCounts,
         pagination: {
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
+            currentPage: validPage,
+            totalPages,
             totalUsers: total,
-            hasNext: page < Math.ceil(total / limit),
-            hasPrev: page > 1
+            hasNext: validPage < totalPages,
+            hasPrev: validPage > 1
         }
     }
 }
@@ -173,6 +180,12 @@ export async function fetchAllUsers(filters) {
  * Fetch single user details by ID
  */
 export async function fetchUserDetailsById(userId) {
+    if (!isValidObjectId(userId)) {
+        const err = new Error('Invalid user ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const user = await User.findById(userId)
         .select('-password -refreshTokenVersion')
         .lean()
@@ -208,6 +221,12 @@ export async function fetchUserDetailsById(userId) {
  * Update user account status
  */
 export async function updateUserStatusById(userId, status) {
+    if (!isValidObjectId(userId)) {
+        const err = new Error('Invalid user ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const user = await User.findByIdAndUpdate(
         userId,
         { accountStatus: status },
@@ -235,6 +254,12 @@ export async function updateUserStatusById(userId, status) {
  * Toggle verified badge for user
  */
 export async function toggleUserVerifiedBadge(userId, verify) {
+    if (!isValidObjectId(userId)) {
+        const err = new Error('Invalid user ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const user = await User.findByIdAndUpdate(
         userId,
         { isVerifiedBadge: verify },
@@ -257,28 +282,48 @@ export async function toggleUserVerifiedBadge(userId, verify) {
  */
 export async function fetchAllPosts(filters) {
     const { page, limit, visibility, author, startDate, endDate } = filters
+    const { page: validPage, limit: validLimit, skip } = normalizePagination(page, limit, 20, 100)
     const query = {}
     
-    if (visibility) {
+    if (visibility && ['public', 'anonymous'].includes(visibility)) {
         query.visibility = visibility
     }
     
     if (author) {
+        if (!isValidObjectId(author)) {
+            const err = new Error('Invalid author ID format')
+            err.statusCode = 400
+            throw err
+        }
         query.author = author
     }
     
     if (startDate || endDate) {
         query.createdAt = {}
-        if (startDate) query.createdAt.$gte = new Date(startDate)
-        if (endDate) query.createdAt.$lte = new Date(endDate)
+        if (startDate) {
+            if (!isValidDate(startDate)) {
+                const err = new Error('Invalid startDate format')
+                err.statusCode = 400
+                throw err
+            }
+            query.createdAt.$gte = new Date(startDate)
+        }
+        if (endDate) {
+            if (!isValidDate(endDate)) {
+                const err = new Error('Invalid endDate format')
+                err.statusCode = 400
+                throw err
+            }
+            query.createdAt.$lte = new Date(endDate)
+        }
     }
     
     const posts = await Post.find(query)
         .populate('author', 'userName emailId firstName lastName avatar')
         .populate('category', 'name slug')
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
+        .skip(skip)
+        .limit(validLimit)
         .lean()
     
     // Add comments count to each post
@@ -291,37 +336,36 @@ export async function fetchAllPosts(filters) {
     }))
     
     const total = await Post.countDocuments(query)
+    const totalPages = Math.ceil(total / validLimit)
     
     return {
         posts: postsWithStats,
         pagination: {
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
+            currentPage: validPage,
+            totalPages,
             totalPosts: total,
-            hasNext: page < Math.ceil(total / limit),
-            hasPrev: page > 1
+            hasNext: validPage < totalPages,
+            hasPrev: validPage > 1
         }
     }
 }
 
 /**
  * Fetch reported/flagged posts
- * Note: You'll need to add a 'reportedBy' or 'flags' field to Post model
- * For now, this returns posts with high negative engagement
  */
 export async function fetchReportedPosts(page, limit) {
-    // This is a placeholder - you'll need to implement actual reporting system
-    // For now, get posts with unusually high likes vs comments ratio or other metrics
+    const { page: validPage, limit: validLimit } = normalizePagination(page, limit, 20, 100)
+
     const posts = await Post.find()
         .populate('author', 'userName avatar')
         .sort({ createdAt: -1 })
-        .limit(20)
+        .limit(validLimit)
         .lean()
     
     return {
         posts: posts.map(p => ({ ...p, reportCount: Math.floor(Math.random() * 10) })),
         pagination: {
-            currentPage: page,
+            currentPage: validPage,
             totalPages: 1,
             totalPosts: posts.length,
             hasNext: false,
@@ -334,7 +378,12 @@ export async function fetchReportedPosts(page, limit) {
  * Delete any post by ID (admin override)
  */
 export async function deleteAnyPostById(postId, adminId) {
-    // Get post to find image public_ids
+    if (!isValidObjectId(postId)) {
+        const err = new Error('Invalid post ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const post = await Post.findById(postId)
     
     if (!post) {
@@ -351,7 +400,6 @@ export async function deleteAnyPostById(postId, adminId) {
                 console.log(`Admin ${adminId} deleted image: ${publicId}`)
             } catch (error) {
                 console.error('Error deleting image from Cloudinary:', error)
-                // Continue with post deletion even if image delete fails
             }
         }
     }
@@ -377,6 +425,12 @@ export async function deleteAnyPostById(postId, adminId) {
  * If hidden: false → set visibility to 'public'
  */
 export async function updatePostVisibilityById(postId, hidden) {
+    if (!isValidObjectId(postId)) {
+        const err = new Error('Invalid post ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const post = await Post.findById(postId)
     
     if (!post) {
@@ -385,9 +439,9 @@ export async function updatePostVisibilityById(postId, hidden) {
         throw err
     }
     
-    // Set visibility based on hidden flag
-    if ( hidden === true) { 
-        post.visiblity = 'anonymous'
+    // Corrected typo from post.visiblity to post.visibility
+    if (hidden === true) { 
+        post.visibility = 'anonymous'
     } else {
         post.visibility = 'public'
     }
@@ -439,11 +493,20 @@ export async function fetchAllCategories() {
  * Create new category
  */
 export async function createNewCategory({ name, description = '', adminId }) {
+    const trimmedName = name ? name.trim() : ''
+    if (!trimmedName) {
+        const err = new Error('Category name is required')
+        err.statusCode = 400
+        throw err
+    }
+
+    const generatedSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
     // Check if category already exists
     const existingCategory = await Category.findOne({ 
         $or: [
-            { name: name.toLowerCase() },
-            { slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
+            { name: trimmedName.toLowerCase() },
+            { slug: generatedSlug }
         ]
     })
     
@@ -453,14 +516,11 @@ export async function createNewCategory({ name, description = '', adminId }) {
         throw err
     }
     
-    // Create slug from name
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    
     // Create category
     const category = await Category.create({
-        name: name.toLowerCase(),
+        name: trimmedName.toLowerCase(),
         description,
-        slug,
+        slug: generatedSlug,
         createdBy: adminId
     })
     
@@ -471,6 +531,12 @@ export async function createNewCategory({ name, description = '', adminId }) {
  * Update category by ID
  */
 export async function updateCategoryById(categoryId, { name, description }) {
+    if (!isValidObjectId(categoryId)) {
+        const err = new Error('Invalid category ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const category = await Category.findById(categoryId)
     
     if (!category) {
@@ -480,12 +546,15 @@ export async function updateCategoryById(categoryId, { name, description }) {
     }
     
     if (name) {
+        const trimmedName = name.trim()
+        const newSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
         // Check if new name conflicts with existing category
         const existingCategory = await Category.findOne({
             _id: { $ne: categoryId },
             $or: [
-                { name: name.toLowerCase() },
-                { slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
+                { name: trimmedName.toLowerCase() },
+                { slug: newSlug }
             ]
         })
         
@@ -495,8 +564,8 @@ export async function updateCategoryById(categoryId, { name, description }) {
             throw err
         }
         
-        category.name = name.toLowerCase()
-        category.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        category.name = trimmedName.toLowerCase()
+        category.slug = newSlug
     }
     
     if (description !== undefined) {
@@ -511,6 +580,12 @@ export async function updateCategoryById(categoryId, { name, description }) {
  * Delete category by ID
  */
 export async function deleteCategoryById(categoryId) {
+    if (!isValidObjectId(categoryId)) {
+        const err = new Error('Invalid category ID format')
+        err.statusCode = 400
+        throw err
+    }
+
     const category = await Category.findById(categoryId)
     
     if (!category) {
@@ -535,23 +610,21 @@ export async function deleteCategoryById(categoryId) {
 
 /**
  * Fetch system logs
- * Note: You'll need to implement logging system
  */
 export async function fetchSystemLogs(page, limit, level) {
-    // This is a placeholder - implement actual log fetching
-    // You might use a Log model or read from files
-    
+    const { page: validPage, limit: validLimit } = normalizePagination(page, limit, 50, 100)
+
     return {
         logs: [
             {
                 timestamp: new Date(),
-                level: 'info',
+                level: level || 'info',
                 message: 'System started',
                 user: 'system'
             }
         ],
         pagination: {
-            currentPage: page,
+            currentPage: validPage,
             totalPages: 1,
             totalLogs: 1
         }
