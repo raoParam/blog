@@ -2,8 +2,20 @@ import User from '../models/user.js'
 import RefreshToken from '../models/refreshToken.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { randomUUID } from 'crypto'
+
 const NAME_REGEX = /^[A-Za-z_]+$/
+
+/**
+ * Computes a secure SHA-256 digest of a token for storage at rest.
+ * @param {string} token 
+ * @returns {string}
+ */
+export const hashToken = (token) => {
+    if (!token || typeof token !== 'string') return ''
+    return crypto.createHash('sha256').update(token).digest('hex')
+}
 
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
@@ -18,10 +30,10 @@ export const generateAccessToken = (user) => {
     )
 }
 
-// Generate Refresh Token (long-lived)
+// Generate Refresh Token (long-lived) - saves SHA-256 hash at rest in MongoDB
 export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = '') => {
-    // Create unique token
-    const token = jwt.sign(
+    // Create unique raw JWT token
+    const rawToken = jwt.sign(
         { 
             _id: user._id,
             version: user.refreshTokenVersion,
@@ -31,27 +43,42 @@ export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = ''
         { expiresIn: '7d' } // 7 days
     )
 
-    // Save to database
-    const refreshToken = await RefreshToken.create({
-        token,
+    // Hash token at rest
+    const tokenHash = hashToken(rawToken)
+
+    // Save hashed token to database
+    await RefreshToken.create({
+        token: tokenHash,
         user: user._id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         deviceInfo,
         ipAddress
     })
 
-    return refreshToken.token
+    // Return the raw token only to the client
+    return rawToken
 }
 
-// Verify Refresh Token
-export const verifyRefreshToken = async (token) => {
+// Verify Refresh Token - looks up by SHA-256 hash (or raw token for backward-compatible migration)
+export const verifyRefreshToken = async (rawToken) => {
+    if (!rawToken || typeof rawToken !== 'string') {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    const tokenHash = hashToken(rawToken)
+
     const refreshToken = await RefreshToken.findOne({ 
-        token, 
+        $or: [
+            { token: tokenHash },
+            { token: rawToken } // Safe migration for existing pre-hash sessions
+        ],
         isValid: true,
         expiresAt: { $gt: new Date() }
     }).populate('user')
 
-    if (!refreshToken) {
+    if (!refreshToken || !refreshToken.user) {
         const err = new Error('Invalid or expired refresh token')
         err.statusCode = 401
         throw err
@@ -59,10 +86,10 @@ export const verifyRefreshToken = async (token) => {
 
     const user = refreshToken.user
     try {
-        jwt.verify(token, process.env.JWT_SECRET + user.refreshTokenVersion)
+        jwt.verify(rawToken, process.env.JWT_SECRET + user.refreshTokenVersion)
         return { user, refreshToken }
     } catch (error) {
-        // If token verification fails, invalidate it
+        // If token verification fails, invalidate the record
         refreshToken.isValid = false
         await refreshToken.save()
         const err = new Error('Invalid or expired refresh token')
@@ -71,13 +98,14 @@ export const verifyRefreshToken = async (token) => {
     }
 }
 
-// Get new access token using refresh token
+// Get new access token using refresh token (rotates token and stores new token hashed)
 export const refreshAccessToken = async (refreshTokenStr) => {
     const { user, refreshToken } = await verifyRefreshToken(refreshTokenStr)
 
     // Rotate refresh token on every refresh call for better security.
     refreshToken.isValid = false
     await refreshToken.save()
+
     const newRefreshToken = await generateRefreshToken(
         user,
         refreshToken.deviceInfo || '',
@@ -98,7 +126,7 @@ export const invalidateAllUserTokens = async (userId) => {
     )
 }
 
-// Update loginUser function
+// Login user and return raw tokens
 export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     const { emailId , password } = userData
     if(!emailId || !password) {
@@ -148,18 +176,23 @@ export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     return { accessToken, refreshToken, user }
 }
 
-// Update logout function
+// Logout user and invalidate token using hash
 export async function logoutUser(userId, refreshToken) {
     if (refreshToken) {
+        const tokenHash = hashToken(refreshToken)
         await RefreshToken.findOneAndUpdate(
-            { token: refreshToken },
+            {
+                $or: [
+                    { token: tokenHash },
+                    { token: refreshToken }
+                ]
+            },
             { isValid: false }
         )
     }
     return true
 }
 
-// Rest of your existing functions remain the same...
 export async function createUser(userData) {
     const normalizedEmail = userData.emailId?.trim().toLowerCase()
     const normalizedUserName = userData.userName?.trim()
@@ -204,7 +237,6 @@ export async function createUser(userData) {
         Number(process.env.SALT_ROUNDS)
     )
 
-    // OTP verification flow removed: users are marked verified on register.
     const user = await User.create({
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
@@ -226,7 +258,6 @@ export async function createUser(userData) {
 }
 
 export async function changeUserPassword(userId, currentPassword, newPassword) {
-    // Find user with password field
     const user = await User.findById(userId).select('+password')
     
     if (!user) {
@@ -235,7 +266,6 @@ export async function changeUserPassword(userId, currentPassword, newPassword) {
         throw err
     }
 
-    // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, user.password)
     
     if (!isValidPassword) {
@@ -244,13 +274,11 @@ export async function changeUserPassword(userId, currentPassword, newPassword) {
         throw err
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(
         newPassword,
         Number(process.env.SALT_ROUNDS)
     )
 
-    // Update password
     user.password = hashedPassword
     await user.save()
 

@@ -1,5 +1,8 @@
 import mongoose from 'mongoose'
 
+const DEFAULT_MAX_LIMIT = 100
+const DEFAULT_MAX_PAGE = 10000
+
 /**
  * Escapes regex special characters to prevent ReDoS and regex injection.
  * @param {string} str
@@ -12,26 +15,57 @@ export function escapeRegex(str) {
 
 /**
  * Normalizes and bounds pagination parameters.
- * @param {any} page 
- * @param {any} limit 
+ * Handles malformed strings, negative values, decimals, NaN, Infinity, and huge numbers safely.
+ * @param {any} rawPage 
+ * @param {any} rawLimit 
  * @param {number} defaultLimit 
  * @param {number} maxLimit 
+ * @param {number} maxPage
  * @returns {{ page: number, limit: number, skip: number }}
  */
-export function normalizePagination(page, limit, defaultLimit = 10, maxLimit = 100) {
-    const parsedPage = parseInt(page, 10)
-    const validPage = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1
+export function normalizePagination(
+    rawPage, 
+    rawLimit, 
+    defaultLimit = 10, 
+    maxLimit = DEFAULT_MAX_LIMIT, 
+    maxPage = DEFAULT_MAX_PAGE
+) {
+    const safeMaxLimit = (typeof maxLimit === 'number' && Number.isFinite(maxLimit) && maxLimit > 0) 
+        ? Math.floor(maxLimit) 
+        : 100
 
-    const parsedLimit = parseInt(limit, 10)
-    let validLimit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? parsedLimit : defaultLimit
-    if (validLimit > maxLimit) {
-        validLimit = maxLimit
+    const safeDefaultLimit = (typeof defaultLimit === 'number' && Number.isFinite(defaultLimit) && defaultLimit > 0)
+        ? Math.min(Math.floor(defaultLimit), safeMaxLimit)
+        : 10
+
+    const safeMaxPage = (typeof maxPage === 'number' && Number.isFinite(maxPage) && maxPage > 0) 
+        ? Math.floor(maxPage) 
+        : DEFAULT_MAX_PAGE
+
+    let page = 1
+    const numPage = Number(rawPage)
+    if (Number.isFinite(numPage)) {
+        const intPage = Math.floor(numPage)
+        if (intPage >= 1) {
+            page = Math.min(intPage, safeMaxPage)
+        }
     }
 
+    let limit = safeDefaultLimit
+    const numLimit = Number(rawLimit)
+    if (Number.isFinite(numLimit)) {
+        const intLimit = Math.floor(numLimit)
+        if (intLimit >= 1) {
+            limit = Math.min(intLimit, safeMaxLimit)
+        }
+    }
+
+    const skip = (page - 1) * limit
+
     return {
-        page: validPage,
-        limit: validLimit,
-        skip: (validPage - 1) * validLimit
+        page,
+        limit,
+        skip
     }
 }
 

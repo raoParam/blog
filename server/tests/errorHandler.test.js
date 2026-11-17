@@ -19,7 +19,7 @@ function createMockRes() {
 }
 
 describe('Centralized Error Handler (errorHandler.js)', () => {
-    it('should format Mongoose ValidationError with 400 Bad Request', () => {
+    it('should format Mongoose ValidationError with 400 Bad Request and clean field messages', () => {
         const valErr = new Error('Validation failed')
         valErr.name = 'ValidationError'
         valErr.errors = {
@@ -36,8 +36,8 @@ describe('Centralized Error Handler (errorHandler.js)', () => {
         assert.ok(res.body.message.includes('Content must be at least 10 characters'))
     })
 
-    it('should format Mongoose CastError with 400 Bad Request', () => {
-        const castErr = new Error('Cast failed')
+    it('should format Mongoose CastError with 400 Bad Request and clean resource identifier message', () => {
+        const castErr = new Error('Cast to ObjectId failed')
         castErr.name = 'CastError'
         castErr.path = 'postId'
         castErr.value = 'invalid_id_123'
@@ -47,7 +47,7 @@ describe('Centralized Error Handler (errorHandler.js)', () => {
 
         assert.equal(res.statusCode, 400)
         assert.equal(res.body.status, 'failed')
-        assert.equal(res.body.message, 'Invalid postId: invalid_id_123')
+        assert.equal(res.body.message, 'Invalid identifier format for postId')
     })
 
     it('should format MongoDB duplicate key error (code 11000) with 409 Conflict', () => {
@@ -89,11 +89,11 @@ describe('Centralized Error Handler (errorHandler.js)', () => {
         assert.equal(res.body.message, 'Malformed JSON in request body')
     })
 
-    it('should mask internal error message in production mode (500)', () => {
+    it('should mask 500 internal errors in production mode (NODE_ENV=production)', () => {
         const prevEnv = process.env.NODE_ENV
         process.env.NODE_ENV = 'production'
 
-        const internalErr = new Error('MongoServerSelectionError: connection refused mongodb+srv://admin:secret@atlas')
+        const internalErr = new Error('MongoServerSelectionError: connection refused mongodb+srv://admin:supersecret@atlas.cluster')
         internalErr.statusCode = 500
 
         const res = createMockRes()
@@ -104,8 +104,24 @@ describe('Centralized Error Handler (errorHandler.js)', () => {
         assert.equal(res.statusCode, 500)
         assert.equal(res.body.status, 'failed')
         assert.equal(res.body.message, 'Internal Server Error')
-        // Ensure sensitive connection strings/passwords are NOT leaked to client
         assert.equal(res.body.message.includes('mongodb+srv'), false)
-        assert.equal(res.body.message.includes('secret'), false)
+        assert.equal(res.body.message.includes('supersecret'), false)
+    })
+
+    it('should scrub credentials from error messages even in development mode', () => {
+        const prevEnv = process.env.NODE_ENV
+        process.env.NODE_ENV = 'development'
+
+        const devErr = new Error('Failed connecting to mongodb+srv://param:MySecretPassword123@cluster.mongodb.net/db')
+        devErr.statusCode = 500
+
+        const res = createMockRes()
+        errorHandler(devErr, { method: 'GET', originalUrl: '/api/posts' }, res, () => {})
+
+        process.env.NODE_ENV = prevEnv
+
+        assert.equal(res.statusCode, 500)
+        assert.equal(res.body.message.includes('MySecretPassword123'), false, 'Credentials must be scrubbed')
+        assert.ok(res.body.message.includes('mongodb+srv://***:***@'))
     })
 })

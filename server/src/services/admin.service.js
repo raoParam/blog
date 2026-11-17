@@ -352,25 +352,22 @@ export async function fetchAllPosts(filters) {
 
 /**
  * Fetch reported/flagged posts
+ * Note: Platform currently does not have a reporting data model or report collection.
+ * Returns empty array and reports that the feature is not implemented.
  */
 export async function fetchReportedPosts(page, limit) {
-    const { page: validPage, limit: validLimit } = normalizePagination(page, limit, 20, 100)
+    const { page: validPage } = normalizePagination(page, limit, 20, 100)
 
-    const posts = await Post.find()
-        .populate('author', 'userName avatar')
-        .sort({ createdAt: -1 })
-        .limit(validLimit)
-        .lean()
-    
     return {
-        posts: posts.map(p => ({ ...p, reportCount: Math.floor(Math.random() * 10) })),
+        posts: [],
         pagination: {
             currentPage: validPage,
-            totalPages: 1,
-            totalPosts: posts.length,
+            totalPages: 0,
+            totalPosts: 0,
             hasNext: false,
             hasPrev: false
-        }
+        },
+        message: 'Post reporting feature is not implemented yet. No report data exists.'
     }
 }
 

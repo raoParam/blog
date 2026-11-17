@@ -1,3 +1,4 @@
+import { normalizePagination } from '../utils/queryHelper.js'
 import {
     // Dashboard services
     getPlatformStatistics,
@@ -178,14 +179,13 @@ export async function getAllPosts(req, res, next) {
  */
 export async function getReportedPosts(req, res, next) {
     try {
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
         
         const result = await fetchReportedPosts(page, limit)
         
         res.status(200).json({
             Status: "success",
-            Message: "Reported posts fetched successfully",
+            Message: result.message || "Reported posts fetched successfully",
             reportedPosts: result.posts,
             pagination: result.pagination
         })
