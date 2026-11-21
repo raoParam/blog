@@ -3,25 +3,30 @@
  */
 
 /**
- * Scrubs credentials and connection strings from error messages and logs.
+ * Scrubs credentials, tokens, secrets, and connection strings from error messages, URLs, and logs.
  * @param {string} text 
  * @returns {string}
  */
-function scrubSensitiveData(text) {
+export function scrubSensitiveData(text) {
     if (typeof text !== 'string') return ''
     return text
         .replace(/mongodb(\+srv)?:\/\/[^@\s]+@/gi, 'mongodb$1://***:***@')
-        .replace(/(?:password|secret|key|token|auth)=[^&\s]+/gi, '$1=***')
+        .replace(/Bearer\s+[^\s"';,]+/gi, 'Bearer ***')
+        .replace(/([a-zA-Z0-9_-]*(?:password|secret|key|token|auth)[a-zA-Z0-9_-]*\s*=\s*)[^&\s]+/gi, '$1***')
+        .replace(/((["'])(?:[a-zA-Z0-9_-]*(?:password|secret|key|token|auth)[a-zA-Z0-9_-]*)\2\s*:\s*(["']))[^"'\r\n,\s]+(\3)/gi, '$1***$4')
 }
 
 export default function errorHandler(err, req, res, next) {
     // Determine effective status code
-    let statusCode = err.statusCode || (err.status && typeof err.status === 'number' ? err.status : 500)
-    let message = err.message || 'Internal Server Error'
+    let statusCode = err?.statusCode || (err?.status && typeof err.status === 'number' ? err.status : 500)
+    let message = err?.message || 'Internal Server Error'
 
-    // Server-side logging with scrubbed credentials
-    const scrubbedStack = scrubSensitiveData(err.stack || String(err))
-    console.error(`[Error] ${req.method} ${req.originalUrl}:`, scrubbedStack)
+    // Sanitize req.originalUrl and stack trace before writing to server logs
+    const method = req?.method || 'UNKNOWN'
+    const originalUrl = req?.originalUrl || req?.url || ''
+    const scrubbedUrl = scrubSensitiveData(originalUrl)
+    const scrubbedStack = scrubSensitiveData(err?.stack || String(err || ''))
+    console.error(`[Error] ${method} ${scrubbedUrl}:`, scrubbedStack)
 
     // Handle Mongoose Validation Error (client-facing 400)
     if (err.name === 'ValidationError' && err.errors) {

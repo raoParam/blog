@@ -59,7 +59,7 @@ export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = ''
     return rawToken
 }
 
-// Verify Refresh Token - looks up by SHA-256 hash (or raw token for backward-compatible migration)
+// Verify Refresh Token - checks status, signature, and active account status
 export const verifyRefreshToken = async (rawToken) => {
     if (!rawToken || typeof rawToken !== 'string') {
         const err = new Error('Invalid or expired refresh token')
@@ -85,6 +85,24 @@ export const verifyRefreshToken = async (rawToken) => {
     }
 
     const user = refreshToken.user
+
+    // Reject non-active accounts during refresh-token verification
+    if (user.accountStatus === 'suspended') {
+        const err = new Error('Account is suspended')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus === 'deleted') {
+        const err = new Error('Account has been deleted')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus !== 'active') {
+        const err = new Error('Account is not active')
+        err.statusCode = 403
+        throw err
+    }
+
     try {
         jwt.verify(rawToken, process.env.JWT_SECRET + user.refreshTokenVersion)
         return { user, refreshToken }
@@ -98,18 +116,71 @@ export const verifyRefreshToken = async (rawToken) => {
     }
 }
 
-// Get new access token using refresh token (rotates token and stores new token hashed)
+// Atomically claim and rotate refresh token to prevent race conditions or replay attacks
 export const refreshAccessToken = async (refreshTokenStr) => {
-    const { user, refreshToken } = await verifyRefreshToken(refreshTokenStr)
+    if (!refreshTokenStr || typeof refreshTokenStr !== 'string') {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
 
-    // Rotate refresh token on every refresh call for better security.
-    refreshToken.isValid = false
-    await refreshToken.save()
+    const tokenHash = hashToken(refreshTokenStr)
 
+    // Atomically find and invalidate the active token record in a single DB operation.
+    // If two concurrent requests attempt to rotate the same token, exactly one succeeds.
+    const claimedToken = await RefreshToken.findOneAndUpdate(
+        {
+            $or: [
+                { token: tokenHash },
+                { token: refreshTokenStr }
+            ],
+            isValid: true,
+            expiresAt: { $gt: new Date() }
+        },
+        { $set: { isValid: false } },
+        { new: false } // return document before update
+    ).populate('user')
+
+    if (!claimedToken || !claimedToken.user) {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    const user = claimedToken.user
+
+    // Reject non-active accounts during refresh-token rotation
+    if (user.accountStatus === 'suspended') {
+        const err = new Error('Account is suspended')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus === 'deleted') {
+        const err = new Error('Account has been deleted')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus !== 'active') {
+        const err = new Error('Account is not active')
+        err.statusCode = 403
+        throw err
+    }
+
+    // Verify cryptographic signature and user version
+    try {
+        jwt.verify(refreshTokenStr, process.env.JWT_SECRET + user.refreshTokenVersion)
+    } catch (jwtErr) {
+        // Token was already marked invalid in DB by findOneAndUpdate
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    // Generate new refresh token (hashed at rest)
     const newRefreshToken = await generateRefreshToken(
         user,
-        refreshToken.deviceInfo || '',
-        refreshToken.ipAddress || ''
+        claimedToken.deviceInfo || '',
+        claimedToken.ipAddress || ''
     )
 
     // Generate new access token
@@ -126,27 +197,45 @@ export const invalidateAllUserTokens = async (userId) => {
     )
 }
 
-// Login user and return raw tokens
+// Login user and return raw tokens - rejects non-active accounts before issuing tokens
 export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     const { emailId , password } = userData
-    if(!emailId || !password) {
+    if (!emailId || !password) {
         const err = new Error('Required fields are missing')
         err.statusCode = 400
         throw err
     }
-    const existingUser = await User.findOne({emailId}).select('+password')
-    if(!existingUser) {
+    const existingUser = await User.findOne({ emailId }).select('+password')
+    if (!existingUser) {
         const err = new Error("Invalid Credentials")
         err.statusCode = 401
         throw err
     }
-    let isValiduser = await bcrypt.compare(password,existingUser.password)
-    if(!isValiduser) {
+    let isValiduser = await bcrypt.compare(password, existingUser.password)
+    if (!isValiduser) {
         const err = new Error("Invalid Credentials")
         err.statusCode = 401
         throw err
     }
-    if(!process.env.JWT_SECRET) {
+
+    // Reject suspended and deleted accounts during login before issuing tokens
+    if (existingUser.accountStatus === 'suspended') {
+        const err = new Error("Account is suspended")
+        err.statusCode = 403
+        throw err
+    }
+    if (existingUser.accountStatus === 'deleted') {
+        const err = new Error("Account has been deleted")
+        err.statusCode = 403
+        throw err
+    }
+    if (existingUser.accountStatus !== 'active') {
+        const err = new Error("Account is not active")
+        err.statusCode = 403
+        throw err
+    }
+
+    if (!process.env.JWT_SECRET) {
         const err = new Error("Internal Server Error, jwt_secret not found")
         err.statusCode = 500
         throw err
@@ -176,12 +265,19 @@ export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     return { accessToken, refreshToken, user }
 }
 
-// Logout user and invalidate token using hash
+// Logout user and invalidate token scoped strictly to user ownership
 export async function logoutUser(userId, refreshToken) {
+    if (!userId) {
+        const err = new Error('User ID is required for logout')
+        err.statusCode = 400
+        throw err
+    }
+
     if (refreshToken) {
         const tokenHash = hashToken(refreshToken)
-        await RefreshToken.findOneAndUpdate(
+        const updated = await RefreshToken.findOneAndUpdate(
             {
+                user: userId, // Scoped strictly to the authenticated user ID
                 $or: [
                     { token: tokenHash },
                     { token: refreshToken }
@@ -189,6 +285,8 @@ export async function logoutUser(userId, refreshToken) {
             },
             { isValid: false }
         )
+        // If token belonged to another user, updated will be null
+        return !!updated
     }
     return true
 }

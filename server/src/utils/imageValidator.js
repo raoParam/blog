@@ -1,13 +1,12 @@
-import { PassThrough } from 'stream'
+import { Readable } from 'stream'
 import path from 'path'
+import sharp from 'sharp'
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp'])
-const MIN_HEADER_BYTES = 32
 
 /**
  * Validates and decodes image format from buffer headers (JPEG, PNG, WebP).
- * Does not rely solely on simple 3-byte prefix; decodes header structures/chunks.
  * @param {Buffer} buffer 
  * @returns {'jpeg'|'png'|'webp'|null}
  */
@@ -17,48 +16,19 @@ export function detectImageFormat(buffer) {
     // 1. PNG: 8-byte signature followed by IHDR chunk with dimensions
     if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47 &&
         buffer[4] === 0x0D && buffer[5] === 0x0A && buffer[6] === 0x1A && buffer[7] === 0x0A) {
-        if (buffer.length >= 24) {
-            const chunkType = buffer.toString('ascii', 12, 16)
-            if (chunkType === 'IHDR') {
-                const width = buffer.readUInt32BE(16)
-                const height = buffer.readUInt32BE(20)
-                if (width > 0 && height > 0) {
-                    return 'png'
-                }
-            }
-        } else {
-            return 'png'
-        }
+        return 'png'
     }
 
-    // 2. JPEG: SOI (FF D8) + Marker (FF xx) + segment length
+    // 2. JPEG: SOI (FF D8) + Marker (FF xx)
     if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
-        const marker = buffer[3]
-        // Standard markers following SOI: APP0-APP15 (E0-EF), DQT (DB), SOF0-SOF2 (C0-C3), DRI (DD), COM (FE)
-        if ((marker >= 0xE0 && marker <= 0xEF) || marker === 0xDB || (marker >= 0xC0 && marker <= 0xC3) || marker === 0xDD || marker === 0xFE) {
-            if (buffer.length >= 6) {
-                const markerLen = buffer.readUInt16BE(4)
-                if (markerLen >= 2) {
-                    return 'jpeg'
-                }
-            } else {
-                return 'jpeg'
-            }
-        }
+        return 'jpeg'
     }
 
-    // 3. WebP: RIFF (bytes 0-3) + WEBP (bytes 8-11) + VP8 / VP8L / VP8X chunk
+    // 3. WebP: RIFF (bytes 0-3) + WEBP (bytes 8-11)
     if (buffer.length >= 12 &&
         buffer.toString('ascii', 0, 4) === 'RIFF' &&
         buffer.toString('ascii', 8, 12) === 'WEBP') {
-        if (buffer.length >= 16) {
-            const chunkType = buffer.toString('ascii', 12, 16)
-            if (chunkType === 'VP8 ' || chunkType === 'VP8L' || chunkType === 'VP8X') {
-                return 'webp'
-            }
-        } else {
-            return 'webp'
-        }
+        return 'webp'
     }
 
     return null
@@ -71,6 +41,50 @@ export function detectImageFormat(buffer) {
  */
 export function isValidImageMagicNumber(buffer) {
     return detectImageFormat(buffer) !== null
+}
+
+/**
+ * Uses maintained image library (Sharp) to decode and verify image integrity and format.
+ * Throws a 400 error if empty, unparseable, corrupted, or not permitted.
+ * @param {Buffer} buffer 
+ * @param {string[]} allowedFormats 
+ * @returns {Promise<{ format: string, width: number, height: number }>}
+ */
+export async function decodeAndValidateImage(buffer, allowedFormats = ['jpeg', 'png', 'webp', 'jpg']) {
+    if (!buffer || buffer.length === 0) {
+        const err = new Error('Empty image file uploaded')
+        err.statusCode = 400
+        throw err
+    }
+
+    const normalizedAllowed = new Set(
+        allowedFormats.map(f => f.toLowerCase() === 'jpg' ? 'jpeg' : f.toLowerCase())
+    )
+
+    let metadata
+    try {
+        const image = sharp(buffer, { failOn: 'error' })
+        metadata = await image.metadata()
+        // Fully decode pixel statistics to detect truncated or corrupted files
+        await image.stats()
+    } catch (decodeErr) {
+        const err = new Error('Invalid or corrupted image: file cannot be decoded as an image')
+        err.statusCode = 400
+        throw err
+    }
+
+    const detectedFormat = (metadata.format || '').toLowerCase()
+    if (!normalizedAllowed.has(detectedFormat)) {
+        const err = new Error(`Image format "${detectedFormat}" is not permitted`)
+        err.statusCode = 400
+        throw err
+    }
+
+    return {
+        format: detectedFormat,
+        width: metadata.width,
+        height: metadata.height
+    }
 }
 
 /**
@@ -91,19 +105,18 @@ export function imageFileFilter(req, file, cb) {
 
 /**
  * Wraps a Multer storage engine to buffer incoming chunks across stream fragmentation,
- * validate image format headers before any byte reaches Cloudinary, and preserve all bytes.
+ * fully decode and validate the image via Sharp before any byte reaches Cloudinary,
+ * and preserve every byte into the upload stream if valid.
  * @param {object} baseStorage 
  * @param {string[]} allowedFormats
  * @returns {object}
  */
 export function wrapStorageWithContentValidation(baseStorage, allowedFormats = ['jpeg', 'png', 'webp', 'jpg']) {
-    const normalizedAllowed = new Set(allowedFormats.map(f => f.toLowerCase() === 'jpg' ? 'jpeg' : f.toLowerCase()))
-
     return {
         _handleFile(req, file, cb) {
             const chunks = []
             let totalBytes = 0
-            let evaluated = false
+            let finished = false
 
             function cleanup() {
                 file.stream.removeListener('data', onData)
@@ -112,48 +125,14 @@ export function wrapStorageWithContentValidation(baseStorage, allowedFormats = [
             }
 
             function onData(chunk) {
-                if (evaluated) return
+                if (finished) return
                 chunks.push(chunk)
                 totalBytes += chunk.length
-
-                if (totalBytes >= MIN_HEADER_BYTES) {
-                    evaluated = true
-                    cleanup()
-                    file.stream.pause()
-
-                    const headerBuffer = Buffer.concat(chunks, totalBytes)
-                    const detectedFormat = detectImageFormat(headerBuffer)
-
-                    if (!detectedFormat) {
-                        file.stream.resume() // Drain stream
-                        const err = new Error('Invalid image file content: file signature does not match any supported image format')
-                        err.statusCode = 400
-                        return cb(err)
-                    }
-
-                    if (!normalizedAllowed.has(detectedFormat)) {
-                        file.stream.resume() // Drain stream
-                        const err = new Error(`Image format "${detectedFormat}" is not permitted`)
-                        err.statusCode = 400
-                        return cb(err)
-                    }
-
-                    // Validated successfully. Replay every buffered byte into PassThrough and pipe remaining.
-                    const pass = new PassThrough()
-                    for (const c of chunks) {
-                        pass.write(c)
-                    }
-                    file.stream.pipe(pass)
-                    file.stream.resume()
-
-                    const wrappedFile = { ...file, stream: pass, detectedFormat }
-                    baseStorage._handleFile(req, wrappedFile, cb)
-                }
             }
 
-            function onEnd() {
-                if (evaluated) return
-                evaluated = true
+            async function onEnd() {
+                if (finished) return
+                finished = true
                 cleanup()
 
                 if (totalBytes === 0) {
@@ -162,35 +141,30 @@ export function wrapStorageWithContentValidation(baseStorage, allowedFormats = [
                     return cb(err)
                 }
 
-                // If file is smaller than MIN_HEADER_BYTES but has ended
-                const headerBuffer = Buffer.concat(chunks, totalBytes)
-                const detectedFormat = detectImageFormat(headerBuffer)
+                const fullBuffer = Buffer.concat(chunks, totalBytes)
 
-                if (!detectedFormat) {
-                    const err = new Error('Invalid or corrupted image: file too small or invalid signature')
-                    err.statusCode = 400
-                    return cb(err)
+                try {
+                    const validated = await decodeAndValidateImage(fullBuffer, allowedFormats)
+                    
+                    // Replay all buffered bytes into a clean Readable stream for Cloudinary
+                    const replayStream = Readable.from(fullBuffer)
+                    const wrappedFile = { 
+                        ...file, 
+                        stream: replayStream, 
+                        detectedFormat: validated.format,
+                        imageDimensions: { width: validated.width, height: validated.height }
+                    }
+
+                    baseStorage._handleFile(req, wrappedFile, cb)
+                } catch (validationErr) {
+                    // Invalid/corrupted image: base storage is NEVER invoked
+                    cb(validationErr)
                 }
-
-                if (!normalizedAllowed.has(detectedFormat)) {
-                    const err = new Error(`Image format "${detectedFormat}" is not permitted`)
-                    err.statusCode = 400
-                    return cb(err)
-                }
-
-                const pass = new PassThrough()
-                for (const c of chunks) {
-                    pass.write(c)
-                }
-                pass.end()
-
-                const wrappedFile = { ...file, stream: pass, detectedFormat }
-                baseStorage._handleFile(req, wrappedFile, cb)
             }
 
             function onError(err) {
-                if (evaluated) return
-                evaluated = true
+                if (finished) return
+                finished = true
                 cleanup()
                 cb(err)
             }
