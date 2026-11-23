@@ -1,91 +1,78 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight, PenSquare, BookOpen, Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
 
 const FinalCTA = () => {
   return (
-    <section className="relative pb-28 overflow-hidden">
-      {/* Deep background with subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-base via-base to-surface-0/50" />
-      
-      {/* Glow effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
-
-      {/* Grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e2130_1px,transparent_1px),linear-gradient(to_bottom,#1e2130_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,black_40%,transparent_100%)] opacity-20" />
-
-      <div className="relative max-w-4xl mx-auto px-6 text-center">
+    <section className="relative py-20 lg:py-28 overflow-hidden bg-[var(--bg-page-secondary)]/50">
+      <div className="relative max-w-5xl mx-auto px-6">
+        
+        {/* Editorial Masthead Call Box */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="bg-surface-0/80 backdrop-blur-sm border border-border-subtle rounded-3xl p-12 md:p-16 shadow-2xl"
+          transition={{ duration: 0.5 }}
+          className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-8 sm:p-12 lg:p-16 text-center shadow-sm relative overflow-hidden"
         >
-          {/* Icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-8"
-          >
-            <Sparkles className="w-8 h-8 text-accent" />
-          </motion.div>
+          {/* Subtle Top Accent Rule */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--btn-primary-bg)]" />
 
-          {/* Heading */}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary mb-4 tracking-tight">
-            Ready to Share Your
-            <br />
-            <span className="text-accent">Voice with the World?</span>
+          {/* Monospace Eyebrow */}
+          <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[var(--color-accent)] font-semibold mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
+            <span>Open Call For Contributors // Vol. 2026</span>
+          </div>
+
+          {/* Headline */}
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text-heading)] tracking-tight leading-tight max-w-3xl mx-auto mb-6">
+            The software industry needs your unvarnished experience.
           </h2>
 
-          {/* Description */}
-          <p className="text-text-secondary text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of developers who are already writing, 
-            learning, and growing together on Flagger.
+          {/* Editorial Subtitle */}
+          <p className="text-base sm:text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto mb-10">
+            Whether you just spent 40 hours isolating a race condition, redesigned a high-throughput pipeline, or lived through a disastrous cloud migration—your story helps other developers write better software.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link to="/register" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white font-medium px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-lg"
-              >
-                Create Free Account
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover)] text-[var(--btn-primary-text)] font-medium px-8 py-4 rounded-xl transition-all shadow-sm group text-base">
+                <PenSquare size={18} />
+                <span>Publish Your First Dispatch</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
             </Link>
 
             <Link to="/explore" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-surface-1 hover:bg-surface-2 text-text-primary font-medium px-8 py-4 rounded-xl transition-all duration-300 border border-border-subtle text-lg"
-              >
-                Browse Feed
-              </motion.button>
+              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-[var(--border-card)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-heading)] font-medium px-8 py-4 rounded-xl transition-all text-base shadow-sm">
+                <BookOpen size={18} className="text-[var(--color-accent)]" />
+                <span>Explore The Archive</span>
+              </button>
             </Link>
           </div>
 
-          {/* Trust badges */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm text-[#f8f9fa]">
-            <div className="flex items-center gap-2 text-text-muted">
-              <span className="w-1.5 h-1.5 bg-accent rounded-full" />
-              No credit card required
+          {/* Editorial Commitments Strip */}
+          <div className="pt-8 border-t border-[var(--divider)] flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-mono text-[var(--text-muted)]">
+            <div className="flex items-center gap-1.5">
+              <Check size={14} className="text-[var(--color-accent)] stroke-[2.5]" />
+              <span>Zero paywalls or reading meters</span>
             </div>
-            <div className="flex items-center gap-2 text-text-muted">
-              <span className="w-1.5 h-1.5 bg-accent rounded-full" />
-              Free forever
+            <div className="flex items-center gap-1.5">
+              <Check size={14} className="text-[var(--color-accent)] stroke-[2.5]" />
+              <span>Cryptographic anonymous posting option</span>
             </div>
-            <div className="flex items-center gap-2 text-text-muted">
-              <span className="w-1.5 h-1.5 bg-accent rounded-full" />
-              Cancel anytime
+            <div className="flex items-center gap-1.5">
+              <Check size={14} className="text-[var(--color-accent)] stroke-[2.5]" />
+              <span>Native Markdown & code formatting</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Check size={14} className="text-[var(--color-accent)] stroke-[2.5]" />
+              <span>Free for developers forever</span>
             </div>
           </div>
+
         </motion.div>
       </div>
     </section>

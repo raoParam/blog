@@ -277,7 +277,7 @@ const UserProfilePage = () => {
   const isVerifiedUser = Boolean(profile?.isVerified || profile?.isVerifiedBadge);
 
   return (
-    <div className="min-h-screen bg-[#020307] text-[#E9EDF3]">
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-body)] transition-colors duration-200">
       <HomeNavbar
         user={user}
         onLogout={handleLogout}
@@ -314,7 +314,7 @@ const UserProfilePage = () => {
 
       <main className="mx-auto w-full max-w-[960px] px-4 py-6 sm:px-6">
         {pageError && (
-          <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          <div className="mb-4 rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-text)]">
             {pageError}
           </div>
         )}
@@ -323,7 +323,7 @@ const UserProfilePage = () => {
           <UserProfileSkeleton />
         ) : (
           <>
-            <section className="relative rounded-3xl border border-[#10131B] bg-[#020307] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.6)] sm:p-6">
+            <section className="relative rounded-3xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-card)] sm:p-6 transition-colors">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-shrink-0">
@@ -331,35 +331,35 @@ const UserProfilePage = () => {
                       <img
                         src={avatar}
                         alt={userName}
-                        className="h-24 w-24 rounded-full border-2 border-[#1F2130] object-cover"
+                        className="h-24 w-24 rounded-full border-2 border-[var(--border-input)] object-cover"
                       />
                     ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#1F2130] bg-[#0B0E17] text-2xl font-semibold text-[#F8FBFF]">
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[var(--border-input)] bg-[var(--bg-surface-elevated)] text-2xl font-semibold text-[var(--text-heading)]">
                         {userName.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
 
                   <div className="flex flex-1 flex-wrap gap-4">
-                    <div className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left">
-                      <span className="text-xs text-[#6E7489]">Posts</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{posts.length}</span>
+                    <div className="flex flex-col gap-1 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-input)] px-3.5 py-2 text-left shadow-xs">
+                      <span className="text-xs text-[var(--text-muted)]">Posts</span>
+                      <span className="text-lg font-semibold text-[var(--text-heading)]">{posts.length}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => openConnectionsList("followers")}
-                      className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                      className="flex flex-col gap-1 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-input)] px-3.5 py-2 text-left transition hover:border-[var(--border-focus)] shadow-xs"
                     >
-                      <span className="text-xs text-[#6E7489]">Followers</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{profile?.followersCount || 0}</span>
+                      <span className="text-xs text-[var(--text-muted)]">Followers</span>
+                      <span className="text-lg font-semibold text-[var(--text-heading)]">{profile?.followersCount || 0}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => openConnectionsList("following")}
-                      className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                      className="flex flex-col gap-1 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-input)] px-3.5 py-2 text-left transition hover:border-[var(--border-focus)] shadow-xs"
                     >
-                      <span className="text-xs text-[#6E7489]">Following</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{profile?.followingCount || 0}</span>
+                      <span className="text-xs text-[var(--text-muted)]">Following</span>
+                      <span className="text-lg font-semibold text-[var(--text-heading)]">{profile?.followingCount || 0}</span>
                     </button>
                   </div>
                 </div>
@@ -367,10 +367,10 @@ const UserProfilePage = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1">
-                      <p className="text-sm text-[#8C95A7]">@{userName}</p>
-                      {isVerifiedUser && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+                      <p className="text-sm text-[var(--text-muted)]">@{userName}</p>
+                      {isVerifiedUser && <ShieldCheck size={14} className="text-[var(--color-accent)]" />}
                     </div>
-                    <p className="text-base font-semibold text-[#F3F7FF]">{profileFullName}</p>
+                    <p className="text-base font-semibold text-[var(--text-heading)]">{profileFullName}</p>
                   </div>
 
                   <button
@@ -379,8 +379,8 @@ const UserProfilePage = () => {
                     disabled={followLoading || !profile}
                     className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                       profile?.isFollowing
-                        ? "border border-[#4B5568] bg-[#0B0E13] text-[#E7EDF6] hover:border-[#5CA6FF]"
-                        : "bg-[#5CA6FF] text-white hover:bg-[#6CB0FF]"
+                        ? "border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] text-[var(--text-heading)] hover:border-[var(--border-focus)]"
+                        : "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--btn-primary-hover)]"
                     } ${followLoading ? "cursor-not-allowed opacity-70" : ""}`}
                   >
                     {followLoading ? "Please wait..." : profile?.isFollowing ? "Following" : "Follow"}

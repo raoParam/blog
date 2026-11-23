@@ -24,7 +24,7 @@ const baseStorage = new CloudinaryStorage({
     }
 })
 
-const secureStorage = wrapStorageWithContentValidation(baseStorage)
+const secureStorage = wrapStorageWithContentValidation(baseStorage, undefined, 10 * 1024 * 1024)
 
 // Create multer upload instance with max 5 images and 10MB limit per file
 export const uploadPostImages = multer({

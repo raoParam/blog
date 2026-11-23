@@ -47,24 +47,24 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl border border-[#2A2E3B] bg-[#0C0E14] text-[#EDEDED] shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+      <div className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-elevated)] text-[var(--text-body)] shadow-[var(--shadow-dropdown)]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#1E222D] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-card)] px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg-surface-hover)] text-[var(--color-accent)]">
               <BookOpen size={18} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#F9FAFB]">Markdown Reference & Cheatsheet</h2>
-              <p className="text-xs text-[#9CA3AF]">Quick syntax guide with copy and insert helpers</p>
+              <h2 className="text-base font-semibold text-[var(--text-heading)]">Markdown Reference & Cheatsheet</h2>
+              <p className="text-xs text-[var(--text-secondary)]">Quick syntax guide with copy and insert helpers</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close guide"
-            className="rounded-lg border border-[#272B38] p-1.5 text-[#9CA3AF] transition hover:bg-[#1C202B] hover:text-white"
+            className="rounded-lg border border-[var(--border-input)] p-1.5 text-[var(--text-secondary)] transition hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-heading)]"
           >
             <X size={18} />
           </button>
@@ -72,8 +72,8 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 text-xs text-indigo-200 flex items-start gap-2.5">
-            <Sparkles size={16} className="mt-0.5 shrink-0 text-indigo-400" />
+          <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--bg-surface-input)] p-3.5 text-xs text-[var(--text-body)] flex items-start gap-2.5">
+            <Sparkles size={16} className="mt-0.5 shrink-0 text-[var(--color-accent)]" />
             <span>
               You can write directly in standard GitHub-Flavored Markdown. Use the toolbar or type markdown formatting markers directly.
             </span>
@@ -83,14 +83,14 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
             {GUIDE_SECTIONS.map((section) => (
               <div
                 key={section.title}
-                className="flex flex-col justify-between rounded-xl border border-[#1F232F] bg-[#11141D] p-4 transition hover:border-[#2E3547]"
+                className="flex flex-col justify-between rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-4 transition hover:border-[var(--border-focus)] shadow-sm"
               >
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#A5B4FC]">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
                     {section.title}
                   </h3>
-                  <p className="mt-1 text-xs text-[#9CA3AF] leading-relaxed">{section.description}</p>
-                  <pre className="mt-3 rounded-lg border border-[#232734] bg-[#0A0C11] p-2.5 font-mono text-xs text-[#E0E7FF] overflow-x-auto whitespace-pre">
+                  <p className="mt-1 text-xs text-[var(--text-secondary)] leading-relaxed">{section.description}</p>
+                  <pre className="mt-3 rounded-lg border border-[var(--border-input)] bg-[var(--bg-surface-code)] p-2.5 font-mono text-xs text-[var(--text-heading)] overflow-x-auto whitespace-pre">
                     {section.syntax}
                   </pre>
                 </div>
@@ -101,7 +101,7 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
                       onInsertTemplate(section.syntax);
                       onClose();
                     }}
-                    className="mt-3 inline-flex items-center justify-center gap-1 rounded-lg border border-[#2B3244] bg-[#171B26] px-3 py-1.5 text-xs font-medium text-[#CBD5E1] transition hover:border-indigo-500 hover:bg-indigo-600/20 hover:text-white"
+                    className="mt-3 inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] px-3 py-1.5 text-xs font-medium text-[var(--text-heading)] transition hover:border-[var(--border-focus)] hover:bg-[var(--bg-surface-hover)]"
                   >
                     Insert Example
                   </button>
@@ -112,11 +112,11 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end border-t border-[#1E222D] px-6 py-3.5">
+        <div className="flex items-center justify-end border-t border-[var(--border-card)] px-6 py-3.5">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-[#2A2E3B] bg-[#181C26] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#202534]"
+            className="rounded-xl border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] px-5 py-2 text-xs font-semibold text-[var(--text-heading)] transition hover:bg-[var(--bg-surface-hover)]"
           >
             Got it
           </button>

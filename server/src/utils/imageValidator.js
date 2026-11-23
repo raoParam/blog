@@ -111,7 +111,7 @@ export function imageFileFilter(req, file, cb) {
  * @param {string[]} allowedFormats
  * @returns {object}
  */
-export function wrapStorageWithContentValidation(baseStorage, allowedFormats = ['jpeg', 'png', 'webp', 'jpg']) {
+export function wrapStorageWithContentValidation(baseStorage, allowedFormats = ['jpeg', 'png', 'webp', 'jpg'], maxBytes = 10 * 1024 * 1024) {
     return {
         _handleFile(req, file, cb) {
             const chunks = []
@@ -124,8 +124,24 @@ export function wrapStorageWithContentValidation(baseStorage, allowedFormats = [
                 file.stream.removeListener('error', onError)
             }
 
+            function failForFileSize() {
+                if (finished) return
+                finished = true
+                cleanup()
+                chunks.length = 0
+                file.stream.resume()
+
+                const err = new Error('Uploaded file exceeds the maximum allowed size limit')
+                err.statusCode = 413
+                err.code = 'LIMIT_FILE_SIZE'
+                cb(err)
+            }
+
             function onData(chunk) {
                 if (finished) return
+                if (totalBytes + chunk.length > maxBytes) {
+                    return failForFileSize()
+                }
                 chunks.push(chunk)
                 totalBytes += chunk.length
             }
@@ -172,6 +188,7 @@ export function wrapStorageWithContentValidation(baseStorage, allowedFormats = [
             file.stream.on('data', onData)
             file.stream.on('end', onEnd)
             file.stream.on('error', onError)
+            file.stream.once('limit', failForFileSize)
         },
 
         _removeFile(req, file, cb) {

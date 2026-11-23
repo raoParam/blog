@@ -342,7 +342,7 @@ const ProfilePage = () => {
   const isVerifiedUser = Boolean(profile?.isVerified || profile?.isVerifiedBadge);
 
   return (
-    <div className="min-h-screen bg-[#020307] text-[#E9EDF3]">
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-body)] transition-colors duration-200">
       <HomeNavbar
         user={profile || user}
         onLogout={handleLogout}
@@ -379,7 +379,7 @@ const ProfilePage = () => {
 
       <main className="mx-auto w-full max-w-[960px] px-4 py-6 sm:px-6">
         {pageError && (
-          <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          <div className="mb-4 rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-text)]">
             {pageError}
           </div>
         )}
@@ -388,7 +388,7 @@ const ProfilePage = () => {
           <ProfilePageSkeleton />
         ) : (
           <>
-            <section className="relative rounded-3xl border border-[#10131B] bg-[#020307] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.6)] sm:p-6">
+            <section className="relative rounded-3xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-card)] sm:p-6 transition-colors">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-shrink-0">
@@ -396,10 +396,10 @@ const ProfilePage = () => {
                       <img
                         src={avatar}
                         alt={userName}
-                        className="h-24 w-24 rounded-full border-2 border-[#1F2130] object-cover"
+                        className="h-24 w-24 rounded-full border-2 border-[var(--border-input)] object-cover"
                       />
                     ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#1F2130] bg-[#0B0E17] text-2xl font-semibold text-[#F8FBFF]">
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[var(--border-input)] bg-[var(--bg-surface-elevated)] text-2xl font-semibold text-[var(--text-heading)]">
                         {userName.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -410,20 +410,20 @@ const ProfilePage = () => {
                       stat.key == "posts" ? (
                         <div
                           key={stat.key}
-                          className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left"
+                          className="flex flex-col gap-1 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-input)] px-3.5 py-2 text-left shadow-xs"
                         >
-                          <span className="text-xs text-[#6E7489]">{stat.label}</span>
-                          <span className="text-lg font-semibold text-[#F8FBFF]">{stat.count}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{stat.label}</span>
+                          <span className="text-lg font-semibold text-[var(--text-heading)]">{stat.count}</span>
                         </div>
                       ) : (
                         <button
                           key={stat.key}
                           type="button"
                           onClick={() => openConnectionsList(stat.key)}
-                          className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                          className="flex flex-col gap-1 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface-input)] px-3.5 py-2 text-left transition hover:border-[var(--border-focus)] shadow-xs"
                         >
-                          <span className="text-xs text-[#6E7489]">{stat.label}</span>
-                          <span className="text-lg font-semibold text-[#F8FBFF]">{stat.count}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{stat.label}</span>
+                          <span className="text-lg font-semibold text-[var(--text-heading)]">{stat.count}</span>
                         </button>
                       )
                     )}
@@ -432,17 +432,17 @@ const ProfilePage = () => {
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <p className="text-sm text-[#8C95A7]">@{userName}</p>
-                    {isVerifiedUser && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+                    <p className="text-sm text-[var(--text-muted)]">@{userName}</p>
+                    {isVerifiedUser && <ShieldCheck size={14} className="text-[var(--color-accent)]" />}
                   </div>
-                  <p className="text-base font-semibold text-[#F3F7FF]">
+                  <p className="text-base font-semibold text-[var(--text-heading)]">
                     {profile?.firstName || profile?.lastName ? `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() : ""}
                   </p>
                 </div>
               </div>
 
               <div className="mt-2">
-                <p className="text-xs font-semibold text-[#8C95A7]">
+                <p className="text-xs font-semibold text-[var(--text-muted)]">
                   Joined {joinedText || "Unknown"}
                 </p>
               </div>
@@ -454,24 +454,24 @@ const ProfilePage = () => {
                   setEditOpen(true);
                 }}
                 aria-label="Edit profile"
-                className="absolute right-4 bottom-4 rounded-full border border-[#1F2130] bg-[#0B0E17] p-3 text-[#EAF1FF] transition hover:border-[#7FA8CA]"
+                className="absolute right-4 bottom-4 rounded-full border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] p-3 text-[var(--text-heading)] transition hover:border-[var(--border-focus)] shadow-sm"
               >
                 <Edit3 size={18} />
               </button>
             </section>
 
             <section className="mt-6">
-              <div className="border-b border-[#1F293B]">
+              <div className="border-b border-[var(--border-card)]">
                 <div className="flex flex-wrap gap-6 text-sm font-semibold">
                   {["posts", "saved", "about"].map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setActiveTab(tab)}
-                      className={`border-b-2 pb-2 text-sm transition ${
+                      className={`relative pb-3 capitalize transition ${
                         activeTab === tab
-                          ? "border-[#5CA6FF] text-[#5CA6FF]"
-                          : "border-transparent text-[#90A1C2] hover:text-[#D2DCFF]"
+                          ? "text-[var(--text-heading)] font-semibold"
+                          : "text-[var(--text-secondary)] hover:text-[var(--text-heading)]"
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}

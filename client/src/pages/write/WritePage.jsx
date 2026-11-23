@@ -196,7 +196,7 @@ const WritePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050608] text-[#F2F2F2]">
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-body)] transition-colors duration-200">
       <HomeNavbar
         user={user}
         onLogout={handleLogout}
@@ -234,11 +234,11 @@ const WritePage = () => {
       <main className="mx-auto w-full max-w-[1366px] px-4 py-6 sm:px-6">
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           {/* Main Editing Area */}
-          <section className="rounded-2xl border border-[#1E1F23] bg-[#090A0D] p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#1C1D22] pb-4">
+          <section className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-5 shadow-[var(--shadow-card)] transition-colors">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--divider)] pb-4">
               <div>
-                <h1 className="text-xl font-semibold text-[#F9F9F9]">Write New Story</h1>
-                <p className="text-sm text-[#C7C7C9]">Draft your post with Markdown support and publish when ready.</p>
+                <h1 className="text-xl font-semibold text-[var(--text-heading)]">Write New Story</h1>
+                <p className="text-sm text-[var(--text-secondary)]">Draft your post with Markdown support and publish when ready.</p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -246,7 +246,7 @@ const WritePage = () => {
                   type="button"
                   onClick={handlePublish}
                   disabled={submitting}
-                  className="rounded-xl bg-[#1E3E73] px-5 py-2 text-sm font-semibold text-[#F8FBFF] shadow-sm transition hover:bg-[#2A4E88] disabled:opacity-60"
+                  className="rounded-xl bg-[var(--btn-primary-bg)] px-5 py-2 text-sm font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:bg-[var(--btn-primary-hover)] disabled:opacity-60"
                 >
                   {submitting ? "Publishing..." : "Publish"}
                 </button>
@@ -256,15 +256,15 @@ const WritePage = () => {
             <div className="space-y-5">
               {/* Title Input */}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Title</label>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">Title</label>
                 <input
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   maxLength={TITLE_MAX}
                   placeholder="Write your headline..."
-                  className="w-full rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 text-[15px] text-[#F1F1F2] outline-none transition focus:border-[#355D9A]"
+                  className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-surface-input)] px-4 py-3 text-[15px] text-[var(--text-heading)] outline-none transition focus:border-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
                 />
-                <p className="mt-1 text-right text-xs text-[#9A9BA1]">
+                <p className="mt-1 text-right text-xs text-[var(--text-muted)]">
                   {titleLength}/{TITLE_MAX} (min {TITLE_MIN})
                 </p>
               </div>
@@ -273,11 +273,11 @@ const WritePage = () => {
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <label className="block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">
+                    <label className="block text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">
                       Content
                     </label>
                     {markdownEnabled && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/30 bg-indigo-950/40 px-2 py-0.5 text-[10px] font-medium text-indigo-300">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-accent)]/40 bg-[var(--bg-surface-hover)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)]">
                         <Sparkles size={10} />
                         Markdown
                       </span>
@@ -292,8 +292,8 @@ const WritePage = () => {
                       onClick={() => setMarkdownEnabled((prev) => !prev)}
                       className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
                         markdownEnabled
-                          ? "border-indigo-500/40 bg-indigo-950/30 text-indigo-300 hover:bg-indigo-900/40"
-                          : "border-[#2A2D35] bg-[#111319] text-[#8E93A3] hover:text-[#D1D5DB]"
+                          ? "border-[var(--border-focus)] bg-[var(--bg-surface-hover)] text-[var(--text-heading)]"
+                          : "border-[var(--border-input)] bg-[var(--bg-surface-input)] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                       }`}
                       title={markdownEnabled ? "Markdown enabled" : "Plain text mode"}
                     >
@@ -302,14 +302,14 @@ const WritePage = () => {
                     </button>
 
                     {/* View Modes (Write / Preview / Split) */}
-                    <div className="flex items-center rounded-lg border border-[#262A36] bg-[#0F1219] p-0.5 text-xs">
+                    <div className="flex items-center rounded-lg border border-[var(--border-input)] bg-[var(--bg-surface-input)] p-0.5 text-xs">
                       <button
                         type="button"
                         onClick={() => setEditorMode("write")}
                         className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
                           editorMode === "write"
-                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
-                            : "text-[#8E93A3] hover:text-white"
+                            ? "bg-[var(--bg-surface)] text-[var(--text-heading)] font-semibold shadow-xs"
+                            : "text-[var(--text-secondary)] hover:text-[var(--text-heading)]"
                         }`}
                         title="Write mode"
                       >
@@ -322,8 +322,8 @@ const WritePage = () => {
                         onClick={() => setEditorMode("preview")}
                         className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
                           editorMode === "preview"
-                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
-                            : "text-[#8E93A3] hover:text-white"
+                            ? "bg-[var(--bg-surface)] text-[var(--text-heading)] font-semibold shadow-xs"
+                            : "text-[var(--text-secondary)] hover:text-[var(--text-heading)]"
                         }`}
                         title="Preview mode"
                       >
@@ -336,8 +336,8 @@ const WritePage = () => {
                         onClick={() => setEditorMode("split")}
                         className={`hidden sm:flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
                           editorMode === "split"
-                            ? "bg-[#1E2433] text-white font-medium shadow-xs"
-                            : "text-[#8E93A3] hover:text-white"
+                            ? "bg-[var(--bg-surface)] text-[var(--text-heading)] font-semibold shadow-xs"
+                            : "text-[var(--text-secondary)] hover:text-[var(--text-heading)]"
                         }`}
                         title="Split view"
                       >
@@ -372,12 +372,12 @@ const WritePage = () => {
                         ? "Start writing your story in Markdown (e.g. # Heading, **bold**, `code`, etc.)..."
                         : "Start writing your story..."
                     }
-                    className="w-full resize-y rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 font-mono text-[14.5px] leading-7 text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
+                    className="w-full resize-y rounded-xl border border-[var(--border-input)] bg-[var(--bg-surface-input)] px-4 py-3 font-mono text-[14.5px] leading-7 text-[var(--text-heading)] outline-none transition focus:border-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
                   />
                 )}
 
                 {editorMode === "preview" && (
-                  <div className="min-h-[420px] rounded-xl border border-[#2A2C31] bg-[#0C0D11] p-5">
+                  <div className="min-h-[420px] rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-5">
                     <MarkdownRenderer content={content} />
                   </div>
                 )}
@@ -385,7 +385,7 @@ const WritePage = () => {
                 {editorMode === "split" && (
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="flex flex-col">
-                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[#8E93A3]">
+                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
                         <span>Markdown Editor</span>
                         <span>Ctrl+B, Ctrl+I, Ctrl+K</span>
                       </div>
@@ -397,38 +397,38 @@ const WritePage = () => {
                         onChange={(event) => setContent(event.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Write markdown here..."
-                        className="h-[420px] w-full resize-y rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 font-mono text-[14px] leading-7 text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
+                        className="h-[420px] w-full resize-y rounded-xl border border-[var(--border-input)] bg-[var(--bg-surface-input)] px-4 py-3 font-mono text-[14px] leading-7 text-[var(--text-heading)] outline-none transition focus:border-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
                       />
                     </div>
                     <div className="flex flex-col">
-                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[#8E93A3]">
+                      <div className="mb-1.5 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
                         <span>Live Preview</span>
-                        <span className="text-indigo-400">Real-time</span>
+                        <span className="text-[var(--color-accent)] font-semibold">Real-time</span>
                       </div>
-                      <div className="h-[420px] overflow-y-auto rounded-xl border border-[#2A2C31] bg-[#0C0D11] p-4">
+                      <div className="h-[420px] overflow-y-auto rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-4">
                         <MarkdownRenderer content={content} />
                       </div>
                     </div>
                   </div>
                 )}
 
-                <p className="mt-1 text-right text-xs text-[#9A9BA1]">
+                <p className="mt-1 text-right text-xs text-[var(--text-muted)]">
                   {contentLength}/{CONTENT_MAX} (min {CONTENT_MIN})
                 </p>
               </div>
 
               {/* Summary / Excerpt Input */}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Summary / Excerpt</label>
+                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">Summary / Excerpt</label>
                 <textarea
                   rows={2}
                   maxLength={EXCERPT_MAX}
                   value={excerpt}
                   onChange={(event) => setExcerpt(event.target.value)}
                   placeholder="Short summary for cards and previews..."
-                  className="w-full resize-none rounded-xl border border-[#2A2C31] bg-[#0C0D11] px-4 py-3 text-[14px] text-[#ECECEE] outline-none transition focus:border-[#355D9A]"
+                  className="w-full resize-none rounded-xl border border-[var(--border-input)] bg-[var(--bg-surface-input)] px-4 py-3 text-[14px] text-[var(--text-heading)] outline-none transition focus:border-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
                 />
-                <p className="mt-1 text-right text-xs text-[#9A9BA1]">
+                <p className="mt-1 text-right text-xs text-[var(--text-muted)]">
                   {excerptLength}/{EXCERPT_MAX} (min {EXCERPT_MIN} if provided)
                 </p>
               </div>
@@ -436,8 +436,8 @@ const WritePage = () => {
               {/* Images */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="block text-xs uppercase tracking-[0.2em] text-[#B9BABE]">Images (max {MAX_IMAGES}, 10MB each)</label>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#2E3036] bg-[#101114] px-3 py-1.5 text-xs text-[#E7E7E8] transition hover:border-[#355D9A]">
+                  <label className="block text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">Images (max {MAX_IMAGES}, 10MB each)</label>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] px-3 py-1.5 text-xs text-[var(--text-heading)] transition hover:border-[var(--border-focus)]">
                     <ImagePlus size={14} />
                     Add Images
                     <input type="file" accept="image/*" multiple className="hidden" onChange={handlePickImages} />
@@ -445,13 +445,13 @@ const WritePage = () => {
                 </div>
 
                 {images.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-[#30333A] bg-[#0A0B0F] px-4 py-6 text-center text-sm text-[#A9AAB0]">
+                  <div className="rounded-xl border border-dashed border-[var(--border-input)] bg-[var(--bg-surface-input)] px-4 py-6 text-center text-sm text-[var(--text-muted)]">
                     No cover or gallery images attached. You can also insert image URLs inside markdown!
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {images.map((file, index) => (
-                      <div key={`${file.name}-${index}`} className="relative overflow-hidden rounded-lg border border-[#2A2D33]">
+                      <div key={`${file.name}-${index}`} className="relative overflow-hidden rounded-lg border border-[var(--border-card)]">
                         <img src={URL.createObjectURL(file)} alt={file.name} className="h-24 w-full object-cover" />
                         <button
                           type="button"
@@ -473,14 +473,14 @@ const WritePage = () => {
           {/* Sidebar Area */}
           <aside className="space-y-4">
             {/* Post Settings */}
-            <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
-              <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Post Settings</h2>
+            <section className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-card)]">
+              <h2 className="mb-3 text-sm font-semibold text-[var(--text-heading)]">Post Settings</h2>
 
-              <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[#B8B9BD]">Visibility</label>
+              <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">Visibility</label>
               <select
                 value={visibility}
                 onChange={(event) => setVisibility(event.target.value)}
-                className="mb-3 w-full rounded-lg border border-[#2A2D33] bg-[#0C0D11] px-3 py-2 text-sm text-[#ECECEE] outline-none focus:border-[#355D9A]"
+                className="mb-3 w-full rounded-lg border border-[var(--border-input)] bg-[var(--bg-surface-input)] px-3 py-2 text-sm text-[var(--text-heading)] outline-none focus:border-[var(--border-focus)] transition"
               >
                 <option value="public">Public</option>
                 <option value="anonymous">Anonymous</option>
@@ -488,67 +488,67 @@ const WritePage = () => {
             </section>
 
             {/* Markdown Quick Card */}
-            <section className="rounded-2xl border border-indigo-500/20 bg-[#0D101A] p-4">
+            <section className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-card)]">
               <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-indigo-200">
-                  <Sparkles size={15} className="text-indigo-400" />
+                <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent)]">
+                  <Sparkles size={15} />
                   <span>Markdown Support</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setGuideModalOpen(true)}
-                  className="text-xs text-indigo-300 underline underline-offset-2 hover:text-indigo-200"
+                  className="text-xs text-[var(--color-accent)] underline underline-offset-2 hover:opacity-80 font-medium"
                 >
                   Guide
                 </button>
               </div>
-              <p className="text-xs text-[#9CA3AF] leading-relaxed">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 Use headings, code blocks, checklists, tables, links, quotes, and more to enrich your blog post.
               </p>
-              <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-[#CBD5E1]">
-                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]"># Heading</span>
-                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">**bold**</span>
-                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">`code`</span>
-                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">&gt; quote</span>
-                <span className="rounded bg-[#171B28] px-2 py-0.5 border border-[#262C3E]">- list</span>
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-[var(--text-heading)]">
+                <span className="rounded bg-[var(--bg-surface-input)] px-2 py-0.5 border border-[var(--border-input)]"># Heading</span>
+                <span className="rounded bg-[var(--bg-surface-input)] px-2 py-0.5 border border-[var(--border-input)]">**bold**</span>
+                <span className="rounded bg-[var(--bg-surface-input)] px-2 py-0.5 border border-[var(--border-input)]">`code`</span>
+                <span className="rounded bg-[var(--bg-surface-input)] px-2 py-0.5 border border-[var(--border-input)]">&gt; quote</span>
+                <span className="rounded bg-[var(--bg-surface-input)] px-2 py-0.5 border border-[var(--border-input)]">- list</span>
               </div>
             </section>
 
             {/* Live Stats */}
-            <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
-              <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Live Stats</h2>
-              <div className="space-y-2 text-sm text-[#C2C3C8]">
+            <section className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-card)]">
+              <h2 className="mb-3 text-sm font-semibold text-[var(--text-heading)]">Live Stats</h2>
+              <div className="space-y-2 text-sm text-[var(--text-secondary)]">
                 <p className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
                     <FileText size={14} /> Words
                   </span>
-                  <span className="font-semibold text-[#F1F1F2]">{wordCount}</span>
+                  <span className="font-semibold text-[var(--text-heading)]">{wordCount}</span>
                 </p>
                 <p className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
                     <Type size={14} /> Characters
                   </span>
-                  <span className="font-semibold text-[#F1F1F2]">{contentLength}</span>
+                  <span className="font-semibold text-[var(--text-heading)]">{contentLength}</span>
                 </p>
                 <p className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
                     <Clock size={14} /> Read Time
                   </span>
-                  <span className="font-semibold text-[#F1F1F2]">{readMinutes} min</span>
+                  <span className="font-semibold text-[var(--text-heading)]">{readMinutes} min</span>
                 </p>
                 <p className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[#9CA3AF]">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
                     <Layers size={14} /> Images
                   </span>
-                  <span className="font-semibold text-[#F1F1F2]">{images.length}/{MAX_IMAGES}</span>
+                  <span className="font-semibold text-[var(--text-heading)]">{images.length}/{MAX_IMAGES}</span>
                 </p>
               </div>
             </section>
 
             {/* Constraints */}
-            <section className="rounded-2xl border border-[#22242A] bg-[#0A0B0F] p-4">
-              <h2 className="mb-3 text-sm font-semibold text-[#F0F0F1]">Publishing Constraints</h2>
-              <div className="space-y-1.5 text-xs text-[#BFC0C5]">
+            <section className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-card)]">
+              <h2 className="mb-3 text-sm font-semibold text-[var(--text-heading)]">Publishing Constraints</h2>
+              <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
                 <p>Title: {TITLE_MIN}-{TITLE_MAX} characters</p>
                 <p>Content: {CONTENT_MIN}-{CONTENT_MAX} characters</p>
                 <p>Summary: {EXCERPT_MIN}-{EXCERPT_MAX} characters (optional)</p>
@@ -569,13 +569,13 @@ const WritePage = () => {
       {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-[#5E2A35] bg-[#120A0D] p-6 text-center shadow-[0_25px_80px_rgba(0,0,0,0.7)]">
-            <h2 className="mb-3 text-2xl font-semibold text-[#FFE3E8]">Publishing Error</h2>
-            <p className="mx-auto max-w-xl text-[15px] leading-7 text-[#FFC8D1]">{error}</p>
+          <div className="w-full max-w-2xl rounded-2xl border border-[var(--danger-border)] bg-[var(--danger-bg)] p-6 text-center shadow-[var(--shadow-dropdown)]">
+            <h2 className="mb-3 text-2xl font-semibold text-[var(--danger-text)]">Publishing Error</h2>
+            <p className="mx-auto max-w-xl text-[15px] leading-7 text-[var(--danger-text)] opacity-90">{error}</p>
             <button
               type="button"
               onClick={() => setError("")}
-              className="mt-5 rounded-xl border border-[#4A4D54] bg-[#1A1B20] px-5 py-2 text-sm font-semibold text-[#F0F0F2] hover:border-[#355D9A] hover:bg-[#20222A]"
+              className="mt-5 rounded-xl border border-[var(--btn-secondary-border)] bg-[var(--btn-secondary-bg)] px-5 py-2 text-sm font-semibold text-[var(--text-heading)] hover:border-[var(--border-focus)] transition"
             >
               Close
             </button>

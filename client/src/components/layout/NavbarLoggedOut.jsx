@@ -1,33 +1,35 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import BrandMark from "../common/BrandMark";
+import ThemeToggle from "../common/ThemeToggle";
 
 const NavbarLoggedOut = () => {
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-base/80 border-b border-border-subtle">
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-[var(--navbar-bg)] border-b border-[var(--border-card)] transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
 
           {/* Left Side - Logo + Brand */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
-              <span className="text-white font-bold text-sm">F</span>
-            </div>
-            <span className="hidden sm:block font-semibold text-text-primary text-lg">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <BrandMark size="sm" />
+            <span className="font-semibold text-[var(--text-heading)] text-lg tracking-wide">
               Flagger
             </span>
           </Link>
 
-          {/* Right Side - Auth Buttons */}
-          <div className="flex items-center gap-4">
+          {/* Right Side - Theme Toggle + Auth Buttons */}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
             <Link
               to="/login"
-              className="text-text-secondary hover:text-accent transition font-medium hidden sm:block"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-heading)] transition font-medium hidden sm:block px-3 py-1.5"
             >
               Sign In
             </Link>
 
             <Link to="/register">
-              <button className="bg-accent hover:bg-accent-hover text-white font-medium px-5 py-2 rounded-xl transition-all shadow-md hover:shadow-lg">
+              <button className="bg-[var(--btn-primary-bg)] hover:bg-[var(--btn-primary-hover)] text-[var(--btn-primary-text)] font-semibold px-4 py-2 rounded-xl transition-all shadow-sm">
                 Sign Up
               </button>
             </Link>

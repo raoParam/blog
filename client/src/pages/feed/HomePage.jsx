@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { feedService } from "../../services/feed.service";
@@ -216,7 +216,7 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#080B10] font-['Arial'] text-[#EEF3FA]">
+      <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-body)] transition-colors duration-200">
         <HomeNavbar
           user={currentUser || user}
           onLogout={handleLogout}
@@ -229,7 +229,7 @@ const HomePage = () => {
             type="button"
             aria-label="Close menu overlay"
             onClick={() => setMenuOpen(false)}
-            className="fixed inset-0 z-30 bg-black/55"
+            className="fixed inset-0 z-30 bg-black/60"
           />
         )}
 
@@ -265,13 +265,13 @@ const HomePage = () => {
             </div>
 
             {selectedCategory && (
-              <div className="mb-4 rounded-xl border border-[#D0D9E5]/25 bg-[#111823] px-3 py-2 text-sm text-[#DDE5F0]">
-                Showing category: <span className="font-semibold text-[#7DA6FF]">{selectedCategory}</span>
+              <div className="mb-4 rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-heading)] shadow-sm">
+                Showing category: <span className="font-semibold text-[var(--color-accent)]">{selectedCategory}</span>
               </div>
             )}
 
             {pageError && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              <div className="mb-4 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger-text)]">
                 {pageError}
               </div>
             )}
@@ -279,8 +279,8 @@ const HomePage = () => {
             {initialLoading ? (
               <FeedSkeleton />
             ) : posts.length === 0 ? (
-              <div className="rounded-2xl border border-[#D0D9E5]/20 bg-[#0E1219] p-8 text-center">
-                <p className="text-sm text-[#B9C4D3]">
+              <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-8 text-center shadow-[var(--shadow-card)]">
+                <p className="text-sm text-[var(--text-secondary)]">
                   {activeTab === "following"
                     ? "No posts from people you follow yet."
                     : "No posts available right now."}
@@ -295,13 +295,13 @@ const HomePage = () => {
                 <div ref={sentinelRef} className="h-4" />
 
                 {loadingMore && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-3 text-center text-sm text-[var(--text-muted)]">
                     <LoaderRing className="mx-auto" />
                   </div>
                 )}
 
                 {!hasNext && posts.length > 0 && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-surface)] p-3 text-center text-sm text-[var(--text-muted)]">
                     You&apos;ve reached the end.
                   </div>
                 )}
