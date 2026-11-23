@@ -248,6 +248,16 @@ export async function unfollowUserById(currentUserId, targetUserId) {
 }
 
 export async function getFollowersList(userId, page = 1, limit = 20, currentUserId = null) {
+    const relationshipData = await User.findById(userId).select('followers').lean()
+
+    if (!relationshipData) {
+        const err = new Error('User not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const totalFollowers = relationshipData.followers?.length || 0
+
     const user = await User.findById(userId)
         .populate({
             path: 'followers',
@@ -259,14 +269,7 @@ export async function getFollowersList(userId, page = 1, limit = 20, currentUser
             }
         })
 
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
     const followersList = (user.followers || []).filter(Boolean)
-    const totalFollowers = followersList.length
 
     let followingSet = null
     if (currentUserId) {
@@ -295,6 +298,16 @@ export async function getFollowersList(userId, page = 1, limit = 20, currentUser
 }
 
 export async function getFollowingList(userId, page = 1, limit = 20, currentUserId = null) {
+    const relationshipData = await User.findById(userId).select('following').lean()
+
+    if (!relationshipData) {
+        const err = new Error('User not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const totalFollowing = relationshipData.following?.length || 0
+
     const user = await User.findById(userId)
         .populate({
             path: 'following',
@@ -306,14 +319,7 @@ export async function getFollowingList(userId, page = 1, limit = 20, currentUser
             }
         })
 
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
     const followingList = (user.following || []).filter(Boolean)
-    const totalFollowing = followingList.length
 
     let followingSet = null
     if (currentUserId) {
