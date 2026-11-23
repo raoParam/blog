@@ -14,6 +14,7 @@ import postRouter from './routes/post.routes.js'
 import publicRouter from './routes/public.routes.js'
 import adminRouter from './routes/admin.routes.js'
 import errorHandler from './middleware/errorHandler.js'
+import { scrubSensitiveData } from './middleware/errorHandler.js'
 
 dotenv.config()
 
@@ -95,7 +96,7 @@ app.get('/health', (req, res) => {
 app.use(/.*/, (req, res) => {
   res.status(404).json({
     status: 'fail',
-    message: `Cannot ${req.method} ${req.originalUrl}`
+    message: 'Route not found'
   })
 })
 
@@ -111,7 +112,8 @@ if (process.env.NODE_ENV !== 'test') {
       })
     })
     .catch((err) => {
-      console.error('DB connection failed', err)
+      const details = scrubSensitiveData(err?.stack || err?.message || String(err))
+      console.error('DB connection failed:', details)
     })
 }
 

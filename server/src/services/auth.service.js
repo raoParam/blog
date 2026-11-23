@@ -378,10 +378,8 @@ export async function changeUserPassword(userId, currentPassword, newPassword) {
     )
 
     user.password = hashedPassword
-    await user.save()
-
-    // Increment refresh token version to invalidate all existing refresh tokens
     user.refreshTokenVersion += 1
+    // Save the password and token version together so a partial update cannot leave old sessions valid.
     await user.save()
 
     // Invalidate all refresh tokens for security
