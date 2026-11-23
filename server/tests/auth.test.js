@@ -122,7 +122,7 @@ describe('Authentication Middleware (auth.js)', () => {
         findByIdMock.mock.restore()
         assert.ok(errorResult)
         assert.equal(errorResult.statusCode, 403)
-        assert.equal(errorResult.message, 'Account is suspended')
+        assert.equal(errorResult.message, 'Account is not active')
     })
 
     it('should reject deleted user account with 403 Forbidden', async () => {
@@ -146,7 +146,21 @@ describe('Authentication Middleware (auth.js)', () => {
         findByIdMock.mock.restore()
         assert.ok(errorResult)
         assert.equal(errorResult.statusCode, 403)
-        assert.equal(errorResult.message, 'Account has been deleted')
+        assert.equal(errorResult.message, 'Account is not active')
+    })
+
+    it('should reject token with invalid version payload (e.g. negative or missing version)', async () => {
+        const invalidPayloadToken = jwt.sign({ _id: testUserId, version: -1 }, TEST_SECRET)
+        const req = { cookies: { token: invalidPayloadToken }, headers: {} }
+        let errorResult = null
+
+        await auth(req, {}, (err) => {
+            errorResult = err
+        })
+
+        assert.ok(errorResult)
+        assert.equal(errorResult.statusCode, 401)
+        assert.equal(errorResult.message, 'Invalid token payload')
     })
 
     it('should reject token with mismatched refreshTokenVersion (401)', async () => {

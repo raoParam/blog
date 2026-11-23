@@ -8,19 +8,19 @@ export default async function auth(req, res, next) {
         if (!token) {
             const authHeader = req.headers.authorization
 
-            if (!authHeader) {
+            if (typeof authHeader !== 'string' || !authHeader) {
                 const err = new Error("Token not found")
                 err.statusCode = 401
                 throw err
             }  
 
-            if (!authHeader.startsWith('Bearer ')) {
+            const bearerMatch = authHeader.match(/^Bearer\s+(\S+)$/i)
+            if (!bearerMatch) {
                 const err = new Error("Invalid token format")
                 err.statusCode = 401
                 throw err
-            }  
-
-            token = authHeader.split(' ')[1]
+            }
+            token = bearerMatch[1]
         }
         
         if (!token) {
@@ -38,7 +38,11 @@ export default async function auth(req, res, next) {
         const payload = jwt.verify(token, process.env.JWT_SECRET)
         const { _id, version } = payload
 
-        if (!_id) {
+        if (
+            !_id ||
+            !Number.isSafeInteger(version) ||
+            version < 0
+        ) {
             const err = new Error("Invalid token payload")
             err.statusCode = 401
             throw err
@@ -52,20 +56,14 @@ export default async function auth(req, res, next) {
             throw err
         }
 
-        // Prevent suspended or deleted accounts from accessing protected routes
-        if (user.accountStatus === 'suspended') {
-            const err = new Error("Account is suspended")
+        // Only explicitly active accounts may access protected routes.
+        if (user.accountStatus !== 'active') {
+            const err = new Error("Account is not active")
             err.statusCode = 403
             throw err
         }
 
-        if (user.accountStatus === 'deleted') {
-            const err = new Error("Account has been deleted")
-            err.statusCode = 403
-            throw err
-        }
-
-        // Check if token version matches user's version
+        // Reject tokens issued before a password change or session invalidation.
         if (version !== user.refreshTokenVersion) {
             const err = new Error("Token has been invalidated")
             err.statusCode = 401
