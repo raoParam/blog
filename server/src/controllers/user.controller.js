@@ -17,8 +17,13 @@ import { cloudinary } from '../middleware/upload.js'
 export async function getProfile(req, res, next) {
 	try {
 		const { user } = req
+		const safeUser = user.toObject()
+		delete safeUser.password
+		delete safeUser.refreshTokenVersion
+		delete safeUser.googleId
+
 		res.status(200).json({
-			user,
+			user: safeUser,
 			Status: "success",
 			Message: "User profile fetched successfully"
 		})

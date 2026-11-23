@@ -125,6 +125,11 @@ export async function refreshToken(req, res, next) {
 
         const { accessToken, refreshToken: newRefreshToken, user } = await refreshAccessToken(refreshToken)
 
+        const safeUser = user.toObject()
+        delete safeUser.password
+        delete safeUser.refreshTokenVersion
+        delete safeUser.googleId
+
         res.cookie('token', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -135,7 +140,7 @@ export async function refreshToken(req, res, next) {
         res.status(200).json({
             accessToken,
             refreshToken: newRefreshToken,
-            user,
+            user: safeUser,
             Status: "success",
             Message: "Token refreshed successfully"
         })

@@ -432,6 +432,14 @@ export async function getSavedPostsList(userId, page = 1, limit = 10) {
         throw err
     }
 
+    // Do not reveal the author identity of anonymously published saved posts.
+    user.savedPosts = user.savedPosts.map(post => {
+        if (post && post.visibility === 'anonymous') {
+            post.author = null
+        }
+        return post
+    })
+
     const totalSaved = await User.findById(userId).then(u => u.savedPosts.length)
 
     return {
