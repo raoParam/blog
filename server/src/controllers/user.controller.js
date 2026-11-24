@@ -11,12 +11,19 @@ import {
     unsavePostById,
     getSavedPostsList
 } from '../services/user.service.js'
+import { normalizePagination, isValidObjectId } from '../utils/queryHelper.js'
+import { cloudinary } from '../middleware/upload.js'
 
-export async function getProfile(req,res,next){
+export async function getProfile(req, res, next) {
 	try {
-		const {user} = req
+		const { user } = req
+		const safeUser = user.toObject()
+		delete safeUser.password
+		delete safeUser.refreshTokenVersion
+		delete safeUser.googleId
+
 		res.status(200).json({
-			user,
+			user: safeUser,
 			Status: "success",
 			Message: "User profile fetched successfully"
 		})
@@ -25,7 +32,7 @@ export async function getProfile(req,res,next){
 	}
 }
 
-export async function getPosts(req,res,next) {
+export async function getPosts(req, res, next) {
 	try {
 		const { user } = req
 		const blogs = await fetchPosts(user._id)
@@ -42,7 +49,7 @@ export async function getPosts(req,res,next) {
 export async function getUserByUsername(req, res, next) {
     try {
         const { username } = req.params
-        const currentUserId = req.user?._id // Optional, for follow status
+        const currentUserId = req.user?._id
 
         if (username.toLowerCase() === req.user.userName.toLowerCase()) {
             const err = new Error("Cannot search for yourself")
@@ -65,8 +72,7 @@ export async function getUserByUsername(req, res, next) {
 export async function getUserPostsByUsername(req, res, next) {
     try {
         const { username } = req.params
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
 
         if (username.toLowerCase() === req.user.userName.toLowerCase()) {
             const err = new Error("Use /user/posts to view your own posts")
@@ -126,6 +132,14 @@ export async function updateProfile(req, res, next) {
             Message: "Profile updated successfully"
         })
     } catch (err) {
+        // Clean up newly uploaded avatar from Cloudinary if update fails
+        if (req.file && req.file.filename) {
+            try {
+                await cloudinary.uploader.destroy(req.file.filename)
+            } catch (cleanupErr) {
+                console.error('Failed to cleanup orphaned avatar:', req.file.filename, cleanupErr)
+            }
+        }
         next(err)
     }
 }
@@ -134,6 +148,12 @@ export async function followUser(req, res, next) {
     try {
         const currentUserId = req.user._id
         const targetUserId = req.params.userId
+
+        if (!isValidObjectId(targetUserId)) {
+            const err = new Error("Invalid user ID format")
+            err.statusCode = 400
+            throw err
+        }
 
         // Prevent self-follow
         if (currentUserId.toString() === targetUserId.toString()) {
@@ -160,6 +180,12 @@ export async function unfollowUser(req, res, next) {
         const currentUserId = req.user._id
         const targetUserId = req.params.userId
 
+        if (!isValidObjectId(targetUserId)) {
+            const err = new Error("Invalid user ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         // Prevent self-unfollow
         if (currentUserId.toString() === targetUserId.toString()) {
             const err = new Error("Invalid operation")
@@ -183,8 +209,13 @@ export async function unfollowUser(req, res, next) {
 export async function getFollowers(req, res, next) {
     try {
         const userId = req.query.userId || req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        if (!isValidObjectId(userId)) {
+            const err = new Error("Invalid user ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
 
         const result = await getFollowersList(userId, page, limit, req.user?._id)
 
@@ -202,8 +233,13 @@ export async function getFollowers(req, res, next) {
 export async function getFollowing(req, res, next) {
     try {
         const userId = req.query.userId || req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        if (!isValidObjectId(userId)) {
+            const err = new Error("Invalid user ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
 
         const result = await getFollowingList(userId, page, limit, req.user?._id)
 
@@ -223,6 +259,12 @@ export async function savePost(req, res, next) {
         const userId = req.user._id
         const postId = req.params.postId
 
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         const result = await savePostById(userId, postId)
 
         res.status(200).json({
@@ -241,6 +283,12 @@ export async function unsavePost(req, res, next) {
         const userId = req.user._id
         const postId = req.params.postId
 
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         const result = await unsavePostById(userId, postId)
 
         res.status(200).json({
@@ -257,8 +305,7 @@ export async function unsavePost(req, res, next) {
 export async function getSavedPosts(req, res, next) {
     try {
         const userId = req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
 
         const result = await getSavedPostsList(userId, page, limit)
 

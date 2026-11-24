@@ -47,14 +47,40 @@ const postSchema = new Schema({
 	      type: Schema.Types.ObjectId,
 	      ref: "User"
 	   }
-	]
-
+	],
+	coordinationVersion: {
+		type: Number,
+		default: 0
+	},
+	status: {
+		type: String,
+		enum: ['published', 'deleted'],
+		default: 'published',
+		index: true
+	},
+	cleanupStatus: {
+		type: String,
+		enum: ['none', 'pending', 'in_progress', 'completed', 'failed'],
+		default: 'none',
+		index: true
+	},
+	cleanupLeaseExpiresAt: {
+		type: Date,
+		default: null
+	},
+	cleanupLeaseOwner: {
+		type: String,
+		default: null
+	},
+	deletedAt: {
+		type: Date,
+		default: null
+	}
 },{
   	timestamps: true
 })
-// postSchema.index({ author: 1, createdAt: -1 }); 
-// postSchema.index({ visibility: 1, createdAt: -1 })
-// postSchema.index({ likes: -1 });
+
+postSchema.index({ status: 1, createdAt: -1 })
 
 const Post = mongoose.model('Post',postSchema)
 export default Post

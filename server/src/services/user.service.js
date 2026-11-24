@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import Post from '../models/post.js'
 import User from '../models/user.js'
 import { cloudinary } from '../middleware/upload.js'
@@ -7,7 +8,8 @@ const NAME_REGEX = /^[A-Za-z_]+$/
 export async function fetchPosts(userId, page = 1, limit = 10) {
     const blogs = await Post.find({ 
         author: userId,
-        visibility: 'public' 
+        visibility: 'public',
+        status: { $ne: 'deleted' }
     })
     .sort({createdAt : -1})
     .skip((page - 1) * limit)
@@ -65,7 +67,8 @@ export async function getUserPublicPosts(username, page, limit, currentUserId) {
 
     const posts = await Post.find({ 
         author: user._id,
-        visibility: 'public'
+        visibility: 'public',
+        status: { $ne: 'deleted' }
     })
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
@@ -75,7 +78,8 @@ export async function getUserPublicPosts(username, page, limit, currentUserId) {
 
     const totalPosts = await Post.countDocuments({ 
         author: user._id,
-        visibility: 'public'
+        visibility: 'public',
+        status: { $ne: 'deleted' }
     })
 
     return {
@@ -165,39 +169,61 @@ export async function updateUserProfile(userId, updates) {
 }
 
 export async function followUserById(currentUserId, targetUserId) {
-    // Check if target user exists
-    const targetUser = await User.findById(targetUserId)
-    if (!targetUser) {
-        const err = new Error("User not found")
-        err.statusCode = 404
-        throw err
-    }
-
-    // Check if already following
-    const currentUser = await User.findById(currentUserId)
-    const alreadyFollowing = currentUser.following.some(
-        id => id.toString() === targetUserId.toString()
-    )
-
-    if (alreadyFollowing) {
-        const err = new Error("Already following this user")
+    if (currentUserId.toString() === targetUserId.toString()) {
+        const err = new Error("You cannot follow yourself")
         err.statusCode = 400
         throw err
     }
 
-    // Add to following array of current user
-    await User.findByIdAndUpdate(currentUserId, {
-        $addToSet: { following: targetUserId }
-    })
+    const session = await mongoose.startSession()
+    let updatedTargetUser
+    try {
+        await session.withTransaction(async () => {
+            const targetUser = await User.findById(targetUserId).session(session)
+            if (!targetUser) {
+                const err = new Error("User not found")
+                err.statusCode = 404
+                throw err
+            }
 
-    // Add to followers array of target user
-    await User.findByIdAndUpdate(targetUserId, {
-        $addToSet: { followers: currentUserId }
-    })
+            if (targetUser.accountStatus !== 'active') {
+                const err = new Error("User account is not active")
+                err.statusCode = 400
+                throw err
+            }
 
-    // Get updated counts
-    const updatedTargetUser = await User.findById(targetUserId)
-    const updatedCurrentUser = await User.findById(currentUserId)
+            const currentUser = await User.findById(currentUserId).session(session)
+            if (!currentUser) {
+                const err = new Error("Current user not found")
+                err.statusCode = 404
+                throw err
+            }
+
+            const alreadyFollowing = (currentUser.following || []).some(
+                id => id.toString() === targetUserId.toString()
+            )
+
+            if (alreadyFollowing) {
+                const err = new Error("Already following this user")
+                err.statusCode = 400
+                throw err
+            }
+
+            await User.findByIdAndUpdate(
+                currentUserId,
+                { $addToSet: { following: targetUserId } },
+                { session }
+            )
+
+            updatedTargetUser = await User.findByIdAndUpdate(
+                targetUserId,
+                { $addToSet: { followers: currentUserId } },
+                { session, new: true }
+            )
+        })
+    } finally {
+        await session.endSession()
+    }
 
     return {
         following: true,
@@ -207,38 +233,55 @@ export async function followUserById(currentUserId, targetUserId) {
 }
 
 export async function unfollowUserById(currentUserId, targetUserId) {
-    // Check if target user exists
-    const targetUser = await User.findById(targetUserId)
-    if (!targetUser) {
-        const err = new Error("User not found")
-        err.statusCode = 404
-        throw err
-    }
-
-    // Check if actually following
-    const currentUser = await User.findById(currentUserId)
-    const isFollowing = currentUser.following.some(
-        id => id.toString() === targetUserId.toString()
-    )
-
-    if (!isFollowing) {
-        const err = new Error("You are not following this user")
+    if (currentUserId.toString() === targetUserId.toString()) {
+        const err = new Error("You cannot unfollow yourself")
         err.statusCode = 400
         throw err
     }
 
-    // Remove from following array of current user
-    await User.findByIdAndUpdate(currentUserId, {
-        $pull: { following: targetUserId }
-    })
+    const session = await mongoose.startSession()
+    let updatedTargetUser
+    try {
+        await session.withTransaction(async () => {
+            const targetUser = await User.findById(targetUserId).session(session)
+            if (!targetUser) {
+                const err = new Error("User not found")
+                err.statusCode = 404
+                throw err
+            }
 
-    // Remove from followers array of target user
-    await User.findByIdAndUpdate(targetUserId, {
-        $pull: { followers: currentUserId }
-    })
+            const currentUser = await User.findById(currentUserId).session(session)
+            if (!currentUser) {
+                const err = new Error("Current user not found")
+                err.statusCode = 404
+                throw err
+            }
 
-    // Get updated counts
-    const updatedTargetUser = await User.findById(targetUserId)
+            const isFollowing = (currentUser.following || []).some(
+                id => id.toString() === targetUserId.toString()
+            )
+
+            if (!isFollowing) {
+                const err = new Error("You are not following this user")
+                err.statusCode = 400
+                throw err
+            }
+
+            await User.findByIdAndUpdate(
+                currentUserId,
+                { $pull: { following: targetUserId } },
+                { session }
+            )
+
+            updatedTargetUser = await User.findByIdAndUpdate(
+                targetUserId,
+                { $pull: { followers: currentUserId } },
+                { session, new: true }
+            )
+        })
+    } finally {
+        await session.endSession()
+    }
 
     return {
         following: false,
@@ -248,6 +291,16 @@ export async function unfollowUserById(currentUserId, targetUserId) {
 }
 
 export async function getFollowersList(userId, page = 1, limit = 20, currentUserId = null) {
+    const relationshipData = await User.findById(userId).select('followers').lean()
+
+    if (!relationshipData) {
+        const err = new Error('User not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const totalFollowers = relationshipData.followers?.length || 0
+
     const user = await User.findById(userId)
         .populate({
             path: 'followers',
@@ -259,14 +312,7 @@ export async function getFollowersList(userId, page = 1, limit = 20, currentUser
             }
         })
 
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
     const followersList = (user.followers || []).filter(Boolean)
-    const totalFollowers = followersList.length
 
     let followingSet = null
     if (currentUserId) {
@@ -295,6 +341,16 @@ export async function getFollowersList(userId, page = 1, limit = 20, currentUser
 }
 
 export async function getFollowingList(userId, page = 1, limit = 20, currentUserId = null) {
+    const relationshipData = await User.findById(userId).select('following').lean()
+
+    if (!relationshipData) {
+        const err = new Error('User not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const totalFollowing = relationshipData.following?.length || 0
+
     const user = await User.findById(userId)
         .populate({
             path: 'following',
@@ -306,14 +362,7 @@ export async function getFollowingList(userId, page = 1, limit = 20, currentUser
             }
         })
 
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
-
     const followingList = (user.following || []).filter(Boolean)
-    const totalFollowing = followingList.length
 
     let followingSet = null
     if (currentUserId) {
@@ -342,34 +391,48 @@ export async function getFollowingList(userId, page = 1, limit = 20, currentUser
 }
 
 export async function savePostById(userId, postId) {
-    // Check if post exists
-    const post = await Post.findById(postId)
-    if (!post) {
-        const err = new Error("Post not found")
-        err.statusCode = 404
-        throw err
+    const session = await mongoose.startSession()
+    let updatedUser
+    try {
+        await session.withTransaction(async () => {
+            const post = await Post.findOneAndUpdate(
+                { _id: postId, status: { $ne: 'deleted' } },
+                { $inc: { coordinationVersion: 1 } },
+                { session, new: true }
+            )
+            if (!post) {
+                const err = new Error("Post not found")
+                err.statusCode = 404
+                throw err
+            }
+
+            const user = await User.findById(userId).session(session)
+            if (!user) {
+                const err = new Error("User not found")
+                err.statusCode = 404
+                throw err
+            }
+
+            const alreadySaved = (user.savedPosts || []).some(
+                id => id.toString() === postId.toString()
+            )
+
+            if (alreadySaved) {
+                const err = new Error("Post already saved")
+                err.statusCode = 400
+                throw err
+            }
+
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $addToSet: { savedPosts: postId } },
+                { session, new: true }
+            )
+        })
+    } finally {
+        await session.endSession()
     }
 
-    // Check if already saved
-    const user = await User.findById(userId)
-    const alreadySaved = user.savedPosts.some(
-        id => id.toString() === postId.toString()
-    )
-
-    if (alreadySaved) {
-        const err = new Error("Post already saved")
-        err.statusCode = 400
-        throw err
-    }
-
-    // Add to savedPosts array
-    await User.findByIdAndUpdate(userId, {
-        $addToSet: { savedPosts: postId }
-    })
-
-    // Get updated count
-    const updatedUser = await User.findById(userId)
-    
     return {
         saved: true,
         savedCount: updatedUser.savedPosts.length
@@ -377,34 +440,43 @@ export async function savePostById(userId, postId) {
 }
 
 export async function unsavePostById(userId, postId) {
-    // Check if post exists
-    const post = await Post.findById(postId)
-    if (!post) {
-        const err = new Error("Post not found")
-        err.statusCode = 404
-        throw err
+    const session = await mongoose.startSession()
+    let updatedUser
+    try {
+        await session.withTransaction(async () => {
+            await Post.findOneAndUpdate(
+                { _id: postId },
+                { $inc: { coordinationVersion: 1 } },
+                { session }
+            )
+
+            const user = await User.findById(userId).session(session)
+            if (!user) {
+                const err = new Error("User not found")
+                err.statusCode = 404
+                throw err
+            }
+
+            const isSaved = (user.savedPosts || []).some(
+                id => id.toString() === postId.toString()
+            )
+
+            if (!isSaved) {
+                const err = new Error("Post not in saved list")
+                err.statusCode = 400
+                throw err
+            }
+
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $pull: { savedPosts: postId } },
+                { session, new: true }
+            )
+        })
+    } finally {
+        await session.endSession()
     }
 
-    // Check if actually saved
-    const user = await User.findById(userId)
-    const isSaved = user.savedPosts.some(
-        id => id.toString() === postId.toString()
-    )
-
-    if (!isSaved) {
-        const err = new Error("Post not in saved list")
-        err.statusCode = 400
-        throw err
-    }
-
-    // Remove from savedPosts array
-    await User.findByIdAndUpdate(userId, {
-        $pull: { savedPosts: postId }
-    })
-
-    // Get updated count
-    const updatedUser = await User.findById(userId)
-    
     return {
         saved: false,
         savedCount: updatedUser.savedPosts.length
@@ -412,9 +484,23 @@ export async function unsavePostById(userId, postId) {
 }
 
 export async function getSavedPostsList(userId, page = 1, limit = 10) {
+    const rawUser = await User.findById(userId)
+    if (!rawUser) {
+        const err = new Error('User not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const allSavedIds = (rawUser.savedPosts || []).map(p => p?._id || p).filter(Boolean)
+    const totalSaved = await Post.countDocuments({
+        _id: { $in: allSavedIds },
+        status: { $ne: 'deleted' }
+    })
+
     const user = await User.findById(userId)
         .populate({
             path: 'savedPosts',
+            match: { status: { $ne: 'deleted' } },
             populate: {
                 path: 'author',
                 select: 'userName avatar firstName lastName isVerifiedBadge'
@@ -426,21 +512,22 @@ export async function getSavedPostsList(userId, page = 1, limit = 10) {
             }
         })
 
-    if (!user) {
-        const err = new Error('User not found')
-        err.statusCode = 404
-        throw err
-    }
+    const savedPosts = (user?.savedPosts || []).filter(Boolean).map(post => {
+        if (post && post.visibility === 'anonymous') {
+            post.author = null
+        }
+        return post
+    })
 
-    const totalSaved = await User.findById(userId).then(u => u.savedPosts.length)
+    const totalPages = Math.ceil(totalSaved / limit)
 
     return {
-        savedPosts: user.savedPosts,
+        savedPosts,
         pagination: {
             currentPage: page,
-            totalPages: Math.ceil(totalSaved / limit),
+            totalPages,
             totalSaved,
-            hasNext: page < Math.ceil(totalSaved / limit),
+            hasNext: page < totalPages,
             hasPrev: page > 1
         }
     }

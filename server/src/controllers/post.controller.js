@@ -16,11 +16,11 @@ import {
     updateCommentById,
     deleteCommentById
 } from '../services/post.service.js'
-
+import { normalizePagination, isValidObjectId } from '../utils/queryHelper.js'
+import { cloudinary } from '../middleware/uploadPost.js'
 
 export async function createBlog(req, res, next) {
     try {
-
         const { title, content, excerpt, visibility } = req.body
 
         if (!title || !content) {
@@ -39,7 +39,7 @@ export async function createBlog(req, res, next) {
             imagePublicIds: []
         }
 
-        // ✅ Add Cloudinary image URLs and public_ids
+        // Add Cloudinary image URLs and public_ids
         if (req.files && req.files.length > 0) {
             postData.images = req.files.map(file => file.path)
             postData.imagePublicIds = req.files.map(file => file.filename)
@@ -55,7 +55,19 @@ export async function createBlog(req, res, next) {
             Status: "success",
             Message: "Blog created successfully"
         })
-    } catch(err) {
+    } catch (err) {
+        // Clean up uploaded images if subsequent operations or validations fail
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                if (file.filename) {
+                    try {
+                        await cloudinary.uploader.destroy(file.filename)
+                    } catch (cleanupErr) {
+                        console.error('Failed to cleanup orphaned post image:', file.filename, cleanupErr)
+                    }
+                }
+            }
+        }
         next(err)
     }
 }
@@ -63,7 +75,8 @@ export async function createBlog(req, res, next) {
 export async function getBlogs(req, res, next) {
     try {
         const currentUserId = req.user._id  
-        const result = await fetchPosts(req.query, currentUserId)
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
+        const result = await fetchPosts({ page, limit }, currentUserId)
         
         res.status(200).json({
             blogs: result.blogs,
@@ -71,60 +84,85 @@ export async function getBlogs(req, res, next) {
             Status: "success",
             Message: "Blogs fetched successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
 
-export async function getBlog(req,res,next) {
+export async function getBlog(req, res, next) {
 	try {
-		const blog = await fetchPost(req.params.postId)
+        const { postId } = req.params
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+		const blog = await fetchPost(postId)
 		res.status(200).json({
 			blog,
-			Status : "success",
-			Message : "Blog fetched successfully"
+			Status: "success",
+			Message: "Blog fetched successfully"
 		})
 	} catch (err) {
 		next(err)
 	}
 }
 
-export async function updateBlog(req,res,next) {
+export async function updateBlog(req, res, next) {
 	try {
 		const { postId } = req.params
-		const updatedBlog = await updatePost(postId,req.body,req.user._id)
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+		const updatedBlog = await updatePost(postId, req.body, req.user._id)
 		res.status(200).json({
 			updatedBlog,
-			Status : "success",
-			Message : "Blog updated successfully"
+			Status: "success",
+			Message: "Blog updated successfully"
 		})
-	} catch(err) {
+	} catch (err) {
 		next(err)
 	}
 }
 
-export async function deleteBlog(req,res,next) {
+export async function deleteBlog(req, res, next) {
 	try {
 		const { postId } = req.params
-		const deletedBlog = await deletePost(postId,req.user._id)
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+		const deletedBlog = await deletePost(postId, req.user._id)
 		res.status(200).json({
 			deletedBlog,
-			Status : "success",
-			Message : "Blog deleted successfully"
+			Status: "success",
+			Message: "Blog deleted successfully"
 		})
-	} catch(err) {
+	} catch (err) {
 		next(err)
 	}
 }
 
-export async function likeBlog(req,res,next) {
+export async function likeBlog(req, res, next) {
 	try {
 		const { postId } = req.params
-		const likes = await likePost(postId,req.user._id)
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+		const likes = await likePost(postId, req.user._id)
 		res.status(200).json({
 			likes,
-			Status : "success",
-			Message : "Blog liked successfully"
+			Status: "success",
+			Message: "Blog liked successfully"
 		})
 	} catch (err) {
 		next(err)
@@ -134,8 +172,7 @@ export async function likeBlog(req,res,next) {
 export async function getTrendingBlogs(req, res, next) {
     try {
         const currentUserId = req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
         
         const result = await fetchTrendingPosts(currentUserId, page, limit)
         
@@ -145,7 +182,7 @@ export async function getTrendingBlogs(req, res, next) {
             Status: "success",
             Message: "Trending blogs fetched successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -153,8 +190,7 @@ export async function getTrendingBlogs(req, res, next) {
 export async function getFollowingFeed(req, res, next) {
     try {
         const currentUserId = req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
         
         const result = await fetchFollowingFeed(currentUserId, page, limit)
         
@@ -164,7 +200,7 @@ export async function getFollowingFeed(req, res, next) {
             Status: "success",
             Message: "Following feed fetched successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -178,7 +214,7 @@ export async function getCategories(req, res, next) {
             Status: "success",
             Message: "Categories fetched successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -187,8 +223,7 @@ export async function getPostsByCategory(req, res, next) {
     try {
         const { name } = req.params
         const currentUserId = req.user._id
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 10, 50)
         
         const result = await getPostsByCategoryName(name, currentUserId, page, limit)
         
@@ -199,7 +234,7 @@ export async function getPostsByCategory(req, res, next) {
             Status: "success",
             Message: `Posts in category "${name}" fetched successfully`
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -222,7 +257,7 @@ export async function createCategory(req, res, next) {
             Status: "success",
             Message: "Category created successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -230,8 +265,13 @@ export async function createCategory(req, res, next) {
 export async function getComments(req, res, next) {
     try {
         const { postId } = req.params
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
         
         const result = await fetchCommentsByPost(postId, page, limit)
         
@@ -242,7 +282,7 @@ export async function getComments(req, res, next) {
             Status: "success",
             Message: "Comments fetched successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -250,6 +290,12 @@ export async function getComments(req, res, next) {
 export async function addComment(req, res, next) {
     try {
         const { postId } = req.params
+        if (!isValidObjectId(postId)) {
+            const err = new Error("Invalid post ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         const { content } = req.body
         const userId = req.user._id
 
@@ -266,7 +312,7 @@ export async function addComment(req, res, next) {
             Status: "success",
             Message: "Comment added successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -274,6 +320,12 @@ export async function addComment(req, res, next) {
 export async function updateComment(req, res, next) {
     try {
         const { commentId } = req.params
+        if (!isValidObjectId(commentId)) {
+            const err = new Error("Invalid comment ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         const { content } = req.body
         const userId = req.user._id
 
@@ -290,7 +342,7 @@ export async function updateComment(req, res, next) {
             Status: "success",
             Message: "Comment updated successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
@@ -298,6 +350,12 @@ export async function updateComment(req, res, next) {
 export async function deleteComment(req, res, next) {
     try {
         const { commentId } = req.params
+        if (!isValidObjectId(commentId)) {
+            const err = new Error("Invalid comment ID format")
+            err.statusCode = 400
+            throw err
+        }
+
         const userId = req.user._id
 
         await deleteCommentById(commentId, userId)
@@ -306,7 +364,7 @@ export async function deleteComment(req, res, next) {
             Status: "success",
             Message: "Comment deleted successfully"
         })
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }

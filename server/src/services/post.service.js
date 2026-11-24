@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+import mongoose from 'mongoose'
 import Post from '../models/post.js'
 import User from '../models/user.js'
 import Category from '../models/category.js'
@@ -15,7 +17,8 @@ export async function fetchPosts(postData, currentUserId) {
     const limit = 10
     
     const query = {
-        author: { $ne: currentUserId }
+        author: { $ne: currentUserId },
+        status: { $ne: 'deleted' }
     }
     
     const blogs = await Post.find(query)
@@ -48,8 +51,8 @@ export async function fetchPosts(postData, currentUserId) {
 }
 
 export async function fetchPost(postId) {
-    const blog = await Post.findById(postId)
-    .select('title content excerpt likes visibility createdAt images')
+    const blog = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } })
+    .select('title content excerpt likes visibility createdAt images author')
     .populate({
         path : "author",
         select : "userName avatar firstName lastName isVerifiedBadge"
@@ -78,7 +81,7 @@ export async function updatePost(postId,updatedPost,userId) {
         throw err
     }
     validateUpdatedPost(updatedPost)
-    const blog = await Post.findById(postId)
+    const blog = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } })
     if (!blog) {
         const err = new Error("Blog not found")
         err.statusCode = 404
@@ -99,47 +102,245 @@ export async function updatePost(postId,updatedPost,userId) {
     return blog
 }
 
-export async function deletePostImages(postId) {
-    try {
-        // Get post to find image public_ids
-        const post = await Post.findById(postId)
-        
-        if (post && post.imagePublicIds && post.imagePublicIds.length > 0) {
-            // Delete each image from Cloudinary
-            for (const publicId of post.imagePublicIds) {
-                await cloudinary.uploader.destroy(publicId)
-                console.log(`Deleted image: ${publicId}`)
+export async function deletePostImages(postOrId) {
+    let post = postOrId
+    if (!post || !post.imagePublicIds) {
+        post = await Post.findById(postOrId)
+    }
+
+    if (!post || !post.imagePublicIds || post.imagePublicIds.length === 0) {
+        return post || true
+    }
+
+    const successfullyDeleted = []
+
+    for (const publicId of post.imagePublicIds) {
+        try {
+            const res = await cloudinary.uploader.destroy(publicId)
+            if (res && (res.result === 'ok' || res.result === 'not found')) {
+                successfullyDeleted.push(publicId)
+            } else {
+                const err = new Error(`Cloudinary destroy failed for ${publicId} with result: ${res?.result || 'unknown'}`)
+                err.publicId = publicId
+                throw err
+            }
+        } catch (destroyErr) {
+            const isNotFound =
+                destroyErr?.http_code === 404 ||
+                destroyErr?.status === 404 ||
+                destroyErr?.result === 'not found' ||
+                destroyErr?.error?.http_code === 404
+
+            if (isNotFound) {
+                successfullyDeleted.push(publicId)
+            } else {
+                // If some images were already successfully deleted before this error,
+                // pull them from the post document so subsequent retries only attempt the rest!
+                if (successfullyDeleted.length > 0 && post._id) {
+                    await Post.updateOne(
+                        { _id: post._id },
+                        { $pull: { imagePublicIds: { $in: successfullyDeleted } } }
+                    ).catch(() => {})
+                }
+                throw destroyErr
             }
         }
-    } catch (error) {
-        console.error('Error deleting images from Cloudinary:', error)
-        // Don't throw - continue with post deletion even if image delete fails
+    }
+
+    // All images were successfully processed/confirmed deleted
+    if (post._id && successfullyDeleted.length > 0) {
+        await Post.updateOne(
+            { _id: post._id },
+            { $pull: { imagePublicIds: { $in: successfullyDeleted } } }
+        ).catch(() => {})
+        post.imagePublicIds = []
+    }
+
+    return post
+}
+
+export async function renewPostTombstoneLease(postId, leaseToken, additionalMs = 60000) {
+    const newExpiresAt = new Date(Date.now() + additionalMs)
+    const res = await Post.updateOne(
+        {
+            _id: postId,
+            status: 'deleted',
+            cleanupLeaseOwner: leaseToken,
+            cleanupStatus: 'in_progress',
+            cleanupLeaseExpiresAt: { $gte: new Date() }
+        },
+        {
+            $set: { cleanupLeaseExpiresAt: newExpiresAt }
+        }
+    )
+    return res.matchedCount > 0
+}
+
+export async function executePostTombstoneCleanup(postId, customLeaseOwner = null, options = {}) {
+    const now = new Date()
+    const leaseDurationMs = options.leaseDurationMs || 60000
+    const leaseExpiration = new Date(now.getTime() + leaseDurationMs)
+    const leaseToken = customLeaseOwner || crypto.randomUUID()
+
+    const post = await Post.findOneAndUpdate(
+        {
+            _id: postId,
+            status: 'deleted',
+            $or: [
+                { cleanupStatus: 'pending' },
+                { cleanupStatus: 'none' },
+                { cleanupStatus: 'failed' },
+                { cleanupStatus: 'in_progress', cleanupLeaseExpiresAt: { $lt: now } }
+            ]
+        },
+        {
+            $set: {
+                cleanupStatus: 'in_progress',
+                cleanupLeaseExpiresAt: leaseExpiration,
+                cleanupLeaseOwner: leaseToken
+            }
+        },
+        { new: true }
+    )
+
+    if (!post) {
+        return null
+    }
+
+    // Active lease renewal heartbeat for long-running cleanup
+    const heartbeatIntervalMs = options.heartbeatIntervalMs || 15000
+    const additionalLeaseMs = options.additionalLeaseMs || 60000
+    let renewTimer = null
+    if (options.autoRenew !== false) {
+        renewTimer = setInterval(async () => {
+            try {
+                await renewPostTombstoneLease(postId, leaseToken, additionalLeaseMs)
+            } catch (_) {}
+        }, heartbeatIntervalMs)
+        if (renewTimer.unref) renewTimer.unref()
+    }
+
+    try {
+        await User.updateMany(
+            { savedPosts: postId },
+            { $pull: { savedPosts: postId } }
+        )
+
+        await Comment.deleteMany({ post: postId })
+
+        // Propagate errors from image deletion: do NOT physically delete Post if media cleanup fails!
+        await deletePostImages(post)
+
+        if (renewTimer) {
+            clearInterval(renewTimer)
+            renewTimer = null
+        }
+
+        // Fencing check: verify this worker still holds the lease owner AND the lease has not expired
+        const deleteRes = await Post.deleteOne({
+            _id: postId,
+            cleanupLeaseOwner: leaseToken,
+            cleanupLeaseExpiresAt: { $gte: new Date() }
+        })
+
+        if (deleteRes.deletedCount === 0) {
+            // Lease token was lost or lease expired before deletion could finalize
+            return null
+        }
+
+        return { success: true }
+    } catch (err) {
+        if (renewTimer) {
+            clearInterval(renewTimer)
+            renewTimer = null
+        }
+        // Mark failed and allow immediate retry
+        await Post.updateOne(
+            { _id: postId, cleanupLeaseOwner: leaseToken },
+            {
+                $set: {
+                    cleanupStatus: 'failed',
+                    cleanupLeaseExpiresAt: new Date(0)
+                }
+            }
+        ).catch(() => {})
+        throw err
     }
 }
 
+export async function retryFailedPostCleanups() {
+    const now = new Date()
+    const eligiblePosts = await Post.find({
+        status: 'deleted',
+        $or: [
+            { cleanupStatus: { $in: ['pending', 'failed', 'none'] } },
+            { cleanupStatus: 'in_progress', cleanupLeaseExpiresAt: { $lt: now } }
+        ]
+    }).select('_id')
+
+    let cleanedCount = 0
+    for (const p of eligiblePosts) {
+        try {
+            const res = await executePostTombstoneCleanup(p._id)
+            if (res?.success) {
+                cleanedCount++
+            }
+        } catch (e) {
+            console.error(`Retry cleanup failed for post ${p._id}:`, e)
+        }
+    }
+    return cleanedCount
+}
+
 export async function deletePost(postId, userId) {
-    const blog = await Post.findById(postId)
-    if (!blog) {
-        const err = new Error("Blog not found")
-        err.statusCode = 404
-        throw err
+    const session = await mongoose.startSession()
+    let blog
+    try {
+        await session.withTransaction(async () => {
+            blog = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } }).session(session)
+            if (!blog) {
+                const err = new Error("Blog not found")
+                err.statusCode = 404
+                throw err
+            }
+            if (blog.author.toString() !== userId.toString()) {
+                const err = new Error("Not authorized to delete this blog")
+                err.statusCode = 403
+                throw err
+            }
+
+            blog.status = 'deleted'
+            blog.deletedAt = new Date()
+            blog.cleanupStatus = 'pending'
+            blog.coordinationVersion = (blog.coordinationVersion || 0) + 1
+            await blog.save({ session })
+
+            await User.updateMany(
+                { savedPosts: postId },
+                { $pull: { savedPosts: postId } },
+                { session }
+            )
+
+            await Comment.deleteMany(
+                { post: postId },
+                { session }
+            )
+        })
+    } finally {
+        await session.endSession()
     }
-    if (blog.author.toString() !== userId.toString()) {
-        const err = new Error("Not authorized to delete this blog")
-        err.statusCode = 403
-        throw err
+
+    try {
+        await executePostTombstoneCleanup(postId)
+    } catch (cleanupErr) {
+        console.error(`Tombstone cleanup failed immediately for ${postId}, deferred to retry worker:`, cleanupErr)
     }
-    
-    // Delete images from Cloudinary first
-    await deletePostImages(postId)
-    
-    // Then delete the post
-    await blog.deleteOne()
+
     return blog
 }
 
 export async function updatePostImages(postId, newFiles, userId) {
-    const blog = await Post.findById(postId)
+    const blog = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } })
     if (!blog) {
         const err = new Error("Blog not found")
         err.statusCode = 404
@@ -150,53 +351,97 @@ export async function updatePostImages(postId, newFiles, userId) {
         err.statusCode = 403
         throw err
     }
-    
-    // Delete old images
-    if (blog.imagePublicIds && blog.imagePublicIds.length > 0) {
-        for (const publicId of blog.imagePublicIds) {
-            await cloudinary.uploader.destroy(publicId)
+
+    const oldPublicIds = [...(blog.imagePublicIds || [])]
+    const newImages = newFiles && newFiles.length > 0 ? newFiles.map(file => file.path) : []
+    const newPublicIds = newFiles && newFiles.length > 0 ? newFiles.map(file => file.filename) : []
+
+    blog.images = newImages
+    blog.imagePublicIds = newPublicIds
+
+    try {
+        await blog.save()
+    } catch (saveErr) {
+        // Failed database update must NOT delete existing Cloudinary assets.
+        // Clean up newly uploaded files so they don't leak orphaned storage in Cloudinary.
+        if (newPublicIds.length > 0) {
+            for (const pubId of newPublicIds) {
+                try {
+                    await cloudinary.uploader.destroy(pubId)
+                } catch (cleanupErr) {
+                    console.error(`Failed to clean up newly uploaded image ${pubId} after DB error:`, cleanupErr)
+                }
+            }
+        }
+        throw saveErr
+    }
+
+    // Only delete old images AFTER the database update has successfully committed
+    if (oldPublicIds.length > 0) {
+        for (const publicId of oldPublicIds) {
+            try {
+                await cloudinary.uploader.destroy(publicId)
+            } catch (error) {
+                console.error(`Error deleting old image ${publicId} from Cloudinary:`, error)
+            }
         }
     }
-    
-    // Add new images
-    if (newFiles && newFiles.length > 0) {
-        blog.images = newFiles.map(file => file.path)
-        blog.imagePublicIds = newFiles.map(file => file.filename)
-    } else {
-        blog.images = []
-        blog.imagePublicIds = []
-    }
-    
-    await blog.save()
+
     return blog
 }
 
 export async function likePost(postId, userId) {
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+    const postObjectId = new mongoose.Types.ObjectId(postId)
 
-    const blog = await Post.findById(postId)
-    if (!blog) {
+    const updated = await Post.findOneAndUpdate(
+        { _id: postObjectId, status: { $ne: 'deleted' } },
+        [
+            {
+                $set: {
+                    likes: {
+                        $cond: {
+                            if: { $in: [userObjectId, { $ifNull: ["$likes", []] }] },
+                            then: {
+                                $filter: {
+                                    input: { $ifNull: ["$likes", []] },
+                                    as: "id",
+                                    cond: { $ne: ["$$id", userObjectId] }
+                                }
+                            },
+                            else: {
+                                $concatArrays: [
+                                    {
+                                        $filter: {
+                                            input: { $ifNull: ["$likes", []] },
+                                            as: "id",
+                                            cond: { $ne: ["$$id", userObjectId] }
+                                        }
+                                    },
+                                    [userObjectId]
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        { updatePipeline: true, new: true, select: 'likes' }
+    )
+
+    if (!updated) {
         const err = new Error("Blog not found")
         err.statusCode = 404
         throw err
     }
 
-    const alreadyLiked = blog.likes.some(
+    const isLikedByUser = (updated.likes || []).some(
         id => id.toString() === userId.toString()
     )
 
-    if (alreadyLiked) {
-        blog.likes = blog.likes.filter(
-            id => id.toString() !== userId.toString()
-        )
-    } else {
-        blog.likes.push(userId)
-    }
-
-    await blog.save()
-
     return {
-        totalLikes: blog.likes.length,
-        isLikedByUser: !alreadyLiked
+        totalLikes: (updated.likes || []).length,
+        isLikedByUser
     }
 }
 
@@ -207,6 +452,7 @@ export async function fetchTrendingPosts(currentUserId, page = 1, limit = 10) {
     
     const query = {
         author: { $ne: currentUserId },
+        status: { $ne: 'deleted' },
         createdAt: { $gte: sevenDaysAgo }
     }
     
@@ -247,7 +493,8 @@ export async function fetchFollowingFeed(currentUserId, page = 1, limit = 10) {
     
     const query = {
         author: { $in: followingIds },  // Only from followed users
-        visibility: 'public'  // Only public posts
+        visibility: 'public',  // Only public posts
+        status: { $ne: 'deleted' }
     }
     
     const blogs = await Post.find(query)
@@ -306,6 +553,7 @@ export async function getPostsByCategoryName(categoryName, currentUserId, page =
     // Build query
     const query = {
         author: { $ne: currentUserId },
+        status: { $ne: 'deleted' },
         category: category._id,
         visibility: 'public'
     }
@@ -378,7 +626,7 @@ export async function createNewCategory({ name, description = '', adminId }) {
 
 export async function fetchCommentsByPost(postId, page = 1, limit = 20) {
     // Check if post exists
-    const post = await Post.findById(postId)
+    const post = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } })
     if (!post) {
         const err = new Error('Post not found')
         err.statusCode = 404
@@ -416,7 +664,7 @@ export async function fetchCommentsByPost(postId, page = 1, limit = 20) {
 
 export async function createNewComment(postId, userId, content) {
     // Check if post exists
-    const post = await Post.findById(postId)
+    const post = await Post.findOne({ _id: postId, status: { $ne: 'deleted' } })
     if (!post) {
         const err = new Error('Post not found')
         err.statusCode = 404
@@ -447,6 +695,14 @@ export async function updateCommentById(commentId, userId, content) {
 
     if (!comment) {
         const err = new Error('Comment not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    // Check parent post: must exist and not be deleted
+    const parentPost = await Post.findOne({ _id: comment.post, status: { $ne: 'deleted' } })
+    if (!parentPost) {
+        const err = new Error('Post not found')
         err.statusCode = 404
         throw err
     }
@@ -482,6 +738,14 @@ export async function deleteCommentById(commentId, userId) {
         throw err
     }
 
+    // Check parent post: must exist and not be deleted
+    const parentPost = await Post.findOne({ _id: comment.post, status: { $ne: 'deleted' } })
+    if (!parentPost) {
+        const err = new Error('Post not found')
+        err.statusCode = 404
+        throw err
+    }
+
     // Check if user is the author
     if (comment.author.toString() !== userId.toString()) {
         const err = new Error('Not authorized to delete this comment')
@@ -495,29 +759,70 @@ export async function deleteCommentById(commentId, userId) {
 
 export async function likeComment(commentId, userId) {
     const comment = await Comment.findById(commentId)
-
     if (!comment) {
         const err = new Error('Comment not found')
         err.statusCode = 404
         throw err
     }
 
-    const alreadyLiked = comment.likes.some(
+    // Check parent post: must exist and not be deleted
+    const parentPost = await Post.findOne({ _id: comment.post, status: { $ne: 'deleted' } })
+    if (!parentPost) {
+        const err = new Error('Post not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+    const commentObjectId = new mongoose.Types.ObjectId(commentId)
+
+    const updated = await Comment.findOneAndUpdate(
+        { _id: commentObjectId },
+        [
+            {
+                $set: {
+                    likes: {
+                        $cond: {
+                            if: { $in: [userObjectId, { $ifNull: ["$likes", []] }] },
+                            then: {
+                                $filter: {
+                                    input: { $ifNull: ["$likes", []] },
+                                    as: "id",
+                                    cond: { $ne: ["$$id", userObjectId] }
+                                }
+                            },
+                            else: {
+                                $concatArrays: [
+                                    {
+                                        $filter: {
+                                            input: { $ifNull: ["$likes", []] },
+                                            as: "id",
+                                            cond: { $ne: ["$$id", userObjectId] }
+                                        }
+                                    },
+                                    [userObjectId]
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        { updatePipeline: true, new: true, select: 'likes' }
+    )
+
+    if (!updated) {
+        const err = new Error('Comment not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const isLikedByUser = (updated.likes || []).some(
         id => id.toString() === userId.toString()
     )
 
-    if (alreadyLiked) {
-        comment.likes = comment.likes.filter(
-            id => id.toString() !== userId.toString()
-        )
-    } else {
-        comment.likes.push(userId)
-    }
-
-    await comment.save()
-
     return {
-        totalLikes: comment.likes.length,
-        isLikedByUser: !alreadyLiked
+        totalLikes: (updated.likes || []).length,
+        isLikedByUser
     }
 }

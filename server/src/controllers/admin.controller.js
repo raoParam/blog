@@ -1,3 +1,4 @@
+import { normalizePagination } from '../utils/queryHelper.js'
 import {
     // Dashboard services
     getPlatformStatistics,
@@ -50,8 +51,7 @@ export async function getDashboardStats(req, res, next) {
  */
 export async function getAllUsers(req, res, next) {
     try {
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
         const search = req.query.search || ''
         const status = req.query.status || ''
         const sort = req.query.sort || 'newest' // newest, oldest
@@ -128,8 +128,8 @@ export async function toggleVerifiedBadge(req, res, next) {
         const { userId } = req.params
         const { verify } = req.body // boolean
         
-        if (verify === undefined) {
-            const err = new Error('verify field is required (true/false)')
+        if (typeof verify !== 'boolean') {
+            const err = new Error('verify must be a boolean (true or false)')
             err.statusCode = 400
             throw err
         }
@@ -153,8 +153,7 @@ export async function toggleVerifiedBadge(req, res, next) {
  */
 export async function getAllPosts(req, res, next) {
     try {
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
         const visibility = req.query.visibility || ''
         const author = req.query.author || ''
         const startDate = req.query.startDate || ''
@@ -178,14 +177,13 @@ export async function getAllPosts(req, res, next) {
  */
 export async function getReportedPosts(req, res, next) {
     try {
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 20
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 20, 100)
         
         const result = await fetchReportedPosts(page, limit)
         
         res.status(200).json({
             Status: "success",
-            Message: "Reported posts fetched successfully",
+            Message: result.message || "Reported posts fetched successfully",
             reportedPosts: result.posts,
             pagination: result.pagination
         })
@@ -228,8 +226,8 @@ export async function togglePostVisibility(req, res, next) {
         const { postId } = req.params
         const { hidden } = req.body // boolean
         
-        if (hidden === undefined) {
-            const err = new Error('hidden field is required (true/false)')
+        if (typeof hidden !== 'boolean') {
+            const err = new Error('hidden must be a boolean (true or false)')
             err.statusCode = 400
             throw err
         }
@@ -343,8 +341,7 @@ export async function deleteCategory(req, res, next) {
  */
 export async function getSystemLogs(req, res, next) {
     try {
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 50
+        const { page, limit } = normalizePagination(req.query.page, req.query.limit, 50, 100)
         const level = req.query.level || '' // error, warn, info
         
         const logs = await fetchSystemLogs(page, limit, level)

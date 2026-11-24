@@ -2,27 +2,39 @@ import User from '../models/user.js'
 import RefreshToken from '../models/refreshToken.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { randomUUID } from 'crypto'
+
 const NAME_REGEX = /^[A-Za-z_]+$/
+
+/**
+ * Computes a secure SHA-256 digest of a token for storage at rest.
+ * @param {string} token
+ * @returns {string}
+ */
+export const hashToken = (token) => {
+    if (!token || typeof token !== 'string') return ''
+    return crypto.createHash('sha256').update(token).digest('hex')
+}
 
 // Generate Access Token (short-lived)
 export const generateAccessToken = (user) => {
     return jwt.sign(
-        { 
-            _id: user._id, 
+        {
+            _id: user._id,
             userName: user.userName,
-            version: user.refreshTokenVersion 
+            version: user.refreshTokenVersion
         },
         process.env.JWT_SECRET,
         { expiresIn: '15m' } // 15 minutes
     )
 }
 
-// Generate Refresh Token (long-lived)
+// Generate Refresh Token (long-lived) - saves SHA-256 hash at rest in MongoDB
 export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = '') => {
-    // Create unique token
-    const token = jwt.sign(
-        { 
+    // Create unique raw JWT token
+    const rawToken = jwt.sign(
+        {
             _id: user._id,
             version: user.refreshTokenVersion,
             jti: randomUUID()
@@ -31,38 +43,71 @@ export const generateRefreshToken = async (user, deviceInfo = '', ipAddress = ''
         { expiresIn: '7d' } // 7 days
     )
 
-    // Save to database
-    const refreshToken = await RefreshToken.create({
-        token,
+    // Hash token at rest
+    const tokenHash = hashToken(rawToken)
+
+    // Save hashed token to database
+    await RefreshToken.create({
+        token: tokenHash,
         user: user._id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         deviceInfo,
         ipAddress
     })
 
-    return refreshToken.token
+    // Return the raw token only to the client
+    return rawToken
 }
 
-// Verify Refresh Token
-export const verifyRefreshToken = async (token) => {
-    const refreshToken = await RefreshToken.findOne({ 
-        token, 
+// Verify Refresh Token - checks status, signature, and active account status
+export const verifyRefreshToken = async (rawToken) => {
+    if (!rawToken || typeof rawToken !== 'string') {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    const tokenHash = hashToken(rawToken)
+
+    const refreshToken = await RefreshToken.findOne({
+        $or: [
+            { token: tokenHash },
+            { token: rawToken } // Safe migration for existing pre-hash sessions
+        ],
         isValid: true,
         expiresAt: { $gt: new Date() }
     }).populate('user')
 
-    if (!refreshToken) {
+    if (!refreshToken || !refreshToken.user) {
         const err = new Error('Invalid or expired refresh token')
         err.statusCode = 401
         throw err
     }
 
     const user = refreshToken.user
+
+    // Reject non-active accounts during refresh-token verification
+    if (user.accountStatus === 'suspended') {
+        const err = new Error('Account is suspended')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus === 'deleted') {
+        const err = new Error('Account has been deleted')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus !== 'active') {
+        const err = new Error('Account is not active')
+        err.statusCode = 403
+        throw err
+    }
+
     try {
-        jwt.verify(token, process.env.JWT_SECRET + user.refreshTokenVersion)
+        jwt.verify(rawToken, process.env.JWT_SECRET + user.refreshTokenVersion)
         return { user, refreshToken }
     } catch (error) {
-        // If token verification fails, invalidate it
+        // If token verification fails, invalidate the record
         refreshToken.isValid = false
         await refreshToken.save()
         const err = new Error('Invalid or expired refresh token')
@@ -71,17 +116,71 @@ export const verifyRefreshToken = async (token) => {
     }
 }
 
-// Get new access token using refresh token
+// Atomically claim and rotate refresh token to prevent race conditions or replay attacks
 export const refreshAccessToken = async (refreshTokenStr) => {
-    const { user, refreshToken } = await verifyRefreshToken(refreshTokenStr)
+    if (!refreshTokenStr || typeof refreshTokenStr !== 'string') {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
 
-    // Rotate refresh token on every refresh call for better security.
-    refreshToken.isValid = false
-    await refreshToken.save()
+    const tokenHash = hashToken(refreshTokenStr)
+
+    // Atomically find and invalidate the active token record in a single DB operation.
+    // If two concurrent requests attempt to rotate the same token, exactly one succeeds.
+    const claimedToken = await RefreshToken.findOneAndUpdate(
+        {
+            $or: [
+                { token: tokenHash },
+                { token: refreshTokenStr }
+            ],
+            isValid: true,
+            expiresAt: { $gt: new Date() }
+        },
+        { $set: { isValid: false } },
+        { new: false } // return document before update
+    ).populate('user')
+
+    if (!claimedToken || !claimedToken.user) {
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    const user = claimedToken.user
+
+    // Reject non-active accounts during refresh-token rotation
+    if (user.accountStatus === 'suspended') {
+        const err = new Error('Account is suspended')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus === 'deleted') {
+        const err = new Error('Account has been deleted')
+        err.statusCode = 403
+        throw err
+    }
+    if (user.accountStatus !== 'active') {
+        const err = new Error('Account is not active')
+        err.statusCode = 403
+        throw err
+    }
+
+    // Verify cryptographic signature and user version
+    try {
+        jwt.verify(refreshTokenStr, process.env.JWT_SECRET + user.refreshTokenVersion)
+    } catch (jwtErr) {
+        // Token was already marked invalid in DB by findOneAndUpdate
+        const err = new Error('Invalid or expired refresh token')
+        err.statusCode = 401
+        throw err
+    }
+
+    // Generate new refresh token (hashed at rest)
     const newRefreshToken = await generateRefreshToken(
         user,
-        refreshToken.deviceInfo || '',
-        refreshToken.ipAddress || ''
+        claimedToken.deviceInfo || '',
+        claimedToken.ipAddress || ''
     )
 
     // Generate new access token
@@ -98,27 +197,45 @@ export const invalidateAllUserTokens = async (userId) => {
     )
 }
 
-// Update loginUser function
+// Login user and return raw tokens - rejects non-active accounts before issuing tokens
 export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     const { emailId , password } = userData
-    if(!emailId || !password) {
+    if (!emailId || !password) {
         const err = new Error('Required fields are missing')
         err.statusCode = 400
         throw err
     }
-    const existingUser = await User.findOne({emailId}).select('+password')
-    if(!existingUser) {
+    const existingUser = await User.findOne({ emailId }).select('+password')
+    if (!existingUser) {
         const err = new Error("Invalid Credentials")
         err.statusCode = 401
         throw err
     }
-    let isValiduser = await bcrypt.compare(password,existingUser.password)
-    if(!isValiduser) {
+    let isValiduser = await bcrypt.compare(password, existingUser.password)
+    if (!isValiduser) {
         const err = new Error("Invalid Credentials")
         err.statusCode = 401
         throw err
     }
-    if(!process.env.JWT_SECRET) {
+
+    // Reject suspended and deleted accounts during login before issuing tokens
+    if (existingUser.accountStatus === 'suspended') {
+        const err = new Error("Account is suspended")
+        err.statusCode = 403
+        throw err
+    }
+    if (existingUser.accountStatus === 'deleted') {
+        const err = new Error("Account has been deleted")
+        err.statusCode = 403
+        throw err
+    }
+    if (existingUser.accountStatus !== 'active') {
+        const err = new Error("Account is not active")
+        err.statusCode = 403
+        throw err
+    }
+
+    if (!process.env.JWT_SECRET) {
         const err = new Error("Internal Server Error, jwt_secret not found")
         err.statusCode = 500
         throw err
@@ -148,18 +265,32 @@ export async function loginUser(userData, deviceInfo = '', ipAddress = '') {
     return { accessToken, refreshToken, user }
 }
 
-// Update logout function
+// Logout user and invalidate token scoped strictly to user ownership
 export async function logoutUser(userId, refreshToken) {
+    if (!userId) {
+        const err = new Error('User ID is required for logout')
+        err.statusCode = 400
+        throw err
+    }
+
     if (refreshToken) {
-        await RefreshToken.findOneAndUpdate(
-            { token: refreshToken },
+        const tokenHash = hashToken(refreshToken)
+        const updated = await RefreshToken.findOneAndUpdate(
+            {
+                user: userId, // Scoped strictly to the authenticated user ID
+                $or: [
+                    { token: tokenHash },
+                    { token: refreshToken }
+                ]
+            },
             { isValid: false }
         )
+        // If token belonged to another user, updated will be null
+        return !!updated
     }
     return true
 }
 
-// Rest of your existing functions remain the same...
 export async function createUser(userData) {
     const normalizedEmail = userData.emailId?.trim().toLowerCase()
     const normalizedUserName = userData.userName?.trim()
@@ -204,7 +335,6 @@ export async function createUser(userData) {
         Number(process.env.SALT_ROUNDS)
     )
 
-    // OTP verification flow removed: users are marked verified on register.
     const user = await User.create({
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
@@ -226,36 +356,30 @@ export async function createUser(userData) {
 }
 
 export async function changeUserPassword(userId, currentPassword, newPassword) {
-    // Find user with password field
     const user = await User.findById(userId).select('+password')
-    
+
     if (!user) {
         const err = new Error('User not found')
         err.statusCode = 404
         throw err
     }
 
-    // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, user.password)
-    
+
     if (!isValidPassword) {
         const err = new Error('Current password is incorrect')
         err.statusCode = 401
         throw err
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(
         newPassword,
         Number(process.env.SALT_ROUNDS)
     )
 
-    // Update password
     user.password = hashedPassword
-    await user.save()
-
-    // Increment refresh token version to invalidate all existing refresh tokens
     user.refreshTokenVersion += 1
+    // Save the password and token version together so a partial update cannot leave old sessions valid.
     await user.save()
 
     // Invalidate all refresh tokens for security
