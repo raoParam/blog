@@ -1,8 +1,45 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion as Motion } from "framer-motion";
-import { Heart, MessageCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { Heart, MessageCircle, ArrowRight, ShieldCheck, EyeOff } from "lucide-react";
 import { publicService } from "../../services/public.service";
+
+const SectionHeader = ({ showLink = true }) => (
+  <div className="mb-12 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+        From the community
+      </p>
+      <h2 className="font-serif text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+        Latest posts
+      </h2>
+    </div>
+    {showLink && (
+      <Link
+        to="/explore"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-text-primary underline decoration-accent/60 decoration-[1.5px] underline-offset-4 transition hover:text-accent hover:decoration-accent"
+      >
+        View all <ArrowRight size={15} aria-hidden="true" />
+      </Link>
+    )}
+  </div>
+);
+
+const Avatar = ({ author }) => {
+  if (author?.avatar) {
+    return (
+      <img
+        src={author.avatar}
+        alt=""
+        className="h-7 w-7 rounded-full border border-border object-cover"
+      />
+    );
+  }
+  return (
+    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-text-primary">
+      {(author?.userName || "?").charAt(0).toUpperCase()}
+    </span>
+  );
+};
 
 const BlogPreview = () => {
   const [posts, setPosts] = useState([]);
@@ -59,54 +96,30 @@ const BlogPreview = () => {
 
   const displayPosts = posts.length > 0 ? posts : fallbackPosts;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) return "yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   if (loading) {
     return (
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-2xl font-bold text-text-primary">Latest from the Community</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-surface-1 rounded-2xl p-6 animate-pulse">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-surface-2 rounded-full" />
-                  <div className="flex-1">
-                    <div className="w-24 h-4 bg-surface-2 rounded mb-2" />
-                    <div className="w-16 h-3 bg-surface-2 rounded" />
-                  </div>
-                </div>
-                <div className="w-full h-6 bg-surface-2 rounded mb-3" />
-                <div className="w-full h-4 bg-surface-2 rounded mb-2" />
-                <div className="w-3/4 h-4 bg-surface-2 rounded mb-4" />
-                <div className="flex gap-4">
-                  <div className="w-12 h-6 bg-surface-2 rounded" />
-                  <div className="w-12 h-6 bg-surface-2 rounded" />
-                </div>
+      <section className="border-t border-border-subtle">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-24">
+          <SectionHeader showLink={false} />
+          <div className="grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse border-t border-border pt-6">
+                <div className="mb-5 h-4 w-32 rounded bg-surface-2" />
+                <div className="mb-3 h-6 w-full rounded bg-surface-2" />
+                <div className="mb-5 h-6 w-2/3 rounded bg-surface-2" />
+                <div className="mb-2 h-4 w-full rounded bg-surface-2" />
+                <div className="h-4 w-3/4 rounded bg-surface-2" />
               </div>
             ))}
           </div>
@@ -117,130 +130,76 @@ const BlogPreview = () => {
 
   if (error && posts.length === 0) {
     return (
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-text-primary mb-10">Latest from the Community</h2>
-          <div className="bg-surface-1 rounded-2xl p-12 text-center">
-            <p className="text-text-secondary">{error}</p>
-          </div>
+      <section className="border-t border-border-subtle">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-24">
+          <SectionHeader showLink={false} />
+          <p className="rounded-xl border border-border bg-surface-1 p-8 text-center text-text-secondary">
+            {error}
+          </p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-surface-1/20 via-transparent to-transparent pointer-events-none" />
+    <section className="border-t border-border-subtle">
+      <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-24">
+        <SectionHeader />
 
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <Motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="flex justify-between items-center mb-10"
-        >
-          <h2 className="text-2xl font-bold text-text-primary">Latest from the Community</h2>
-          <Link 
-            to="/explore" 
-            className="text-accent hover:text-accent-hover flex items-center gap-1 text-sm font-medium transition-colors"
-          >
-            View all <ArrowRight size={16} />
-          </Link>
-        </Motion.div>
-
-        {/* Posts Grid */}
-        <Motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
+        <div className="grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
           {displayPosts.slice(0, 3).map((post) => (
-            <Motion.div
-              key={post._id}
-              variants={itemVariants}
-              whileHover={{ y: -5 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link to={`/post/${post._id}`} className="block h-full">
-                <div className="bg-surface-1 border border-border-subtle rounded-2xl p-6 h-full hover:border-accent/40 transition-all duration-300 group">
-                  
-                  {/* Author Info */}
-                  <div className="flex items-center gap-3 mb-4">
-                    {post.author ? (
-                      <>
-                        <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center">
-                          <img className="w-11 h-11 rounded-4xl" src={post.author.avatar}/>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-text-primary font-medium text-sm">
-                              @{post.author.userName}
-                            </span>
-                            {(post.author?.isVerified || post.author?.isVerifiedBadge) && (
-                              <ShieldCheck size={13} className="text-accent" />
-                            )}
-                          </div>
-                          <span className="text-text-secondary text-xs">
-                            {formatDate(post.createdAt)}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center">
-                          <span className="text-text-secondary text-lg">🕶️</span>
-                        </div>
-                        <div>
-                          <span className="text-text-secondary font-medium text-sm">Anonymous</span>
-                          <span className="text-text-secondary text-xs block">
-                            {formatDate(post.createdAt)}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Post Content */}
-                  <h3 className="text-lg font-semibold text-text-primary mb-2 line-clamp-2 group-hover:text-accent transition-colors">
-                    {post.title}
-                  </h3>
-                  
-                  {post.excerpt && (
-                    <p className="text-text-secondary text-sm mb-4 line-clamp-2">
-                      {post.excerpt}
-                    </p>
+            <article key={post._id} className="border-t border-border pt-6">
+              <Link to={`/blog/${post._id}`} className="group block h-full">
+                <div className="mb-5 flex items-center gap-2.5 text-sm">
+                  {post.author ? (
+                    <>
+                      <Avatar author={post.author} />
+                      <span className="font-medium text-text-primary">
+                        @{post.author.userName}
+                      </span>
+                      {(post.author?.isVerified || post.author?.isVerifiedBadge) && (
+                        <ShieldCheck
+                          size={14}
+                          className="text-accent"
+                          aria-label="Verified writer"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-3 text-text-secondary">
+                        <EyeOff size={14} aria-hidden="true" />
+                      </span>
+                      <span className="font-medium text-text-secondary">Anonymous</span>
+                    </>
                   )}
+                  <span className="text-text-muted" aria-hidden="true">·</span>
+                  <span className="text-text-secondary">{formatDate(post.createdAt)}</span>
+                </div>
 
-                  {/* Engagement Stats */}
-                  <div className="flex items-center gap-4 text-text-secondary">
-                    <div className="flex items-center gap-1.5">
-                      <Heart size={16} className="group-hover:text-accent transition-colors" />
-                      <span className="text-sm">{Array.isArray(post.likes) ? post.likes.length : post.likes || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MessageCircle size={16} className="group-hover:text-accent transition-colors" />
-                      <span className="text-sm">{post.commentsCount || 0}</span>
-                    </div>
-                  </div>
+                <h3 className="line-clamp-3 font-serif text-2xl font-semibold leading-snug tracking-tight text-text-primary decoration-accent decoration-[1.5px] underline-offset-4 group-hover:underline">
+                  {post.title}
+                </h3>
+
+                {post.excerpt && (
+                  <p className="mt-3 line-clamp-3 leading-relaxed text-text-secondary">
+                    {post.excerpt}
+                  </p>
+                )}
+
+                <div className="mt-5 flex items-center gap-5 text-sm text-text-secondary">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Heart size={15} aria-hidden="true" />
+                    {Array.isArray(post.likes) ? post.likes.length : post.likes || 0}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <MessageCircle size={15} aria-hidden="true" />
+                    {post.commentsCount || 0}
+                  </span>
                 </div>
               </Link>
-            </Motion.div>
+            </article>
           ))}
-        </Motion.div>
-
-        {/* Mobile View All (visible only on mobile) */}
-        <div className="mt-8 text-center md:hidden">
-          <Link 
-            to="/explore" 
-            className="inline-flex items-center gap-2 text-accent hover:text-accent-hover text-sm font-medium transition-colors"
-          >
-            Browse all posts <ArrowRight size={16} />
-          </Link>
         </div>
       </div>
     </section>
