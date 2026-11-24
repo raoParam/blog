@@ -1,5 +1,4 @@
 import React from "react";
-import { motion as Motion } from "framer-motion";
 import { Heart, MessageCircle, ShieldCheck } from "lucide-react";
 
 const PublicPostCard = ({ post }) => {
@@ -30,69 +29,63 @@ const PublicPostCard = ({ post }) => {
     window.location.href = "/login";
   };
 
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleCardClick();
+    }
+  };
+
+  const authorLabel = post.author ? `@${post.author.userName}` : "Anonymous";
+
   return (
-    <Motion.div
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="cursor-pointer"
+    <article
+      role="link"
+      tabIndex={0}
       onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      aria-label={`${post.title} by ${authorLabel}. Sign in to read.`}
+      className="group cursor-pointer border-b border-border-subtle py-7 outline-none focus-visible:bg-surface-1"
     >
-      <div className="h-full bg-surface border border-border-subtle rounded-2xl p-6 transition-all duration-300 hover:border-accent hover:shadow-xl group">
-        <div className="flex items-center gap-3 mb-4">
-          {post.author ? (
-            <>
-              <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center text-sm text-text-primary overflow-hidden">
-                {post.author.avatar ? (
-                  <img
-                    src={post.author.avatar}
-                    alt={post.author.userName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="font-medium">{getInitial(post.author)}</span>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-text-primary font-medium text-sm">@{post.author.userName}</span>
-                  {isAuthorVerified && <ShieldCheck size={13} className="text-accent" />}
-                </div>
-                <span className="text-text-secondary text-xs">{formatDate(post.createdAt)}</span>
-              </div>
-            </>
+      <div className="flex items-center gap-2 text-sm">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-[11px] font-semibold text-text-secondary">
+          {post.author?.avatar ? (
+            <img src={post.author.avatar} alt="" className="h-full w-full object-cover" />
           ) : (
-            <>
-              <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center text-lg">
-                <span>Anon</span>
-              </div>
-              <div>
-                <span className="text-text-primary text-sm">Anonymous</span>
-                <div className="text-text-secondary text-xs">{formatDate(post.createdAt)}</div>
-              </div>
-            </>
+            getInitial(post.author)
           )}
-        </div>
-
-        <h3 className="text-xl font-semibold text-text-primary mb-3 line-clamp-2">{post.title}</h3>
-
-        {post.excerpt && (
-          <p className="text-text-secondary text-sm mb-4 line-clamp-3 leading-relaxed">{post.excerpt}</p>
+        </span>
+        <span className="font-medium text-text-primary">{authorLabel}</span>
+        {isAuthorVerified && (
+          <ShieldCheck size={14} className="shrink-0 text-accent" aria-label="Verified writer" />
         )}
-
-        <div className="flex items-center gap-4 text-text-secondary mt-2">
-          <div className="flex items-center gap-1.5">
-            <Heart size={16} className="text-text-secondary" />
-            <span className="text-xs">{Array.isArray(post.likes) ? post.likes.length : post.likes || 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MessageCircle size={16} className="text-text-secondary" />
-            <span className="text-xs">{post.commentsCount || 0}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 text-text-secondary text-xs opacity-0 group-hover:opacity-100 transition">Click to read</div>
+        <span className="text-text-muted" aria-hidden="true">·</span>
+        <span className="text-text-secondary">{formatDate(post.createdAt)}</span>
       </div>
-    </Motion.div>
+
+      <h2 className="mt-3 font-serif text-xl font-semibold leading-snug tracking-tight text-text-primary line-clamp-2 group-hover:underline group-hover:decoration-accent group-hover:decoration-2 group-hover:underline-offset-4 sm:text-[1.4rem]">
+        {post.title}
+      </h2>
+
+      {post.excerpt && (
+        <p className="mt-2 font-serif text-base leading-relaxed text-text-secondary line-clamp-2">
+          {post.excerpt}
+        </p>
+      )}
+
+      <div className="mt-5 flex items-center gap-5 text-sm text-text-secondary">
+        <span className="inline-flex items-center gap-1.5">
+          <Heart size={16} aria-hidden="true" />
+          <span className="sr-only">Likes:</span>
+          {Array.isArray(post.likes) ? post.likes.length : post.likes || 0}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <MessageCircle size={16} aria-hidden="true" />
+          <span className="sr-only">Comments:</span>
+          {post.commentsCount || 0}
+        </span>
+      </div>
+    </article>
   );
 };
 
