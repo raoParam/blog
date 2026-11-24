@@ -47,21 +47,21 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
   const isVerified = Boolean(person?.isVerified || person?.isVerifiedBadge);
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#1F2634] bg-[#07080D] px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-background px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
         {avatar ? (
           <img src={avatar} alt={fullName} className="h-10 w-10 rounded-full object-cover" />
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#131B2A] text-sm font-semibold text-[#E7EDF6]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-semibold text-text-primary">
             {(person?.userName?.charAt(0) || "U").toUpperCase()}
           </div>
         )}
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <p className="truncate text-sm font-semibold text-[#EDF3FF]">{fullName}</p>
-            {isVerified && <ShieldCheck size={13} className="text-[#5CA6FF]" />}
+            <p className="truncate text-sm font-semibold text-text-primary">{fullName}</p>
+            {isVerified && <ShieldCheck size={13} className="text-accent" />}
           </div>
-          <p className="truncate text-xs text-[#97A2B7]">@{person?.userName || "user"}</p>
+          <p className="truncate text-xs text-text-secondary">@{person?.userName || "user"}</p>
         </div>
       </div>
 
@@ -72,8 +72,8 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
           disabled={loading}
           className={`rounded-full border px-3 py-1 text-xs font-semibold tracking-wide transition ${
             person?.isFollowing
-              ? "border-[#5CA6FF] bg-[#111A2B] text-[#DDE8FF]"
-              : "border-[#4B5568] bg-[#0B0E13] text-[#E7EDF6] hover:border-[#5CA6FF]"
+              ? "border-accent bg-surface-2 text-text-primary"
+              : "border-border-strong bg-background text-text-primary hover:border-accent"
           } ${loading ? "cursor-not-allowed opacity-70" : ""}`}
         >
           {person?.isFollowing ? "Following" : "Follow"}
@@ -85,26 +85,26 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
 
 const ProfilePageSkeleton = () => (
   <div className="space-y-4 animate-pulse">
-    <div className="rounded-3xl border border-[#10131B] bg-[#020307] p-5 sm:p-6">
+    <div className="rounded-3xl border border-border-subtle bg-background p-5 sm:p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="h-24 w-24 rounded-full bg-[#111827]" />
+        <div className="h-24 w-24 rounded-full bg-surface" />
         <div className="flex flex-1 flex-wrap gap-3">
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
         </div>
       </div>
       <div className="mt-5 space-y-2">
-        <div className="h-4 w-32 rounded bg-[#111827]" />
-        <div className="h-5 w-48 rounded bg-[#111827]" />
-        <div className="h-3 w-28 rounded bg-[#111827]" />
+        <div className="h-4 w-32 rounded bg-surface" />
+        <div className="h-5 w-48 rounded bg-surface" />
+        <div className="h-3 w-28 rounded bg-surface" />
       </div>
     </div>
     {[1, 2].map((item) => (
-      <div key={item} className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-5">
-        <div className="h-4 w-1/3 rounded bg-[#111827]" />
-        <div className="mt-3 h-3 w-full rounded bg-[#111827]" />
-        <div className="mt-2 h-3 w-5/6 rounded bg-[#111827]" />
+      <div key={item} className="rounded-2xl border border-border-subtle bg-background p-5">
+        <div className="h-4 w-1/3 rounded bg-surface" />
+        <div className="mt-3 h-3 w-full rounded bg-surface" />
+        <div className="mt-2 h-3 w-5/6 rounded bg-surface" />
       </div>
     ))}
   </div>
@@ -342,7 +342,7 @@ const ProfilePage = () => {
   const isVerifiedUser = Boolean(profile?.isVerified || profile?.isVerifiedBadge);
 
   return (
-    <div className="min-h-screen bg-[#020307] text-[#E9EDF3]">
+    <div className="min-h-screen bg-background text-text-primary">
       <HomeNavbar
         user={profile || user}
         onLogout={handleLogout}
@@ -379,7 +379,7 @@ const ProfilePage = () => {
 
       <main className="mx-auto w-full max-w-[960px] px-4 py-6 sm:px-6">
         {pageError && (
-          <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          <div className="mb-4 rounded-2xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
             {pageError}
           </div>
         )}
@@ -388,7 +388,7 @@ const ProfilePage = () => {
           <ProfilePageSkeleton />
         ) : (
           <>
-            <section className="relative rounded-3xl border border-[#10131B] bg-[#020307] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.6)] sm:p-6">
+            <section className="relative rounded-3xl border border-border-subtle bg-background p-5 shadow-pop sm:p-6">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-shrink-0">
@@ -396,10 +396,10 @@ const ProfilePage = () => {
                       <img
                         src={avatar}
                         alt={userName}
-                        className="h-24 w-24 rounded-full border-2 border-[#1F2130] object-cover"
+                        className="h-24 w-24 rounded-full border-2 border-border-subtle object-cover"
                       />
                     ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#1F2130] bg-[#0B0E17] text-2xl font-semibold text-[#F8FBFF]">
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-border-subtle bg-background text-2xl font-semibold text-text-primary">
                         {userName.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -410,20 +410,20 @@ const ProfilePage = () => {
                       stat.key == "posts" ? (
                         <div
                           key={stat.key}
-                          className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left"
+                          className="flex flex-col gap-1 rounded-2xl bg-background px-3 py-2 text-left"
                         >
-                          <span className="text-xs text-[#6E7489]">{stat.label}</span>
-                          <span className="text-lg font-semibold text-[#F8FBFF]">{stat.count}</span>
+                          <span className="text-xs text-text-muted">{stat.label}</span>
+                          <span className="text-lg font-semibold text-text-primary">{stat.count}</span>
                         </div>
                       ) : (
                         <button
                           key={stat.key}
                           type="button"
                           onClick={() => openConnectionsList(stat.key)}
-                          className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                          className="flex flex-col gap-1 rounded-2xl bg-background px-3 py-2 text-left transition hover:border hover:border-accent"
                         >
-                          <span className="text-xs text-[#6E7489]">{stat.label}</span>
-                          <span className="text-lg font-semibold text-[#F8FBFF]">{stat.count}</span>
+                          <span className="text-xs text-text-muted">{stat.label}</span>
+                          <span className="text-lg font-semibold text-text-primary">{stat.count}</span>
                         </button>
                       )
                     )}
@@ -432,17 +432,17 @@ const ProfilePage = () => {
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <p className="text-sm text-[#8C95A7]">@{userName}</p>
-                    {isVerifiedUser && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+                    <p className="text-sm text-text-secondary">@{userName}</p>
+                    {isVerifiedUser && <ShieldCheck size={14} className="text-accent" />}
                   </div>
-                  <p className="text-base font-semibold text-[#F3F7FF]">
+                  <p className="text-base font-semibold text-text-primary">
                     {profile?.firstName || profile?.lastName ? `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() : ""}
                   </p>
                 </div>
               </div>
 
               <div className="mt-2">
-                <p className="text-xs font-semibold text-[#8C95A7]">
+                <p className="text-xs font-semibold text-text-secondary">
                   Joined {joinedText || "Unknown"}
                 </p>
               </div>
@@ -454,14 +454,14 @@ const ProfilePage = () => {
                   setEditOpen(true);
                 }}
                 aria-label="Edit profile"
-                className="absolute right-4 bottom-4 rounded-full border border-[#1F2130] bg-[#0B0E17] p-3 text-[#EAF1FF] transition hover:border-[#7FA8CA]"
+                className="absolute right-4 bottom-4 rounded-full border border-border-subtle bg-background p-3 text-text-primary transition hover:border-accent"
               >
                 <Edit3 size={18} />
               </button>
             </section>
 
             <section className="mt-6">
-              <div className="border-b border-[#1F293B]">
+              <div className="border-b border-border-subtle">
                 <div className="flex flex-wrap gap-6 text-sm font-semibold">
                   {["posts", "saved", "about"].map((tab) => (
                     <button
@@ -470,8 +470,8 @@ const ProfilePage = () => {
                       onClick={() => setActiveTab(tab)}
                       className={`border-b-2 pb-2 text-sm transition ${
                         activeTab === tab
-                          ? "border-[#5CA6FF] text-[#5CA6FF]"
-                          : "border-transparent text-[#90A1C2] hover:text-[#D2DCFF]"
+                          ? "border-accent text-accent"
+                          : "border-transparent text-text-secondary hover:text-text-primary"
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -489,10 +489,10 @@ const ProfilePage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-8 text-center">
+                <div className="rounded-2xl border border-border-subtle bg-background p-8 text-center">
                   <Link
                     to="/write"
-                    className="inline-flex rounded-full bg-[#5CA6FF] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#6CB0FF]"
+                    className="inline-flex rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover"
                   >
                     Write a Post
                   </Link>
@@ -506,23 +506,23 @@ const ProfilePage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-8 text-center text-sm text-[#9EA9C1]">
+                <div className="rounded-2xl border border-border-subtle bg-background p-8 text-center text-sm text-text-secondary">
                   No saved posts yet.
                 </div>
               )
                 ) : (
-                  <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-6 text-sm text-[#A9B5CE]">
+                  <div className="rounded-2xl border border-border-subtle bg-background p-6 text-sm text-text-body">
                     <p>
-                      <span className="text-[#7D8BA0]">Name:</span> {profileFullName || "Anonymous"}
+                      <span className="text-text-secondary">Name:</span> {profileFullName || "Anonymous"}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Username:</span> @{userName}
+                      <span className="text-text-secondary">Username:</span> @{userName}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Bio:</span> {profile?.bio || "No bio yet."}
+                      <span className="text-text-secondary">Bio:</span> {profile?.bio || "No bio yet."}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Account Created:</span> {formatShortDate(profile?.createdAt || profile?.joinedAt) || "Unknown"}
+                      <span className="text-text-secondary">Account Created:</span> {formatShortDate(profile?.createdAt || profile?.joinedAt) || "Unknown"}
                     </p>
                   </div>
                 )}
@@ -534,13 +534,13 @@ const ProfilePage = () => {
 
       {listModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-[#1F2635] bg-[#05070B] p-5">
+          <div className="w-full max-w-xl rounded-2xl border border-border-subtle bg-background p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[#F3F7FF] capitalize">{listModal.type}</h2>
+              <h2 className="text-lg font-semibold text-text-primary capitalize">{listModal.type}</h2>
               <button
                 type="button"
                 onClick={() => setListModal((prev) => ({ ...prev, open: false }))}
-                className="rounded-full border border-[#1F2635] p-1 text-[#8F9CB4] transition hover:border-[#5CA6FF] hover:text-white"
+                className="rounded-full border border-border-subtle p-1 text-text-secondary transition hover:border-accent hover:text-text-primary"
               >
                 <X size={18} />
               </button>
@@ -551,9 +551,9 @@ const ProfilePage = () => {
                 <LoaderRing />
               </div>
             ) : listModal.error ? (
-              <p className="text-sm text-red-300">{listModal.error}</p>
+              <p className="text-sm text-danger">{listModal.error}</p>
             ) : listModal.users.length === 0 ? (
-              <p className="text-sm text-[#9EA9C1]">No users found.</p>
+              <p className="text-sm text-text-secondary">No users found.</p>
             ) : (
               <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
                 {listModal.users.map((person) => (
@@ -573,13 +573,13 @@ const ProfilePage = () => {
 
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-[#1F2635] bg-[#05070B] p-6">
+          <div className="w-full max-w-2xl rounded-2xl border border-border-subtle bg-background p-6">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-[#F3F7FD]">Edit Profile</h2>
+              <h2 className="text-2xl font-semibold text-text-primary">Edit Profile</h2>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-full border border-[#1F2635] p-1 text-[#8F9CB4] transition hover:border-[#5CA6FF] hover:text-white"
+                className="rounded-full border border-border-subtle p-1 text-text-secondary transition hover:border-accent hover:text-text-primary"
               >
                 <X size={20} />
               </button>
@@ -591,16 +591,16 @@ const ProfilePage = () => {
                   <img
                     src={editForm.avatarPreview}
                     alt={userName}
-                    className="h-20 w-20 rounded-full border border-[#2A3546] object-cover"
+                    className="h-20 w-20 rounded-full border border-border object-cover"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#131B2A] text-2xl font-bold text-[#EEF3FA]">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-2 text-2xl font-bold text-text-primary">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <label
                   htmlFor="profile-avatar-input"
-                  className="absolute bottom-0 right-0 inline-flex cursor-pointer rounded-full bg-[#5CA6FF] p-1.5 text-white"
+                  className="absolute bottom-0 right-0 inline-flex cursor-pointer rounded-full bg-accent p-1.5 text-accent-fg"
                 >
                   <Camera size={14} />
                 </label>
@@ -613,49 +613,49 @@ const ProfilePage = () => {
                 />
               </div>
               <div>
-                <p className="text-sm text-[#9EB0CC]">@{userName}</p>
-                <p className="text-base text-[#F3F7FF]">Click to change photo</p>
+                <p className="text-sm text-text-secondary">@{userName}</p>
+                <p className="text-base text-text-primary">Click to change photo</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-[#6D7C99]">First Name</label>
+                <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-text-muted">First Name</label>
                 <input
                   value={editForm.firstName}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                  className="w-full rounded-2xl border border-[#1F2635] bg-[#07090E] px-3 py-2 text-sm text-[#ECF1FF] outline-none focus:border-[#5CA6FF]"
+                  className="w-full rounded-2xl border border-border-subtle bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-[#6D7C99]">Last Name</label>
+                <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-text-muted">Last Name</label>
                 <input
                   value={editForm.lastName}
                   onChange={(event) => setEditForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                  className="w-full rounded-2xl border border-[#1F2635] bg-[#07090E] px-3 py-2 text-sm text-[#ECF1FF] outline-none focus:border-[#5CA6FF]"
+                  className="w-full rounded-2xl border border-border-subtle bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
                 />
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-[#6D7C99]">Bio</label>
+              <label className="mb-1 block text-xs uppercase tracking-[0.3em] text-text-muted">Bio</label>
               <textarea
                 rows={4}
                 maxLength={500}
                 value={editForm.bio}
                 onChange={(event) => setEditForm((prev) => ({ ...prev, bio: event.target.value }))}
-                className="w-full resize-none rounded-2xl border border-[#1F2635] bg-[#07090E] px-3 py-2 text-sm text-[#ECF1FF] outline-none focus:border-[#5CA6FF]"
+                className="w-full resize-none rounded-2xl border border-border-subtle bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
               />
-              <p className="mt-1 text-xs text-[#7C8AA5]">{(editForm.bio || "").length}/500</p>
+              <p className="mt-1 text-xs text-text-secondary">{(editForm.bio || "").length}/500</p>
             </div>
 
-            {editError && <p className="mt-3 text-sm text-red-300">{editError}</p>}
+            {editError && <p className="mt-3 text-sm text-danger">{editError}</p>}
 
             <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-full border border-[#1F2635] px-5 py-2 text-sm font-semibold text-[#EDF1FF]"
+                className="rounded-full border border-border-subtle px-5 py-2 text-sm font-semibold text-text-primary"
               >
                 Cancel
               </button>
@@ -663,7 +663,7 @@ const ProfilePage = () => {
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="rounded-full bg-[#5CA6FF] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#6DB5FF] disabled:opacity-60"
+                className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:opacity-60"
               >
                 {savingProfile ? "Saving..." : "Save Changes"}
               </button>

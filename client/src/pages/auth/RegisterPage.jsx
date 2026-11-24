@@ -84,24 +84,23 @@ const RegisterPage = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#000000] flex items-center justify-center px-4 py-5"
-      style={{ fontFamily: "Arial, sans-serif" }}
+      className="min-h-screen bg-background flex items-center justify-center px-4 py-5"
     >
-      <div className="w-full max-w-md rounded-3xl border border-[#2B2B2B] bg-[#080808] p-6 shadow-[0_28px_80px_rgba(0,0,0,0.75)]">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-background p-6 shadow-pop">
         <div className="mb-6 text-center">
           <Link to="/" className="mb-6 inline-flex items-center gap-2">
             <BrandMark />
-            <span className="text-xl font-bold tracking-wide text-[#F3F3F3]">Flagger</span>
+            <span className="text-xl font-bold tracking-wide text-text-primary">Flagger</span>
           </Link>
-          <h1 className="text-2xl font-semibold text-[#F4F4F4] mb-2">Create Account</h1>
-          <p className="text-[#AFAFAF] text-sm">Sign up to start writing on Flagger</p>
+          <h1 className="text-2xl font-semibold text-text-primary mb-2">Create Account</h1>
+          <p className="text-text-secondary text-sm">Sign up to start writing on Flagger</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="register-username"
-              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
             >
               Username
             </label>
@@ -110,15 +109,15 @@ const RegisterPage = () => {
               type="text"
               value={formData.userName}
               onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-              className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-[#F1F1F1] text-sm focus:border-[#E6E6E6] outline-none transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm focus:border-accent outline-none transition"
             />
-            {errors.userName && <p className="text-red-400 text-xs mt-1">{errors.userName}</p>}
+            {errors.userName && <p className="text-danger text-xs mt-1">{errors.userName}</p>}
           </div>
 
           <div>
             <label
               htmlFor="register-email"
-              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
             >
               Email
             </label>
@@ -127,15 +126,15 @@ const RegisterPage = () => {
               type="email"
               value={formData.emailId}
               onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-              className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-[#F1F1F1] text-sm focus:border-[#E6E6E6] outline-none transition"
+              className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm focus:border-accent outline-none transition"
             />
-            {errors.emailId && <p className="text-red-400 text-xs mt-1">{errors.emailId}</p>}
+            {errors.emailId && <p className="text-danger text-xs mt-1">{errors.emailId}</p>}
           </div>
 
           <div>
             <label
               htmlFor="register-password"
-              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
             >
               Password
             </label>
@@ -145,41 +144,41 @@ const RegisterPage = () => {
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-[#F1F1F1] text-sm pr-12 focus:border-[#E6E6E6] outline-none transition"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm pr-12 focus:border-accent outline-none transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#BDBDBD] hover:text-white transition"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-body hover:text-text-primary transition"
               >
                 {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
               </button>
             </div>
-            {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+            {errors.password && <p className="text-danger text-xs mt-1">{errors.password}</p>}
             {!errors.password && (
-              <p className="text-[#8F8F8F] text-xs mt-1">
+              <p className="text-text-secondary text-xs mt-1">
                 Min 8 chars with uppercase, lowercase, number, and symbol.
               </p>
             )}
           </div>
 
           {serverError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2">
-              <p className="text-red-400 text-xs text-center">{serverError}</p>
+            <div className="bg-danger/10 border border-danger/30 rounded-lg p-2">
+              <p className="text-danger text-xs text-center">{serverError}</p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-gradient-to-r from-[#F2F2F2] to-[#BFBFBF] py-2.5 text-sm font-semibold text-[#111111] hover:opacity-90 transition disabled:opacity-50"
+            className="w-full rounded-xl bg-accent hover:bg-accent-hover py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition disabled:opacity-50"
           >
             {submitting ? "Creating account..." : "Create Account"}
           </button>
 
-          <p className="text-center text-sm text-[#B8B8B8]">
+          <p className="text-center text-sm text-text-body">
             Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-[#F3F3F3] hover:text-white transition">
+            <Link to="/login" className="font-semibold text-accent hover:text-accent-hover transition">
               Sign In
             </Link>
           </p>

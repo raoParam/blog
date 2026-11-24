@@ -7,13 +7,13 @@ const FinalCTA = () => {
   return (
     <section className="relative pb-28 overflow-hidden">
       {/* Deep background with subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-base via-base to-surface-0/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-surface-0/50" />
       
       {/* Glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e2130_1px,transparent_1px),linear-gradient(to_bottom,#1e2130_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,black_40%,transparent_100%)] opacity-20" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px),linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,black_40%,transparent_100%)] opacity-20" />
 
       <div className="relative max-w-4xl mx-auto px-6 text-center">
         <motion.div
@@ -53,7 +53,7 @@ const FinalCTA = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white font-medium px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-lg"
+                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-accent-fg font-medium px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-lg"
               >
                 Create Free Account
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -72,7 +72,7 @@ const FinalCTA = () => {
           </div>
 
           {/* Trust badges */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm text-[#f8f9fa]">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm text-text-primary">
             <div className="flex items-center gap-2 text-text-muted">
               <span className="w-1.5 h-1.5 bg-accent rounded-full" />
               No credit card required

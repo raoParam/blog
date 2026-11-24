@@ -216,7 +216,7 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#080B10] font-['Arial'] text-[#EEF3FA]">
+      <div className="min-h-screen bg-background text-text-primary">
         <HomeNavbar
           user={currentUser || user}
           onLogout={handleLogout}
@@ -265,13 +265,13 @@ const HomePage = () => {
             </div>
 
             {selectedCategory && (
-              <div className="mb-4 rounded-xl border border-[#D0D9E5]/25 bg-[#111823] px-3 py-2 text-sm text-[#DDE5F0]">
-                Showing category: <span className="font-semibold text-[#7DA6FF]">{selectedCategory}</span>
+              <div className="mb-4 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary">
+                Showing category: <span className="font-semibold text-accent">{selectedCategory}</span>
               </div>
             )}
 
             {pageError && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              <div className="mb-4 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
                 {pageError}
               </div>
             )}
@@ -279,8 +279,8 @@ const HomePage = () => {
             {initialLoading ? (
               <FeedSkeleton />
             ) : posts.length === 0 ? (
-              <div className="rounded-2xl border border-[#D0D9E5]/20 bg-[#0E1219] p-8 text-center">
-                <p className="text-sm text-[#B9C4D3]">
+              <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+                <p className="text-sm text-text-body">
                   {activeTab === "following"
                     ? "No posts from people you follow yet."
                     : "No posts available right now."}
@@ -295,13 +295,13 @@ const HomePage = () => {
                 <div ref={sentinelRef} className="h-4" />
 
                 {loadingMore && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="rounded-xl border border-border bg-surface p-3 text-center text-sm text-text-body">
                     <LoaderRing className="mx-auto" />
                   </div>
                 )}
 
                 {!hasNext && posts.length > 0 && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="rounded-xl border border-border bg-surface p-3 text-center text-sm text-text-body">
                     You&apos;ve reached the end.
                   </div>
                 )}

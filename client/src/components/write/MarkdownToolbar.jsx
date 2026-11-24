@@ -186,7 +186,7 @@ const MarkdownToolbar = ({ onInsert, onOpenGuide, disabled = false }) => {
   ];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-xl border border-[#232732] bg-[#0E1117] p-2 text-[#9CA3AF]">
+    <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-xl border border-border-subtle bg-surface p-2 text-text-secondary">
       <div className="flex flex-wrap items-center gap-1">
         {tools.map((group, groupIdx) => (
           <div key={group.group} className="flex items-center gap-0.5">
@@ -198,13 +198,13 @@ const MarkdownToolbar = ({ onInsert, onOpenGuide, disabled = false }) => {
                 title={item.title}
                 aria-label={item.title}
                 onClick={() => onInsert(item.prefix, item.suffix, item.defaultText, item.block)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-[#B0B4C0] transition hover:bg-[#1A1F2C] hover:text-white disabled:opacity-40"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-body transition hover:bg-surface-2 hover:text-text-primary disabled:opacity-40"
               >
                 {item.icon}
               </button>
             ))}
             {groupIdx < tools.length - 1 && (
-              <div className="mx-1 h-4 w-px bg-[#232732]" />
+              <div className="mx-1 h-4 w-px bg-surface-3" />
             )}
           </div>
         ))}
@@ -215,7 +215,7 @@ const MarkdownToolbar = ({ onInsert, onOpenGuide, disabled = false }) => {
           type="button"
           onClick={onOpenGuide}
           title="Markdown Cheatsheet & Guide"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[#2B3140] bg-[#141822] px-2.5 py-1 text-xs font-medium text-[#A5B4FC] transition hover:border-indigo-500/50 hover:bg-[#1C2232] hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-medium text-accent transition hover:border-accent/50 hover:bg-surface-2 hover:text-text-primary"
         >
           <HelpCircle size={13} />
           <span>Markdown Guide</span>

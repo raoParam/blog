@@ -39,7 +39,7 @@ const ExploreHero = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-accent hover:bg-accent-hover text-white font-medium px-8 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group"
+              className="bg-accent hover:bg-accent-hover text-accent-fg font-medium px-8 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group"
             >
               Join Flagger
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

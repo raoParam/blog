@@ -118,7 +118,7 @@ const HeroSection = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white font-medium px-6 md:px-8 py-3 md:py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-sm md:text-base"
+                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-accent-fg font-medium px-6 md:px-8 py-3 md:py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-sm md:text-base"
               >
                 Start Writing
                 <motion.span

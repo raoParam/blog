@@ -13,6 +13,7 @@ import HomePage from "../pages/feed/HomePage";
 import BlogPage from "../pages/feed/BlogPage";
 import ProfilePage from "../pages/user/ProfilePage";
 import UserProfilePage from "../pages/user/UserProfilePage";
+import SettingsPage from "../pages/user/SettingsPage";
 import WritePage from "../pages/write/WritePage";
 
 const AppRoutes = () => {
@@ -65,6 +66,11 @@ const AppRoutes = () => {
       <Route path="/profile/:username" element={
         <ProtectedRoute>
           <UserProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <SettingsPage />
         </ProtectedRoute>
       } />
       <Route path="/write" element={

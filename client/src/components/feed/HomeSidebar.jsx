@@ -26,7 +26,7 @@ const HomeSidebar = ({
 
   return (
     <aside
-      className={`flex h-[calc(100vh-4rem)] min-h-0 w-64 flex-col overflow-hidden border-r border-[#D0D9E5]/20 bg-[#0B0E13] p-4 font-['Arial'] ${className}`}
+      className={`flex h-[calc(100vh-4rem)] min-h-0 w-64 flex-col overflow-hidden border-r border-border bg-background p-4 ${className}`}
     >
       <div className="mb-5 space-y-2">
         <button
@@ -38,8 +38,8 @@ const HomeSidebar = ({
           }}
           className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "home"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "border-accent bg-surface text-text-primary"
+              : "border-transparent text-text-primary hover:bg-surface-2"
           }`}
           title="Home"
         >
@@ -55,8 +55,8 @@ const HomeSidebar = ({
           }}
           className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "write"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "border-accent bg-surface text-text-primary"
+              : "border-transparent text-text-primary hover:bg-surface-2"
           }`}
           title="Write"
         >
@@ -69,8 +69,8 @@ const HomeSidebar = ({
           onClick={onCloseMenu}
           className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] transition ${
             selectedMenuItem === "profile"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "border-accent bg-surface text-text-primary"
+              : "border-transparent text-text-primary hover:bg-surface-2"
           }`}
           title="Profile"
         >
@@ -80,11 +80,11 @@ const HomeSidebar = ({
       </div>
 
       {!hideCategories && (
-        <div className="mt-5 border-t border-[#CCD6E4]/20 pt-4">
+        <div className="mt-5 border-t border-border pt-4">
           <button
             type="button"
             onClick={() => setShowCategories((prev) => !prev)}
-            className="mb-2 flex w-full items-center justify-between rounded-xl border border-[#D4DCE7]/20 bg-gradient-to-r from-[#141C2C] via-[#101722] to-[#0E131D] px-3 py-2 text-sm font-medium text-[#E8EEF9] transition hover:border-[#6D94E2]"
+            className="mb-2 flex w-full items-center justify-between rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm font-medium text-text-primary transition hover:border-accent"
           >
             <span className="flex items-center gap-2">
               <Hash size={16} />
@@ -94,7 +94,7 @@ const HomeSidebar = ({
           </button>
 
           {showCategories && (
-            <div className="space-y-2 rounded-xl border border-[#D2DBE6]/20 bg-[#0F141E] p-2">
+            <div className="space-y-2 rounded-xl border border-border bg-surface p-2">
               {categories.map((category) => {
                 const isActive = selectedCategory === category.name;
                 return (
@@ -107,8 +107,8 @@ const HomeSidebar = ({
                     }}
                     className={`w-full rounded-lg border px-3 py-2 text-left text-sm font-medium uppercase transition ${
                       isActive
-                        ? "border-[#6A90DA] bg-[#162238] text-[#F0F5FF] shadow-[0_0_0_1px_rgba(102,150,231,0.15)]"
-                        : "border-transparent text-[#BBC5D3] hover:border-[#CFD8E4]/25 hover:bg-[#141C2A] hover:text-[#E2E8F3]"
+                        ? "border-accent bg-surface-2 text-text-primary ring-1 ring-accent/15"
+                        : "border-transparent text-text-body hover:border-border hover:bg-surface-2 hover:text-text-primary"
                     }`}
                     title={category.name}
                   >
@@ -118,15 +118,15 @@ const HomeSidebar = ({
               })}
 
               {categories.length === 0 && (
-                <p className="px-1 text-sm text-[#8E9DAF]">No categories found.</p>
+                <p className="px-1 text-sm text-text-secondary">No categories found.</p>
               )}
             </div>
           )}
         </div>
       )}
 
-      <div className="mt-8 border-t border-[#CCD6E4]/20 pt-6">
-        <p className="inline-flex items-center gap-1 text-xs text-[#98A6BA]">
+      <div className="mt-8 border-t border-border pt-6">
+        <p className="inline-flex items-center gap-1 text-xs text-text-secondary">
           <Copyright size={12} />
           <span>2026 Flagger</span>
         </p>

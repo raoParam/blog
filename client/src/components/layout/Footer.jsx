@@ -6,7 +6,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-t border-border-subtle bg-surface-0 pt-16 pb-8 font-['Arial']">
+    <footer className="relative overflow-hidden border-t border-border-subtle bg-surface-0 pt-16 pb-8">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-accent/5 via-transparent to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-6">
@@ -14,7 +14,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="group mb-4 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent shadow-md transition group-hover:scale-105">
-                <span className="text-sm font-bold text-white">F</span>
+                <span className="text-sm font-bold text-accent-fg">F</span>
               </div>
               <span className="text-lg font-semibold text-text-primary">Flagger</span>
             </Link>

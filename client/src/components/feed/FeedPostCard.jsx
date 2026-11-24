@@ -45,11 +45,11 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
 
   return (
     <Link to={`/blog/${post._id}`} className="block">
-      <article className="rounded-2xl border border-[#0E1118] bg-[#03040A] p-4 transition hover:border-[#5CA6FF]">
+      <article className="rounded-2xl border border-border-subtle bg-background p-4 transition hover:border-accent">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1">
-            <div className="flex items-center gap-1 text-sm text-[#BBC8DD]">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1A1F2C] bg-[#04050C] text-[#E9EFF9]">
+            <div className="flex items-center gap-1 text-sm text-text-body">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border-subtle bg-background text-text-primary">
                 {authorAvatar ? (
                   <img src={authorAvatar} alt={safeAuthorName} className="h-full w-full rounded-full object-cover" />
                 ) : (
@@ -60,29 +60,29 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
                 type="button"
                 onClick={handleAuthorClick}
                 disabled={isAnonymous}
-                className={`max-w-[180px] truncate font-semibold ${isAnonymous ? "text-[#D9E1F2]" : "text-[#D9E1F2] hover:text-[#8FB3FF]"}`}
+                className={`max-w-[180px] truncate font-semibold ${isAnonymous ? "text-text-primary" : "text-text-primary hover:text-accent-hover"}`}
                 title={`@${safeAuthorName}`}
               >
                 @{safeAuthorName}
               </button>
-              {isAuthorVerified && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+              {isAuthorVerified && <ShieldCheck size={14} className="text-accent" />}
               {relativeTime && (
                 <>
-                  <span className="text-[#8A93A6]">.</span>
-                  <span className="text-[#8A93A6]">{relativeTime}</span>
+                  <span className="text-text-secondary">.</span>
+                  <span className="text-text-secondary">{relativeTime}</span>
                 </>
               )}
             </div>
 
-            <h2 className="mt-2 text-lg font-semibold text-[#F7FAFF] line-clamp-2">{post.title}</h2>
-            {previewText && <p className="mt-1 text-sm leading-6 text-[#A7B0C1] line-clamp-2">{previewText}</p>}
+            <h2 className="mt-2 text-lg font-semibold text-text-primary line-clamp-2">{post.title}</h2>
+            {previewText && <p className="mt-1 text-sm leading-6 text-text-secondary line-clamp-2">{previewText}</p>}
 
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#C4CCD9]">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-body">
               <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5">
-                <Heart size={14} className={post.isLikedByCurrentUser ? "text-[#FF8EA4]" : "text-[#C4CCD9]"} />
+                <Heart size={14} className={post.isLikedByCurrentUser ? "text-danger" : "text-text-body"} />
                 {post.likesCount}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5 text-[#C4CCD9]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5 text-text-body">
                 <MessageCircle size={14} />
                 {post.commentsCount || 0}
               </span>
@@ -90,7 +90,7 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
           </div>
 
           {Array.isArray(post.images) && post.images.length > 0 && (
-            <div className="h-24 w-full overflow-hidden rounded-xl border border-[#1A1F2C] bg-[#04050C] sm:w-32">
+            <div className="h-24 w-full overflow-hidden rounded-xl border border-border-subtle bg-background sm:w-32">
               <img src={post.images[0]} alt={post.title} className="h-full w-full object-cover" />
             </div>
           )}
@@ -101,7 +101,7 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
             type="button"
             onClick={handleBookmark}
             className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition ${
-              post.isSaved ? "border-[#5CA6FF] text-[#5CA6FF]" : "border-[#3F4D67] text-[#9DB0C6]"
+              post.isSaved ? "border-accent text-accent" : "border-border-strong text-text-secondary"
             }`}
             aria-label={post.isSaved ? "Remove save" : "Save post"}
           >

@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 
 const NavbarLoggedOut = () => {
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-base/80 border-b border-border-subtle">
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border-subtle">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
 
           {/* Left Side - Logo + Brand */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
-              <span className="text-white font-bold text-sm">F</span>
+              <span className="text-accent-fg font-bold text-sm">F</span>
             </div>
             <span className="hidden sm:block font-semibold text-text-primary text-lg">
               Flagger
@@ -27,7 +27,7 @@ const NavbarLoggedOut = () => {
             </Link>
 
             <Link to="/register">
-              <button className="bg-accent hover:bg-accent-hover text-white font-medium px-5 py-2 rounded-xl transition-all shadow-md hover:shadow-lg">
+              <button className="bg-accent hover:bg-accent-hover text-accent-fg font-medium px-5 py-2 rounded-xl transition-all shadow-md hover:shadow-lg">
                 Sign Up
               </button>
             </Link>
