@@ -8,7 +8,7 @@ const LoaderRing = ({ size = "md", className = "" }) => {
   const ringSize = sizeMap[size] || sizeMap.md;
   return (
     <span
-      className={`inline-block animate-spin rounded-full border-[#5CA6FF] border-t-transparent ${ringSize} ${className}`}
+      className={`inline-block animate-spin rounded-full border-accent border-t-transparent ${ringSize} ${className}`}
       aria-label="Loading"
       role="status"
     />

@@ -26,9 +26,9 @@ const HomeSidebar = ({
 
   return (
     <aside
-      className={`flex h-[calc(100vh-4rem)] min-h-0 w-64 flex-col overflow-hidden border-r border-[#D0D9E5]/20 bg-[#0B0E13] p-4 font-['Arial'] ${className}`}
+      className={`flex h-[calc(100vh-4rem)] min-h-0 w-64 flex-col overflow-hidden border-r border-border-subtle bg-background px-3 py-5 ${className}`}
     >
-      <div className="mb-5 space-y-2">
+      <nav aria-label="Primary" className="mb-5 space-y-1">
         <button
           type="button"
           onClick={() => {
@@ -36,14 +36,15 @@ const HomeSidebar = ({
             onHomeClick?.();
             onCloseMenu?.();
           }}
-          className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] font-medium transition ${
+          className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "home"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "bg-surface-2 text-text-primary"
+              : "text-text-secondary hover:bg-surface-1 hover:text-text-primary"
           }`}
           title="Home"
         >
-          <House size={16} />
+          {selectedMenuItem === "home" && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+          <House size={17} />
           Home
         </button>
 
@@ -53,48 +54,51 @@ const HomeSidebar = ({
             onWriteClick?.();
             onCloseMenu?.();
           }}
-          className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] font-medium transition ${
+          className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "write"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "bg-surface-2 text-text-primary"
+              : "text-text-secondary hover:bg-surface-1 hover:text-text-primary"
           }`}
           title="Write"
         >
-          <PenSquare size={16} />
+          {selectedMenuItem === "write" && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+          <PenSquare size={17} />
           Write
         </button>
 
         <Link
           to="/profile"
           onClick={onCloseMenu}
-          className={`flex w-full items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[15px] transition ${
+          className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition ${
             selectedMenuItem === "profile"
-              ? "border-[#5CA6FF] bg-[#101524] text-[#EEF3FA]"
-              : "border-transparent text-[#D8DEE8] hover:bg-[#101927]"
+              ? "bg-surface-2 text-text-primary"
+              : "text-text-secondary hover:bg-surface-1 hover:text-text-primary"
           }`}
           title="Profile"
         >
-          <User size={16} />
+          {selectedMenuItem === "profile" && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+          <User size={17} />
           Profile
         </Link>
-      </div>
+      </nav>
 
       {!hideCategories && (
-        <div className="mt-5 border-t border-[#CCD6E4]/20 pt-4">
+        <div className="mt-3 border-t border-border-subtle pt-4">
           <button
             type="button"
             onClick={() => setShowCategories((prev) => !prev)}
-            className="mb-2 flex w-full items-center justify-between rounded-xl border border-[#D4DCE7]/20 bg-gradient-to-r from-[#141C2C] via-[#101722] to-[#0E131D] px-3 py-2 text-sm font-medium text-[#E8EEF9] transition hover:border-[#6D94E2]"
+            aria-expanded={showCategories}
+            className="mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-text-secondary transition hover:bg-surface-1 hover:text-text-primary"
           >
             <span className="flex items-center gap-2">
-              <Hash size={16} />
+              <Hash size={14} aria-hidden="true" />
               Categories
             </span>
             {showCategories ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
 
           {showCategories && (
-            <div className="space-y-2 rounded-xl border border-[#D2DBE6]/20 bg-[#0F141E] p-2">
+            <div className="min-h-0 max-h-[40vh] space-y-0.5 overflow-y-auto">
               {categories.map((category) => {
                 const isActive = selectedCategory === category.name;
                 return (
@@ -105,10 +109,11 @@ const HomeSidebar = ({
                       onSelectCategory(category.name);
                       onCloseMenu?.();
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm font-medium uppercase transition ${
+                    aria-pressed={isActive}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
                       isActive
-                        ? "border-[#6A90DA] bg-[#162238] text-[#F0F5FF] shadow-[0_0_0_1px_rgba(102,150,231,0.15)]"
-                        : "border-transparent text-[#BBC5D3] hover:border-[#CFD8E4]/25 hover:bg-[#141C2A] hover:text-[#E2E8F3]"
+                        ? "bg-surface-2 font-semibold text-text-primary"
+                        : "text-text-secondary hover:bg-surface-1 hover:text-text-primary"
                     }`}
                     title={category.name}
                   >
@@ -118,15 +123,15 @@ const HomeSidebar = ({
               })}
 
               {categories.length === 0 && (
-                <p className="px-1 text-sm text-[#8E9DAF]">No categories found.</p>
+                <p className="px-1 text-sm text-text-secondary">No categories found.</p>
               )}
             </div>
           )}
         </div>
       )}
 
-      <div className="mt-8 border-t border-[#CCD6E4]/20 pt-6">
-        <p className="inline-flex items-center gap-1 text-xs text-[#98A6BA]">
+      <div className="mt-auto border-t border-border-subtle px-3 pt-5">
+        <p className="inline-flex items-center gap-1 text-xs text-text-muted">
           <Copyright size={12} />
           <span>2026 Flagger</span>
         </p>

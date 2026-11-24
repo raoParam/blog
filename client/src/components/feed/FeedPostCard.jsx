@@ -43,69 +43,85 @@ const FeedPostCard = ({ post, onBookmarkClick }) => {
     navigate(`/profile/${safeAuthorName}`);
   };
 
+  const hasImage = Array.isArray(post.images) && post.images.length > 0;
+
   return (
-    <Link to={`/blog/${post._id}`} className="block">
-      <article className="rounded-2xl border border-[#0E1118] bg-[#03040A] p-4 transition hover:border-[#5CA6FF]">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="flex-1">
-            <div className="flex items-center gap-1 text-sm text-[#BBC8DD]">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#1A1F2C] bg-[#04050C] text-[#E9EFF9]">
-                {authorAvatar ? (
-                  <img src={authorAvatar} alt={safeAuthorName} className="h-full w-full rounded-full object-cover" />
-                ) : (
-                  <CircleUserRound size={16} />
-                )}
-              </span>
-              <button
-                type="button"
-                onClick={handleAuthorClick}
-                disabled={isAnonymous}
-                className={`max-w-[180px] truncate font-semibold ${isAnonymous ? "text-[#D9E1F2]" : "text-[#D9E1F2] hover:text-[#8FB3FF]"}`}
-                title={`@${safeAuthorName}`}
-              >
-                @{safeAuthorName}
-              </button>
-              {isAuthorVerified && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
-              {relativeTime && (
-                <>
-                  <span className="text-[#8A93A6]">.</span>
-                  <span className="text-[#8A93A6]">{relativeTime}</span>
-                </>
-              )}
-            </div>
+    <Link to={`/blog/${post._id}`} className="group block">
+      <article className="border-b border-border-subtle py-7">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-text-secondary">
+            {authorAvatar ? (
+              <img src={authorAvatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <CircleUserRound size={14} aria-hidden="true" />
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={handleAuthorClick}
+            disabled={isAnonymous}
+            className={`max-w-[200px] truncate font-medium text-text-primary ${isAnonymous ? "" : "hover:underline hover:decoration-accent hover:underline-offset-4"}`}
+            title={`@${safeAuthorName}`}
+          >
+            @{safeAuthorName}
+          </button>
+          {isAuthorVerified && (
+            <ShieldCheck size={14} className="shrink-0 text-accent" aria-label="Verified writer" />
+          )}
+          {relativeTime && (
+            <>
+              <span className="text-text-muted" aria-hidden="true">·</span>
+              <span className="text-text-secondary">{relativeTime}</span>
+            </>
+          )}
+        </div>
 
-            <h2 className="mt-2 text-lg font-semibold text-[#F7FAFF] line-clamp-2">{post.title}</h2>
-            {previewText && <p className="mt-1 text-sm leading-6 text-[#A7B0C1] line-clamp-2">{previewText}</p>}
-
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#C4CCD9]">
-              <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5">
-                <Heart size={14} className={post.isLikedByCurrentUser ? "text-[#FF8EA4]" : "text-[#C4CCD9]"} />
-                {post.likesCount}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-0.5 text-[#C4CCD9]">
-                <MessageCircle size={14} />
-                {post.commentsCount || 0}
-              </span>
-            </div>
+        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:gap-6">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight text-text-primary line-clamp-2 sm:text-[1.4rem]">
+              {post.title}
+            </h2>
+            {previewText && (
+              <p className="mt-2 font-serif text-base leading-relaxed text-text-secondary line-clamp-2">
+                {previewText}
+              </p>
+            )}
           </div>
 
-          {Array.isArray(post.images) && post.images.length > 0 && (
-            <div className="h-24 w-full overflow-hidden rounded-xl border border-[#1A1F2C] bg-[#04050C] sm:w-32">
-              <img src={post.images[0]} alt={post.title} className="h-full w-full object-cover" />
+          {hasImage && (
+            <div className="h-40 w-full shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-1 sm:h-28 sm:w-40">
+              <img src={post.images[0]} alt="" className="h-full w-full object-cover" />
             </div>
           )}
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-5 flex items-center justify-between">
+          <div className="flex items-center gap-5 text-sm text-text-secondary">
+            <span className="inline-flex items-center gap-1.5">
+              <Heart
+                size={16}
+                aria-hidden="true"
+                className={post.isLikedByCurrentUser ? "fill-current text-danger" : ""}
+              />
+              <span className="sr-only">Likes:</span>
+              {post.likesCount || 0}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageCircle size={16} aria-hidden="true" />
+              <span className="sr-only">Comments:</span>
+              {post.commentsCount || 0}
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={handleBookmark}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition ${
-              post.isSaved ? "border-[#5CA6FF] text-[#5CA6FF]" : "border-[#3F4D67] text-[#9DB0C6]"
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition hover:bg-surface-2 ${
+              post.isSaved ? "text-accent" : "text-text-secondary hover:text-text-primary"
             }`}
             aria-label={post.isSaved ? "Remove save" : "Save post"}
           >
-            <Bookmark size={16} className={`pointer-events-none ${post.isSaved ? "fill-current" : ""}`} />
+            <Bookmark size={17} className={`pointer-events-none ${post.isSaved ? "fill-current" : ""}`} />
           </button>
         </div>
       </article>

@@ -41,21 +41,21 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
   const isVerified = Boolean(person?.isVerified || person?.isVerifiedBadge);
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#1F2634] bg-[#07080D] px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-background px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
         {avatar ? (
           <img src={avatar} alt={fullName} className="h-10 w-10 rounded-full object-cover" />
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#131B2A] text-sm font-semibold text-[#E7EDF6]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-sm font-semibold text-text-primary">
             {(person?.userName?.charAt(0) || "U").toUpperCase()}
           </div>
         )}
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <p className="truncate text-sm font-semibold text-[#EDF3FF]">{fullName}</p>
-            {isVerified && <ShieldCheck size={13} className="text-[#5CA6FF]" />}
+            <p className="truncate text-sm font-semibold text-text-primary">{fullName}</p>
+            {isVerified && <ShieldCheck size={13} className="text-accent" />}
           </div>
-          <p className="truncate text-xs text-[#97A2B7]">@{person?.userName || "user"}</p>
+          <p className="truncate text-xs text-text-secondary">@{person?.userName || "user"}</p>
         </div>
       </div>
 
@@ -66,8 +66,8 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
           disabled={loading}
           className={`rounded-full border px-3 py-1 text-xs font-semibold tracking-wide transition ${
             person?.isFollowing
-              ? "border-[#5CA6FF] bg-[#111A2B] text-[#DDE8FF]"
-              : "border-[#4B5568] bg-[#0B0E13] text-[#E7EDF6] hover:border-[#5CA6FF]"
+              ? "border-accent bg-surface-2 text-text-primary"
+              : "border-border-strong bg-background text-text-primary hover:border-accent"
           } ${loading ? "cursor-not-allowed opacity-70" : ""}`}
         >
           {person?.isFollowing ? "Following" : "Follow"}
@@ -79,26 +79,26 @@ const UserRow = ({ person, currentUserId, onToggleFollow, loading }) => {
 
 const UserProfileSkeleton = () => (
   <div className="space-y-4 animate-pulse">
-    <div className="rounded-3xl border border-[#10131B] bg-[#020307] p-5 sm:p-6">
+    <div className="rounded-3xl border border-border-subtle bg-background p-5 sm:p-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="h-24 w-24 rounded-full bg-[#111827]" />
+        <div className="h-24 w-24 rounded-full bg-surface" />
         <div className="flex flex-1 flex-wrap gap-3">
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
-          <div className="h-14 w-24 rounded-2xl bg-[#111827]" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
+          <div className="h-14 w-24 rounded-2xl bg-surface" />
         </div>
       </div>
       <div className="mt-5 space-y-2">
-        <div className="h-4 w-32 rounded bg-[#111827]" />
-        <div className="h-5 w-48 rounded bg-[#111827]" />
-        <div className="h-3 w-28 rounded bg-[#111827]" />
+        <div className="h-4 w-32 rounded bg-surface" />
+        <div className="h-5 w-48 rounded bg-surface" />
+        <div className="h-3 w-28 rounded bg-surface" />
       </div>
     </div>
     {[1, 2].map((item) => (
-      <div key={item} className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-5">
-        <div className="h-4 w-1/3 rounded bg-[#111827]" />
-        <div className="mt-3 h-3 w-full rounded bg-[#111827]" />
-        <div className="mt-2 h-3 w-5/6 rounded bg-[#111827]" />
+      <div key={item} className="rounded-2xl border border-border-subtle bg-background p-5">
+        <div className="h-4 w-1/3 rounded bg-surface" />
+        <div className="mt-3 h-3 w-full rounded bg-surface" />
+        <div className="mt-2 h-3 w-5/6 rounded bg-surface" />
       </div>
     ))}
   </div>
@@ -277,7 +277,7 @@ const UserProfilePage = () => {
   const isVerifiedUser = Boolean(profile?.isVerified || profile?.isVerifiedBadge);
 
   return (
-    <div className="min-h-screen bg-[#020307] text-[#E9EDF3]">
+    <div className="min-h-screen bg-background text-text-primary">
       <HomeNavbar
         user={user}
         onLogout={handleLogout}
@@ -314,7 +314,7 @@ const UserProfilePage = () => {
 
       <main className="mx-auto w-full max-w-[960px] px-4 py-6 sm:px-6">
         {pageError && (
-          <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          <div className="mb-4 rounded-2xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
             {pageError}
           </div>
         )}
@@ -323,7 +323,7 @@ const UserProfilePage = () => {
           <UserProfileSkeleton />
         ) : (
           <>
-            <section className="relative rounded-3xl border border-[#10131B] bg-[#020307] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.6)] sm:p-6">
+            <section className="relative rounded-3xl border border-border-subtle bg-background p-5 shadow-pop sm:p-6">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex-shrink-0">
@@ -331,35 +331,35 @@ const UserProfilePage = () => {
                       <img
                         src={avatar}
                         alt={userName}
-                        className="h-24 w-24 rounded-full border-2 border-[#1F2130] object-cover"
+                        className="h-24 w-24 rounded-full border-2 border-border-subtle object-cover"
                       />
                     ) : (
-                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#1F2130] bg-[#0B0E17] text-2xl font-semibold text-[#F8FBFF]">
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-border-subtle bg-background text-2xl font-semibold text-text-primary">
                         {userName.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
 
                   <div className="flex flex-1 flex-wrap gap-4">
-                    <div className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left">
-                      <span className="text-xs text-[#6E7489]">Posts</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{posts.length}</span>
+                    <div className="flex flex-col gap-1 rounded-2xl bg-background px-3 py-2 text-left">
+                      <span className="text-xs text-text-muted">Posts</span>
+                      <span className="text-lg font-semibold text-text-primary">{posts.length}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => openConnectionsList("followers")}
-                      className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                      className="flex flex-col gap-1 rounded-2xl bg-background px-3 py-2 text-left transition hover:border hover:border-accent"
                     >
-                      <span className="text-xs text-[#6E7489]">Followers</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{profile?.followersCount || 0}</span>
+                      <span className="text-xs text-text-muted">Followers</span>
+                      <span className="text-lg font-semibold text-text-primary">{profile?.followersCount || 0}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => openConnectionsList("following")}
-                      className="flex flex-col gap-1 rounded-2xl bg-[#04060C] px-3 py-2 text-left transition hover:border hover:border-[#7FA8CA]"
+                      className="flex flex-col gap-1 rounded-2xl bg-background px-3 py-2 text-left transition hover:border hover:border-accent"
                     >
-                      <span className="text-xs text-[#6E7489]">Following</span>
-                      <span className="text-lg font-semibold text-[#F8FBFF]">{profile?.followingCount || 0}</span>
+                      <span className="text-xs text-text-muted">Following</span>
+                      <span className="text-lg font-semibold text-text-primary">{profile?.followingCount || 0}</span>
                     </button>
                   </div>
                 </div>
@@ -367,10 +367,10 @@ const UserProfilePage = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1">
-                      <p className="text-sm text-[#8C95A7]">@{userName}</p>
-                      {isVerifiedUser && <ShieldCheck size={14} className="text-[#5CA6FF]" />}
+                      <p className="text-sm text-text-secondary">@{userName}</p>
+                      {isVerifiedUser && <ShieldCheck size={14} className="text-accent" />}
                     </div>
-                    <p className="text-base font-semibold text-[#F3F7FF]">{profileFullName}</p>
+                    <p className="text-base font-semibold text-text-primary">{profileFullName}</p>
                   </div>
 
                   <button
@@ -379,8 +379,8 @@ const UserProfilePage = () => {
                     disabled={followLoading || !profile}
                     className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                       profile?.isFollowing
-                        ? "border border-[#4B5568] bg-[#0B0E13] text-[#E7EDF6] hover:border-[#5CA6FF]"
-                        : "bg-[#5CA6FF] text-white hover:bg-[#6CB0FF]"
+                        ? "border border-border-strong bg-background text-text-primary hover:border-accent"
+                        : "bg-accent text-accent-fg hover:bg-accent-hover"
                     } ${followLoading ? "cursor-not-allowed opacity-70" : ""}`}
                   >
                     {followLoading ? "Please wait..." : profile?.isFollowing ? "Following" : "Follow"}
@@ -389,12 +389,12 @@ const UserProfilePage = () => {
               </div>
 
               <div className="mt-2">
-                <p className="text-xs font-semibold text-[#8C95A7]">Joined {joinedText || "Unknown"}</p>
+                <p className="text-xs font-semibold text-text-secondary">Joined {joinedText || "Unknown"}</p>
               </div>
             </section>
 
             <section className="mt-6">
-              <div className="border-b border-[#1F293B]">
+              <div className="border-b border-border-subtle">
                 <div className="flex flex-wrap gap-6 text-sm font-semibold">
                   {["posts", "about"].map((tab) => (
                     <button
@@ -403,8 +403,8 @@ const UserProfilePage = () => {
                       onClick={() => setActiveTab(tab)}
                       className={`border-b-2 pb-2 text-sm transition ${
                         activeTab === tab
-                          ? "border-[#5CA6FF] text-[#5CA6FF]"
-                          : "border-transparent text-[#90A1C2] hover:text-[#D2DCFF]"
+                          ? "border-accent text-accent"
+                          : "border-transparent text-text-secondary hover:text-text-primary"
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -422,23 +422,23 @@ const UserProfilePage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-8 text-center text-sm text-[#9EA9C1]">
+                <div className="rounded-2xl border border-border-subtle bg-background p-8 text-center text-sm text-text-secondary">
                   No public posts yet.
                 </div>
               )
                 ) : (
-                  <div className="rounded-2xl border border-[#1F2737] bg-[#05070B] p-6 text-sm text-[#A9B5CE]">
+                  <div className="rounded-2xl border border-border-subtle bg-background p-6 text-sm text-text-body">
                     <p>
-                      <span className="text-[#7D8BA0]">Name:</span> {profileFullName || "Anonymous"}
+                      <span className="text-text-secondary">Name:</span> {profileFullName || "Anonymous"}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Username:</span> @{userName}
+                      <span className="text-text-secondary">Username:</span> @{userName}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Bio:</span> {profile?.bio || "No bio yet."}
+                      <span className="text-text-secondary">Bio:</span> {profile?.bio || "No bio yet."}
                     </p>
                     <p>
-                      <span className="text-[#7D8BA0]">Account Created:</span>{" "}
+                      <span className="text-text-secondary">Account Created:</span>{" "}
                       {formatShortDate(profile?.joinedAt || profile?.createdAt) || "Unknown"}
                     </p>
                   </div>
@@ -451,13 +451,13 @@ const UserProfilePage = () => {
 
       {listModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-[#1F2635] bg-[#05070B] p-5">
+          <div className="w-full max-w-xl rounded-2xl border border-border-subtle bg-background p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[#F3F7FF] capitalize">{listModal.type}</h2>
+              <h2 className="text-lg font-semibold text-text-primary capitalize">{listModal.type}</h2>
               <button
                 type="button"
                 onClick={() => setListModal((prev) => ({ ...prev, open: false }))}
-                className="rounded-full border border-[#1F2635] p-1 text-[#8F9CB4] transition hover:border-[#5CA6FF] hover:text-white"
+                className="rounded-full border border-border-subtle p-1 text-text-secondary transition hover:border-accent hover:text-text-primary"
               >
                 <X size={18} />
               </button>
@@ -468,9 +468,9 @@ const UserProfilePage = () => {
                 <LoaderRing />
               </div>
             ) : listModal.error ? (
-              <p className="text-sm text-red-300">{listModal.error}</p>
+              <p className="text-sm text-danger">{listModal.error}</p>
             ) : listModal.users.length === 0 ? (
-              <p className="text-sm text-[#9EA9C1]">No users found.</p>
+              <p className="text-sm text-text-secondary">No users found.</p>
             ) : (
               <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
                 {listModal.users.map((person) => (
@@ -490,15 +490,15 @@ const UserProfilePage = () => {
 
       {showNotFoundPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-red-500/40 bg-[#140C11] p-6 text-center">
-            <h2 className="text-xl font-semibold text-[#FFDCE2]">User not found</h2>
-            <p className="mt-2 text-sm text-[#FFC6CF]">
+          <div className="w-full max-w-md rounded-2xl border border-danger/40 bg-danger/10 p-6 text-center">
+            <h2 className="text-xl font-semibold text-danger">User not found</h2>
+            <p className="mt-2 text-sm text-danger">
               The profile you are trying to view does not exist or is unavailable.
             </p>
             <button
               type="button"
               onClick={() => navigate("/home")}
-              className="mt-5 rounded-xl bg-[#2A4E88] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3663AA]"
+              className="mt-5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-fg hover:bg-accent-hover"
             >
               Go to Home
             </button>

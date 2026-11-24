@@ -216,7 +216,7 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#080B10] font-['Arial'] text-[#EEF3FA]">
+      <div className="min-h-screen bg-background text-text-primary">
         <HomeNavbar
           user={currentUser || user}
           onLogout={handleLogout}
@@ -258,20 +258,22 @@ const HomePage = () => {
           />
         </aside>
 
-        <main className="mx-auto w-full max-w-[1366px] px-4 py-6 sm:px-6">
-          <section className="mx-auto max-w-[760px]">
-            <div className="mb-4 flex items-center justify-between gap-3">
+        <main className="mx-auto w-full max-w-[1366px] px-4 pb-16 pt-6 sm:px-6">
+          <section className="mx-auto max-w-[720px]">
+            <h1 className="sr-only">Your feed</h1>
+            <div className="flex items-center justify-between gap-3">
               <FeedTabs activeTab={activeTab} onChange={setActiveTab} />
             </div>
 
             {selectedCategory && (
-              <div className="mb-4 rounded-xl border border-[#D0D9E5]/25 bg-[#111823] px-3 py-2 text-sm text-[#DDE5F0]">
-                Showing category: <span className="font-semibold text-[#7DA6FF]">{selectedCategory}</span>
+              <div className="mt-5 flex items-center gap-2 text-sm text-text-secondary">
+                <span className="h-px w-6 bg-accent" aria-hidden="true" />
+                Showing category: <span className="font-semibold text-text-primary">{selectedCategory}</span>
               </div>
             )}
 
             {pageError && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              <div role="alert" className="mt-5 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
                 {pageError}
               </div>
             )}
@@ -279,15 +281,18 @@ const HomePage = () => {
             {initialLoading ? (
               <FeedSkeleton />
             ) : posts.length === 0 ? (
-              <div className="rounded-2xl border border-[#D0D9E5]/20 bg-[#0E1219] p-8 text-center">
-                <p className="text-sm text-[#B9C4D3]">
+              <div className="py-24 text-center">
+                <p className="font-serif text-2xl font-semibold tracking-tight text-text-primary">
+                  {activeTab === "following" ? "Nothing here yet" : "Nothing to read yet"}
+                </p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-text-secondary">
                   {activeTab === "following"
                     ? "No posts from people you follow yet."
                     : "No posts available right now."}
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div>
                 {posts.map((post) => (
                   <FeedPostCard key={post._id} post={post} />
                 ))}
@@ -295,13 +300,13 @@ const HomePage = () => {
                 <div ref={sentinelRef} className="h-4" />
 
                 {loadingMore && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="py-8 text-center text-sm text-text-body">
                     <LoaderRing className="mx-auto" />
                   </div>
                 )}
 
                 {!hasNext && posts.length > 0 && (
-                  <div className="rounded-xl border border-[#CDD6E4]/20 bg-[#0E1219] p-3 text-center text-sm text-[#B5C0CF]">
+                  <div className="py-10 text-center text-sm text-text-muted">
                     You&apos;ve reached the end.
                   </div>
                 )}

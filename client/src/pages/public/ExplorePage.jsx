@@ -126,26 +126,25 @@ const ExplorePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen bg-background">
         <NavbarLoggedOut />
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-surface-0 rounded-2xl p-6 animate-pulse">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-surface-2 rounded-full" />
-                  <div className="flex-1">
-                    <div className="w-24 h-4 bg-surface-2 rounded mb-2" />
-                    <div className="w-16 h-3 bg-surface-2 rounded" />
-                  </div>
+        <main className="mx-auto max-w-3xl px-6 py-16 sm:px-8" aria-busy="true" aria-label="Loading posts">
+          <div className="animate-pulse">
+            <div className="h-10 w-3/4 rounded bg-surface-2" />
+            <div className="mt-4 h-5 w-1/2 rounded bg-surface-2" />
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="border-b border-border-subtle py-7">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-surface-2" />
+                  <div className="h-3 w-24 rounded bg-surface-2" />
                 </div>
-                <div className="w-full h-6 bg-surface-2 rounded mb-3" />
-                <div className="w-full h-4 bg-surface-2 rounded mb-2" />
-                <div className="w-3/4 h-4 bg-surface-2 rounded mb-4" />
+                <div className="mt-4 h-6 w-3/4 rounded bg-surface-2" />
+                <div className="mt-3 h-4 w-full rounded bg-surface-2" />
+                <div className="mt-2 h-4 w-5/6 rounded bg-surface-2" />
               </div>
             ))}
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -153,32 +152,37 @@ const ExplorePage = () => {
 
   if (error && posts.length === 0) {
     return (
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen bg-background">
         <NavbarLoggedOut />
-        <div className="max-w-7xl mx-auto px-6 py-20 text-center">
-          <p className="text-text-secondary">{error}</p>
-        </div>
+        <main className="mx-auto max-w-3xl px-6 py-24 text-center sm:px-8">
+          <p role="alert" className="font-serif text-2xl font-semibold tracking-tight text-text-primary">
+            {error}
+          </p>
+          <p className="mt-2 text-sm text-text-secondary">Please try again in a moment.</p>
+        </main>
         <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen bg-background">
       <NavbarLoggedOut />
-      <ExploreHero />
-      
-      <div className="max-w-7xl mx-auto px-6 pb-20">
-        {/* Posts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayPosts.slice(0, 10).map((post) => (
-            <PublicPostCard key={post._id} post={post} />
-          ))}
-        </div>
+      <main>
+        <ExploreHero />
 
-        {/* Login CTA - always shown */}
-        <LoginCTA />
-      </div>
+        <div className="mx-auto max-w-3xl px-6 pb-20 sm:px-8">
+          <h2 className="sr-only">Recent posts</h2>
+          <div className="border-t border-border-subtle">
+            {displayPosts.slice(0, 10).map((post) => (
+              <PublicPostCard key={post._id} post={post} />
+            ))}
+          </div>
+
+          {/* Login CTA - always shown */}
+          <LoginCTA />
+        </div>
+      </main>
 
       <Footer />
     </div>

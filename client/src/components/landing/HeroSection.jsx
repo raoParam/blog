@@ -1,149 +1,136 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+const container = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+/** A static sample of what a published post looks like (not real data). */
+const SamplePost = () => (
+  <figure
+    aria-hidden="true"
+    className="rounded-2xl border border-border bg-surface-1 p-6 sm:p-8"
+  >
+    <div className="flex items-center gap-3 text-sm">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-text-primary">
+        A
+      </span>
+      <span className="font-medium text-text-primary">@ada</span>
+      <span className="text-text-muted">·</span>
+      <span className="text-text-secondary">6 min read</span>
+    </div>
+
+    <h2 className="mt-6 font-serif text-2xl font-semibold leading-snug tracking-tight text-text-primary sm:text-[1.7rem]">
+      Why I stopped over-engineering my side projects
+    </h2>
+
+    <p className="mt-3 font-serif text-base leading-relaxed text-text-body">
+      Every weekend I would spend six hours choosing a stack. This is a note
+      to my past self about shipping first and polishing later.
+    </p>
+
+    <pre className="mt-5 overflow-x-auto rounded-lg border border-border bg-background px-4 py-3 font-mono text-[12.5px] leading-6 text-text-primary">
+      <code>const post = await publish(draft);</code>
+    </pre>
+
+    <figcaption className="mt-6 flex items-center justify-between border-t border-border-subtle pt-4 text-xs text-text-muted">
+      <span>#webdev &nbsp;#career</span>
+      <span className="uppercase tracking-[0.14em]">Sample post</span>
+    </figcaption>
+  </figure>
+);
+
 const HeroSection = () => {
   return (
-    <section className="relative mt-0 overflow-hidden">
-
-      {/* Soft Background Glow */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.5 }}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-accent/10 blur-3xl rounded-full pointer-events-none"
-      />
-
-      <div className="relative max-w-7xl mx-auto px-6 py-12 md:py-16">
-        <div className="max-w-3xl mx-auto text-center">
-
-          {/* Badge - Animated */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-surface-1 border border-border-subtle rounded-full px-4 py-2 mb-6 md:mb-8 shadow-sm"
-          >
-            <motion.span 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-2 h-2 bg-accent rounded-full" 
-            />
-            <span className="text-text-secondary text-sm">
-              Where Developers Think Aloud
-            </span>
-          </motion.div>
-
-          {/* Main Heading - Staggered Animation */}
-          <motion.h1 
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.1 }
-              }
-            }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-4 md:mb-6 tracking-tight leading-tight"
-          >
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 }
-              }}
-              className="block"
-            >
-              Write Freely.
-            </motion.span>
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 }
-              }}
-              className="block"
-            >
-              Connect Deeply.
-            </motion.span>
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 }
-              }}
-              className="text-accent relative inline-block mt-2"
-            >
-              Grow Together.
-              <motion.svg
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ delay: 0.8, duration: 0.8 }}
-                className="absolute -bottom-2 left-0 w-full"
-                viewBox="0 0 100 8"
-                preserveAspectRatio="none"
-              >
-                <path
-                  d="M0,5 Q25,0 50,5 T100,5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  opacity="0.3"
-                />
-              </motion.svg>
-            </motion.span>
-          </motion.h1>
-
-          {/* Subheading */}
+    <section>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 pb-20 pt-16 sm:px-8 sm:pb-28 sm:pt-24 lg:grid-cols-12 lg:gap-12">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          className="lg:col-span-7"
+        >
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-text-secondary text-base md:text-lg mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed"
+            variants={fadeUp}
+            className="mb-7 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary"
           >
-            A minimalist space for developers to share ideas, 
-            post anonymously, and build genuine connections 
-            through thoughtful conversations.
+            <span className="h-px w-8 bg-accent" aria-hidden="true" />
+            Where developers think aloud
           </motion.p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          <motion.h1
+            variants={fadeUp}
+            className="font-serif text-5xl font-semibold leading-[1.04] tracking-tight text-text-primary sm:text-6xl lg:text-7xl"
           >
+            Write freely.
+            <br />
+            Connect deeply.
+            <br />
+            <span className="font-normal italic">Grow together.</span>
+          </motion.h1>
 
-            {/* Primary CTA */}
-            <Link to="/register" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white font-medium px-6 md:px-8 py-3 md:py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl flex items-center justify-center gap-2 group text-sm md:text-base"
-              >
-                Start Writing
-                <motion.span
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatType: "loop" }}
-                >
-                  <ArrowRight size={18} />
-                </motion.span>
-              </motion.button>
+          <motion.p
+            variants={fadeUp}
+            className="mt-7 max-w-xl text-lg leading-relaxed text-text-secondary"
+          >
+            A minimalist space for developers to share ideas, post anonymously,
+            and build genuine connections through thoughtful conversations.
+          </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center"
+          >
+            <Link
+              to="/register"
+              className="group inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3.5 text-base font-semibold text-accent-fg transition hover:bg-accent-hover"
+            >
+              Start writing
+              <ArrowRight
+                size={18}
+                className="transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
-
-            {/* Secondary CTA */}
-            <Link to="/explore" className="w-full sm:w-auto">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto bg-surface-1 hover:bg-surface-2 text-text-primary font-medium px-6 md:px-8 py-3 md:py-4 rounded-xl transition-all duration-300 border border-border-subtle text-sm md:text-base"
-              >
-                Explore Feed
-              </motion.button>
+            <Link
+              to="/explore"
+              className="inline-flex items-center justify-center rounded-lg border border-border-strong px-6 py-3.5 text-base font-medium text-text-primary transition hover:bg-surface-2"
+            >
+              Explore the feed
             </Link>
-
           </motion.div>
 
-        </div>
+          <motion.p
+            variants={fadeUp}
+            className="mt-8 flex flex-wrap gap-x-3 gap-y-1 text-sm text-text-muted"
+          >
+            <span>Markdown editor</span>
+            <span aria-hidden="true">·</span>
+            <span>Anonymous posting</span>
+            <span aria-hidden="true">·</span>
+            <span>Verified writers</span>
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className="lg:col-span-5"
+        >
+          <SamplePost />
+        </motion.div>
       </div>
     </section>
   );

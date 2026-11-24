@@ -60,13 +60,12 @@ const LoginForm = () => {
       <form
         onSubmit={handleSubmit}
         className="space-y-4"
-        style={{ fontFamily: "Arial, sans-serif" }}
       >
 
       <div>
         <label
           htmlFor="login-email"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
         >
           Email
         </label>
@@ -77,17 +76,17 @@ const LoginForm = () => {
           onChange={(e) =>
             setFormData({ ...formData, emailId: e.target.value })
           }
-          className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-[#F1F1F1] text-sm focus:border-[#E6E6E6] outline-none transition"
+          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm focus:border-accent outline-none transition"
         />
         {errors.emailId && (
-          <p className="text-red-400 text-xs mt-1">{errors.emailId}</p>
+          <p className="text-danger text-xs mt-1">{errors.emailId}</p>
         )}
       </div>
 
       <div>
         <label
           htmlFor="login-password"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[#B8B8B8]"
+          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
         >
           Password
         </label>
@@ -99,40 +98,40 @@ const LoginForm = () => {
             onChange={(e) =>
               setFormData({ ...formData, password: e.target.value })
             }
-            className="w-full bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-[#F1F1F1] text-sm pr-12 focus:border-[#E6E6E6] outline-none transition"
+            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm pr-12 focus:border-accent outline-none transition"
           />
 
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#BDBDBD] hover:text-white transition"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-body hover:text-text-primary transition"
           >
             {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
           </button>
         </div>
 
         {errors.password && (
-          <p className="text-red-400 text-xs mt-1">{errors.password}</p>
+          <p className="text-danger text-xs mt-1">{errors.password}</p>
         )}
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2">
-          <p className="text-red-400 text-xs text-center">{error}</p>
+        <div className="bg-danger/10 border border-danger/30 rounded-lg p-2">
+          <p className="text-danger text-xs text-center">{error}</p>
         </div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-xl bg-gradient-to-r from-[#F2F2F2] to-[#BFBFBF] py-2.5 text-sm font-semibold text-[#111111] hover:opacity-90 transition disabled:opacity-50"
+        className="w-full rounded-xl bg-accent hover:bg-accent-hover py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition disabled:opacity-50"
       >
         {submitting ? "Signing in..." : "Sign In"}
       </button>
 
-      <p className="text-center text-sm text-[#B8B8B8]">
+      <p className="text-center text-sm text-text-body">
         Don't have an account?{" "}
-        <Link to="/register" className="font-semibold text-[#F3F3F3] hover:text-white transition">
+        <Link to="/register" className="font-semibold text-accent hover:text-accent-hover transition">
           Sign up
         </Link>
       </p>

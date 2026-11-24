@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Hash, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
 import { publicService } from "../../services/public.service";
+
+const TopicsShell = ({ children }) => (
+  <section className="border-t border-border-subtle">
+    <div className="mx-auto max-w-6xl px-6 py-14 sm:px-8 sm:py-16">
+      <div className="flex flex-col gap-6 md:flex-row md:items-baseline md:gap-10">
+        <h2 className="shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">
+          Popular topics
+        </h2>
+        {children}
+      </div>
+    </div>
+  </section>
+);
 
 const TrendingTopics = () => {
   const [categories, setCategories] = useState([]);
@@ -39,118 +49,43 @@ const TrendingTopics = () => {
 
   const displayTopics = categories.length > 0 ? categories : fallbackTopics;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1 }
-  };
-
   if (loading) {
     return (
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-2 mb-8">
-            <TrendingUp className="w-5 h-5 text-accent" />
-            <h2 className="text-2xl font-bold text-text-primary">Trending Topics</h2>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="w-24 h-10 bg-surface-2 rounded-full animate-pulse" />
-            ))}
-          </div>
+      <TopicsShell>
+        <div className="flex flex-wrap gap-2.5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-9 w-24 animate-pulse rounded-full bg-surface-2" />
+          ))}
         </div>
-      </section>
+      </TopicsShell>
     );
   }
 
   if (error) {
     return (
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-2 mb-8">
-            <TrendingUp className="w-5 h-5 text-accent" />
-            <h2 className="text-2xl font-bold text-text-primary">Trending Topics</h2>
-          </div>
-          <div className="text-text-secondary text-sm">{error}</div>
-        </div>
-      </section>
+      <TopicsShell>
+        <p className="text-sm text-text-secondary">{error}</p>
+      </TopicsShell>
     );
   }
 
   return (
-    <section className="relative py-16 overflow-hidden">
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-1/20 via-transparent to-transparent pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center gap-2 mb-8"
-        >
-          <TrendingUp className="w-5 h-5 text-accent" />
-          <h2 className="text-2xl font-bold text-text-primary">Trending Topics</h2>
-        </motion.div>
-
-        {/* Topics Cloud */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="flex flex-wrap gap-3"
-        >
-          {displayTopics.map((topic, index) => (
-            <motion.div
-              key={topic.name || index}
-              variants={itemVariants}
-              whileHover={{ y: -2, scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link
-                to={`/topic/${topic.name}`}
-                className="group inline-flex items-center gap-2 bg-surface-1 hover:bg-surface-2 border border-border-subtle hover:border-accent/40 rounded-full px-5 py-2.5 transition-all duration-300"
-              >
-                <Hash className="w-4 h-4 text-text-secondary group-hover:text-accent transition-colors" />
-                <span className="text-text-primary text-sm font-medium">{topic.name}</span>
-                {topic.count && (
-                  <span className="text-text-secondary text-xs bg-surface-2 group-hover:bg-surface-1 px-2 py-0.5 rounded-full transition-colors">
-                    {topic.count}
-                  </span>
-                )}
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* View All Link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-8"
-        >
-          <Link
-            to="/topics"
-            className="text-sm text-text-secondary hover:text-accent transition-colors inline-flex items-center gap-1"
+    <TopicsShell>
+      <ul className="flex flex-wrap gap-2.5">
+        {displayTopics.map((topic, index) => (
+          <li
+            key={topic.name || index}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-4 py-2 text-sm"
           >
-            Browse all topics
-            <span className="text-lg">→</span>
-          </Link>
-        </motion.div>
-      </div>
-    </section>
+            <span className="font-medium text-text-primary">
+              <span className="text-text-muted">#</span>
+              {topic.name}
+            </span>
+            {topic.count && <span className="text-xs text-text-muted">{topic.count}</span>}
+          </li>
+        ))}
+      </ul>
+    </TopicsShell>
   );
 };
 
