@@ -16,29 +16,29 @@ const formatDate = (dateValue) => {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };
 
+const getReadingTime = (content) => {
+  if (typeof content !== "string" || !content.trim()) return 0;
+  return Math.max(1, Math.round(content.trim().split(/\s+/).length / 220));
+};
+
 const BlogPageSkeleton = () => (
-  <div className="space-y-5 animate-pulse">
-    <section className="rounded-2xl border border-border-subtle bg-background p-5">
-      <div className="flex items-center gap-3">
-        <div className="h-11 w-11 rounded-full bg-surface-2" />
-        <div className="space-y-2">
-          <div className="h-3 w-28 rounded bg-surface-2" />
-          <div className="h-3 w-20 rounded bg-surface-2" />
-        </div>
+  <div className="animate-pulse" aria-busy="true" aria-label="Loading post">
+    <div className="h-10 w-5/6 rounded bg-surface-2 sm:h-12" />
+    <div className="mt-3 h-10 w-2/3 rounded bg-surface-2 sm:h-12" />
+    <div className="mt-8 flex items-center gap-3 border-y border-border-subtle py-4">
+      <div className="h-10 w-10 rounded-full bg-surface-2" />
+      <div className="space-y-2">
+        <div className="h-3 w-28 rounded bg-surface-2" />
+        <div className="h-3 w-40 rounded bg-surface-2" />
       </div>
-      <div className="mt-4 h-7 w-3/4 rounded bg-surface-2" />
-    </section>
-
-    <section className="rounded-2xl border border-border-subtle bg-background p-4">
-      <div className="h-[220px] rounded-xl bg-surface-2 sm:h-[320px] lg:h-[420px]" />
-    </section>
-
-    <section className="rounded-2xl border border-border-subtle bg-background p-6">
+    </div>
+    <div className="mt-10 space-y-3">
       <div className="h-4 w-full rounded bg-surface-2" />
-      <div className="mt-3 h-4 w-full rounded bg-surface-2" />
-      <div className="mt-3 h-4 w-5/6 rounded bg-surface-2" />
-      <div className="mt-3 h-4 w-4/6 rounded bg-surface-2" />
-    </section>
+      <div className="h-4 w-full rounded bg-surface-2" />
+      <div className="h-4 w-5/6 rounded bg-surface-2" />
+      <div className="h-4 w-full rounded bg-surface-2" />
+      <div className="h-4 w-4/6 rounded bg-surface-2" />
+    </div>
   </div>
 );
 
@@ -385,48 +385,58 @@ const BlogPage = () => {
         />
       </aside>
 
-      <main className="mx-auto w-full max-w-[980px] px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-[720px] px-4 pb-20 pt-8 sm:px-6 sm:pt-12">
         {loading ? (
           <BlogPageSkeleton />
         ) : error ? (
-          <div className="rounded-2xl border border-danger/40 bg-danger/10 p-8 text-center text-danger">{error}</div>
+          <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-5 py-4 text-sm text-danger">{error}</div>
         ) : !post ? (
-          <div className="rounded-2xl border border-border-subtle bg-background p-8 text-center text-text-body">Post not found.</div>
+          <div className="py-24 text-center">
+            <p className="font-serif text-2xl font-semibold tracking-tight text-text-primary">Post not found</p>
+            <p className="mt-2 text-sm text-text-secondary">It may have been removed or the link is wrong.</p>
+          </div>
         ) : (
-          <div className="space-y-5">
-            <section className="rounded-2xl border border-border-subtle bg-background p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <article>
+            <header>
+              <h1 className="font-serif text-4xl font-semibold leading-[1.12] tracking-tight text-text-primary sm:text-5xl">
+                {post.title}
+              </h1>
+
+              <div className="mt-8 flex flex-col gap-4 border-y border-border-subtle py-4 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
                   onClick={handleAuthorNavigate}
                   disabled={isAnonymous}
                   className={`flex items-center gap-3 text-left ${isAnonymous ? "" : "hover:opacity-85"} w-full sm:w-auto`}
                 >
-                  <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-text-primary">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-text-secondary">
                     {authorAvatar ? (
-                      <img src={authorAvatar} alt={authorName} className="h-full w-full object-cover" />
+                      <img src={authorAvatar} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <CircleUserRound size={20} />
+                      <CircleUserRound size={20} aria-hidden="true" />
                     )}
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-text-primary">@{authorName}</p>
-                      {isAuthorVerified && <ShieldCheck size={14} className="text-accent" />}
+                      {isAuthorVerified && <ShieldCheck size={14} className="text-accent" aria-label="Verified writer" />}
                     </div>
-                    <p className="text-xs text-text-secondary">{formatDate(post.createdAt)}</p>
+                    <p className="text-sm text-text-secondary">
+                      {formatDate(post.createdAt)}
+                      {getReadingTime(post.content) ? <> · {getReadingTime(post.content)} min read</> : null}
+                    </p>
                   </div>
                 </button>
 
-                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
                   {!isAnonymous && !isOwner && (
                     <button
                       type="button"
                       onClick={handleToggleFollowAuthor}
                       disabled={followLoading}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                      className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
                         authorFollowed
-                          ? "border border-border-strong bg-background text-text-primary hover:border-accent"
+                          ? "border border-border-strong text-text-primary hover:bg-surface-2"
                           : "bg-accent text-accent-fg hover:bg-accent-hover"
                       } ${followLoading ? "cursor-not-allowed opacity-70" : ""}`}
                     >
@@ -439,33 +449,29 @@ const BlogPage = () => {
                       <button
                         type="button"
                         onClick={openEditModal}
-                        className="inline-flex min-w-[92px] items-center justify-center gap-1 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-body hover:border-accent"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border-strong px-3.5 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-2"
                       >
-                        <Pencil size={13} />
+                        <Pencil size={14} aria-hidden="true" />
                         Update
                       </button>
                       <button
                         type="button"
                         onClick={handleDeletePost}
                         disabled={deleteLoading}
-                        className="inline-flex min-w-[92px] items-center justify-center gap-1 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger hover:bg-danger/15 disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-danger/40 px-3.5 py-2 text-sm font-medium text-danger transition hover:bg-danger/10 disabled:opacity-60"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={14} aria-hidden="true" />
                         {deleteLoading ? "Deleting..." : "Delete"}
                       </button>
                     </>
                   )}
                 </div>
               </div>
-
-              <div className="mt-4">
-                <h1 className="text-2xl font-semibold text-text-primary">{post.title}</h1>
-              </div>
-            </section>
+            </header>
 
             {images.length > 0 && (
-              <section className="rounded-2xl border border-border-subtle bg-background p-4">
-                <div className="relative h-[220px] overflow-hidden rounded-xl sm:h-[320px] lg:h-[420px]">
+              <section className="mt-8" aria-label="Post images">
+                <div className="relative h-[220px] overflow-hidden rounded-lg border border-border-subtle bg-surface-1 sm:h-[320px]">
                   <AnimatePresence mode="wait" custom={carouselDirection}>
                     <Motion.button
                       key={carouselIndex}
@@ -481,7 +487,7 @@ const BlogPage = () => {
                     >
                       <img
                         src={images[carouselIndex]}
-                        alt={`blog-image-${carouselIndex + 1}`}
+                        alt={`${post.title} (image ${carouselIndex + 1} of ${images.length})`}
                         className="h-full w-full object-cover"
                       />
                     </Motion.button>
@@ -492,18 +498,18 @@ const BlogPage = () => {
                       <button
                         type="button"
                         onClick={handlePrevImage}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/90 p-2 text-text-primary"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface-1/90 p-2 text-text-primary transition hover:bg-surface-2"
                         aria-label="Previous image"
                       >
-                        <ChevronLeft size={16} />
+                        <ChevronLeft size={16} aria-hidden="true" />
                       </button>
                       <button
                         type="button"
                         onClick={handleNextImage}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/90 p-2 text-text-primary"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface-1/90 p-2 text-text-primary transition hover:bg-surface-2"
                         aria-label="Next image"
                       >
-                        <ChevronRight size={16} />
+                        <ChevronRight size={16} aria-hidden="true" />
                       </button>
                       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/40 px-2 py-1">
                         {images.map((_, idx) => (
@@ -525,115 +531,120 @@ const BlogPage = () => {
               </section>
             )}
 
-            <section className="rounded-2xl border border-border-subtle bg-background p-6">
+            <section className="mt-10">
               <MarkdownRenderer content={post.content} />
               {post.excerpt && (
-                <div className="mt-6 border-t border-border-subtle pt-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-text-body">Summary</h3>
-                  <p className="mt-2 text-[15px] text-text-body">{post.excerpt}</p>
-                </div>
+                <aside className="mt-10 border-l-2 border-accent pl-5">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-text-secondary">Summary</h2>
+                  <p className="mt-2 font-serif text-lg leading-relaxed text-text-body">{post.excerpt}</p>
+                </aside>
               )}
             </section>
 
-            <section className="rounded-2xl border border-border-subtle bg-background p-4">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleToggleLike}
-                  disabled={likingLoading}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                    post.isLikedByCurrentUser
-                      ? "border-danger/60 bg-danger/15 text-danger"
-                      : "border-border bg-surface text-text-body"
-                  } ${likingLoading ? "opacity-60" : ""}`}
-                >
-                  <Heart size={15} className={post.isLikedByCurrentUser ? "fill-current text-danger" : ""} />
-                  <span>{post.likesCount || 0}</span>
-                </button>
+            <div className="mt-12 flex items-center gap-2 border-y border-border-subtle py-3">
+              <button
+                type="button"
+                onClick={handleToggleLike}
+                disabled={likingLoading}
+                aria-pressed={Boolean(post.isLikedByCurrentUser)}
+                aria-label={post.isLikedByCurrentUser ? "Unlike post" : "Like post"}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-surface-2 ${
+                  post.isLikedByCurrentUser ? "text-danger" : "text-text-secondary hover:text-text-primary"
+                } ${likingLoading ? "opacity-60" : ""}`}
+              >
+                <Heart size={18} aria-hidden="true" className={post.isLikedByCurrentUser ? "fill-current" : ""} />
+                <span>{post.likesCount || 0}</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={handleToggleSave}
-                  disabled={savingLoading}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                    isSaved
-                      ? "border-accent bg-surface-2 text-text-primary"
-                      : "border-border bg-surface text-text-body"
-                  } ${savingLoading ? "opacity-60" : ""}`}
-                >
-                  <Bookmark size={15} className={isSaved ? "fill-current" : ""} />
-                </button>
-              </div>
-            </section>
+              <button
+                type="button"
+                onClick={handleToggleSave}
+                disabled={savingLoading}
+                aria-pressed={isSaved}
+                aria-label={isSaved ? "Remove from saved" : "Save post"}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-surface-2 ${
+                  isSaved ? "text-accent" : "text-text-secondary hover:text-text-primary"
+                } ${savingLoading ? "opacity-60" : ""}`}
+              >
+                <Bookmark size={18} aria-hidden="true" className={isSaved ? "fill-current" : ""} />
+              </button>
+            </div>
 
-            <section className="rounded-2xl border border-border-subtle bg-background p-5">
-              <h2 className="mb-3 text-lg font-semibold text-text-primary">Comments</h2>
+            <section className="mt-12" aria-labelledby="comments-heading">
+              <h2 id="comments-heading" className="font-serif text-2xl font-semibold tracking-tight text-text-primary">
+                Comments{comments.length > 0 ? ` (${comments.length})` : ""}
+              </h2>
 
-              <div className="mb-4 flex gap-2">
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start">
                 <textarea
                   rows={2}
                   maxLength={1000}
                   value={commentText}
                   onChange={(event) => setCommentText(event.target.value)}
                   placeholder="Write a comment..."
-                  className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                  aria-label="Write a comment"
+                  className="w-full flex-1 resize-none rounded-lg border border-border bg-surface-1 px-3.5 py-2.5 text-[15px] text-text-primary outline-none transition placeholder:text-text-muted focus:border-border-strong"
                 />
                 <button
                   type="button"
                   onClick={handleAddComment}
                   disabled={commentLoading || !commentText.trim()}
-                  className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-text-primary hover:bg-accent-hover disabled:opacity-60"
+                  className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:opacity-50"
                 >
                   {commentLoading ? "Posting..." : "Post"}
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="mt-6">
                 {comments.length === 0 ? (
-                  <div className="rounded-xl border border-border bg-background p-4 text-sm text-text-secondary">No comments yet.</div>
+                  <p className="border-t border-border-subtle py-8 text-center text-sm text-text-secondary">
+                    No comments yet. Be the first to respond.
+                  </p>
                 ) : (
-                  comments.map((comment) => {
-                    const commentAuthor = comment.author || null;
-                    const isCommentVerified = Boolean(commentAuthor?.isVerified || commentAuthor?.isVerifiedBadge);
-                    const commentAvatar = commentAuthor?.avatar?.trim?.() || "";
-                    return (
-                      <article key={comment._id} className="rounded-xl border border-border bg-background p-3">
-                        <div className="mb-1 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-text-primary">
+                  <ul className="divide-y divide-border-subtle border-y border-border-subtle">
+                    {comments.map((comment) => {
+                      const commentAuthor = comment.author || null;
+                      const isCommentVerified = Boolean(commentAuthor?.isVerified || commentAuthor?.isVerifiedBadge);
+                      const commentAvatar = commentAuthor?.avatar?.trim?.() || "";
+                      return (
+                        <li key={comment._id} className="py-5">
+                          <div className="mb-2 flex items-center gap-2.5">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-text-secondary">
                               {commentAvatar ? (
-                                <img src={commentAvatar} alt={commentAuthor?.userName || "user"} className="h-full w-full object-cover" />
+                                <img src={commentAvatar} alt="" className="h-full w-full object-cover" />
                               ) : (
-                                <CircleUserRound size={16} />
+                                <CircleUserRound size={15} aria-hidden="true" />
                               )}
                             </span>
                             <span className="text-sm font-semibold text-text-primary">@{commentAuthor?.userName || "user"}</span>
-                            {isCommentVerified && <ShieldCheck size={13} className="text-accent" />}
+                            {isCommentVerified && <ShieldCheck size={13} className="text-accent" aria-label="Verified writer" />}
+                            <span className="text-text-muted" aria-hidden="true">·</span>
+                            <span className="text-sm text-text-secondary">{formatDate(comment.createdAt)}</span>
                           </div>
-                          <span className="text-xs text-text-secondary">{formatDate(comment.createdAt)}</span>
-                        </div>
-                        <p className="text-sm text-text-body">{comment.content}</p>
-                      </article>
-                    );
-                  })
+                          <p className="whitespace-pre-wrap break-words pl-[2.375rem] text-[15px] leading-relaxed text-text-body">{comment.content}</p>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 )}
               </div>
             </section>
-          </div>
+          </article>
         )}
       </main>
 
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-background p-5">
+          <div role="dialog" aria-modal="true" aria-labelledby="edit-post-title" className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-border bg-surface-1 p-5 shadow-pop sm:p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-text-primary">Update Blog</h2>
+              <h2 id="edit-post-title" className="font-serif text-2xl font-semibold tracking-tight text-text-primary">Update post</h2>
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-full border border-border p-1 text-text-body hover:border-accent"
+                className="rounded-lg p-1.5 text-text-secondary transition hover:bg-surface-2 hover:text-text-primary"
+                aria-label="Close"
               >
-                <X size={16} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
@@ -642,21 +653,21 @@ const BlogPage = () => {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Title"
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-border-strong"
               />
               <textarea
                 rows={8}
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 placeholder="Content"
-                className="w-full resize-y rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                className="w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-border-strong"
               />
               <textarea
                 rows={2}
                 value={editExcerpt}
                 onChange={(e) => setEditExcerpt(e.target.value)}
                 placeholder="Summary / Excerpt"
-                className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-border-strong"
               />
             </div>
 
@@ -664,7 +675,7 @@ const BlogPage = () => {
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-body"
+                className="rounded-lg border border-border-strong px-3.5 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-2"
               >
                 Cancel
               </button>
@@ -672,7 +683,7 @@ const BlogPage = () => {
                 type="button"
                 onClick={handleUpdatePost}
                 disabled={editSaving}
-                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-fg hover:bg-accent-hover disabled:opacity-60"
+                className="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:opacity-60"
               >
                 {editSaving ? "Saving..." : "Save Changes"}
               </button>
