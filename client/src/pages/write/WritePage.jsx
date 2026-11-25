@@ -231,14 +231,14 @@ const WritePage = () => {
         />
       </aside>
 
-      <main className="mx-auto w-full max-w-[1366px] px-4 py-6 sm:px-6">
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <main className="mx-auto w-full max-w-[1100px] px-4 pb-20 pt-4 sm:px-6">
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
           {/* Main Editing Area */}
-          <section className="rounded-2xl border border-border-subtle bg-background p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle pb-4">
+          <section className="min-w-0">
+            <div className="sticky top-16 z-20 mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle bg-background/90 py-3 backdrop-blur">
               <div>
-                <h1 className="text-xl font-semibold text-text-primary">Write New Story</h1>
-                <p className="text-sm text-text-body">Draft your post with Markdown support and publish when ready.</p>
+                <h1 className="font-serif text-2xl font-semibold tracking-tight text-text-primary">Write a story</h1>
+                <p className="text-sm text-text-secondary">Draft with Markdown support and publish when ready.</p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -246,7 +246,7 @@ const WritePage = () => {
                   type="button"
                   onClick={handlePublish}
                   disabled={submitting}
-                  className="rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-text-primary shadow-sm transition hover:bg-accent-hover disabled:opacity-60"
+                  className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:opacity-60"
                 >
                   {submitting ? "Publishing..." : "Publish"}
                 </button>
@@ -256,13 +256,14 @@ const WritePage = () => {
             <div className="space-y-5">
               {/* Title Input */}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-text-body">Title</label>
+                <label htmlFor="write-title" className="sr-only">Title</label>
                 <input
+                  id="write-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   maxLength={TITLE_MAX}
                   placeholder="Write your headline..."
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-[15px] text-text-primary outline-none transition focus:border-accent"
+                  className="w-full border-0 border-b border-border bg-transparent px-0 py-3 font-serif text-3xl font-semibold leading-tight tracking-tight text-text-primary outline-none transition placeholder:text-text-muted focus:border-accent sm:text-4xl"
                 />
                 <p className="mt-1 text-right text-xs text-text-secondary">
                   {titleLength}/{TITLE_MAX} (min {TITLE_MIN})
@@ -273,7 +274,7 @@ const WritePage = () => {
               <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <label className="block text-xs uppercase tracking-[0.2em] text-text-body">
+                    <label className="block text-sm font-medium text-text-body">
                       Content
                     </label>
                     {markdownEnabled && (
@@ -367,17 +368,18 @@ const WritePage = () => {
                     value={content}
                     onChange={(event) => setContent(event.target.value)}
                     onKeyDown={handleKeyDown}
+                    aria-label="Story content"
                     placeholder={
                       markdownEnabled
                         ? "Start writing your story in Markdown (e.g. # Heading, **bold**, `code`, etc.)..."
                         : "Start writing your story..."
                     }
-                    className="w-full resize-y rounded-xl border border-border bg-background px-4 py-3 font-mono text-[14.5px] leading-7 text-text-primary outline-none transition focus:border-accent"
+                    className="w-full resize-y rounded-lg border border-border bg-surface-1 px-4 py-3 font-mono text-[14.5px] leading-7 text-text-primary outline-none transition hover:border-border-strong focus:border-accent focus:ring-2 focus:ring-accent/25"
                   />
                 )}
 
                 {editorMode === "preview" && (
-                  <div className="min-h-[420px] rounded-xl border border-border bg-background p-5">
+                  <div className="min-h-[420px] rounded-lg border border-border bg-surface-1 p-5">
                     <MarkdownRenderer content={content} />
                   </div>
                 )}
@@ -396,8 +398,9 @@ const WritePage = () => {
                         value={content}
                         onChange={(event) => setContent(event.target.value)}
                         onKeyDown={handleKeyDown}
+                    aria-label="Story content"
                         placeholder="Write markdown here..."
-                        className="h-[420px] w-full resize-y rounded-xl border border-border bg-background px-4 py-3 font-mono text-[14px] leading-7 text-text-primary outline-none transition focus:border-accent"
+                        className="h-[420px] w-full resize-y rounded-lg border border-border bg-surface-1 px-4 py-3 font-mono text-[14px] leading-7 text-text-primary outline-none transition hover:border-border-strong focus:border-accent focus:ring-2 focus:ring-accent/25"
                       />
                     </div>
                     <div className="flex flex-col">
@@ -405,7 +408,7 @@ const WritePage = () => {
                         <span>Live Preview</span>
                         <span className="text-accent">Real-time</span>
                       </div>
-                      <div className="h-[420px] overflow-y-auto rounded-xl border border-border bg-background p-4">
+                      <div className="h-[420px] overflow-y-auto rounded-lg border border-border bg-surface-1 p-4">
                         <MarkdownRenderer content={content} />
                       </div>
                     </div>
@@ -419,14 +422,14 @@ const WritePage = () => {
 
               {/* Summary / Excerpt Input */}
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-text-body">Summary / Excerpt</label>
+                <label className="mb-1 block text-sm font-medium text-text-body">Summary / Excerpt</label>
                 <textarea
                   rows={2}
                   maxLength={EXCERPT_MAX}
                   value={excerpt}
                   onChange={(event) => setExcerpt(event.target.value)}
                   placeholder="Short summary for cards and previews..."
-                  className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-[14px] text-text-primary outline-none transition focus:border-accent"
+                  className="w-full resize-none rounded-lg border border-border bg-surface-1 px-4 py-3 text-[14px] text-text-primary outline-none transition hover:border-border-strong focus:border-accent focus:ring-2 focus:ring-accent/25"
                 />
                 <p className="mt-1 text-right text-xs text-text-secondary">
                   {excerptLength}/{EXCERPT_MAX} (min {EXCERPT_MIN} if provided)
@@ -436,7 +439,7 @@ const WritePage = () => {
               {/* Images */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label className="block text-xs uppercase tracking-[0.2em] text-text-body">Images (max {MAX_IMAGES}, 10MB each)</label>
+                  <label className="block text-sm font-medium text-text-body">Images (max {MAX_IMAGES}, 10MB each)</label>
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-text-primary transition hover:border-accent">
                     <ImagePlus size={14} />
                     Add Images
@@ -473,14 +476,14 @@ const WritePage = () => {
           {/* Sidebar Area */}
           <aside className="space-y-4">
             {/* Post Settings */}
-            <section className="rounded-2xl border border-border-subtle bg-background p-4">
+            <section className="rounded-xl border border-border-subtle bg-surface-1 p-4">
               <h2 className="mb-3 text-sm font-semibold text-text-primary">Post Settings</h2>
 
-              <label className="mb-1 block text-xs uppercase tracking-[0.2em] text-text-body">Visibility</label>
+              <label className="mb-1 block text-sm font-medium text-text-body">Visibility</label>
               <select
                 value={visibility}
                 onChange={(event) => setVisibility(event.target.value)}
-                className="mb-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                className="mb-3 w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm text-text-primary outline-none transition hover:border-border-strong focus:border-accent focus:ring-2 focus:ring-accent/25"
               >
                 <option value="public">Public</option>
                 <option value="anonymous">Anonymous</option>
@@ -488,9 +491,9 @@ const WritePage = () => {
             </section>
 
             {/* Markdown Quick Card */}
-            <section className="rounded-2xl border border-accent/20 bg-surface p-4">
+            <section className="rounded-xl border border-border-subtle bg-surface-1 p-4">
               <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-accent">
+                <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
                   <Sparkles size={15} className="text-accent" />
                   <span>Markdown Support</span>
                 </div>
@@ -515,7 +518,7 @@ const WritePage = () => {
             </section>
 
             {/* Live Stats */}
-            <section className="rounded-2xl border border-border-subtle bg-background p-4">
+            <section className="rounded-xl border border-border-subtle bg-surface-1 p-4">
               <h2 className="mb-3 text-sm font-semibold text-text-primary">Live Stats</h2>
               <div className="space-y-2 text-sm text-text-body">
                 <p className="flex items-center justify-between">
@@ -546,7 +549,7 @@ const WritePage = () => {
             </section>
 
             {/* Constraints */}
-            <section className="rounded-2xl border border-border-subtle bg-background p-4">
+            <section className="rounded-xl border border-border-subtle bg-surface-1 p-4">
               <h2 className="mb-3 text-sm font-semibold text-text-primary">Publishing Constraints</h2>
               <div className="space-y-1.5 text-xs text-text-body">
                 <p>Title: {TITLE_MIN}-{TITLE_MAX} characters</p>
@@ -569,13 +572,13 @@ const WritePage = () => {
       {/* Error Popup */}
       {error && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-danger/40 bg-danger/10 p-6 text-center shadow-pop">
-            <h2 className="mb-3 text-2xl font-semibold text-danger">Publishing Error</h2>
-            <p className="mx-auto max-w-xl text-[15px] leading-7 text-danger">{error}</p>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="publish-error-title" className="w-full max-w-lg rounded-xl border border-danger/40 bg-surface-1 p-6 text-center shadow-pop">
+            <h2 id="publish-error-title" className="mb-3 font-serif text-2xl font-semibold tracking-tight text-danger">Publishing error</h2>
+            <p className="mx-auto max-w-xl whitespace-pre-line text-[15px] leading-7 text-text-body">{error}</p>
             <button
               type="button"
               onClick={() => setError("")}
-              className="mt-5 rounded-xl border border-border-strong bg-surface-2 px-5 py-2 text-sm font-semibold text-text-primary hover:border-accent hover:bg-surface-2"
+              className="mt-5 rounded-lg border border-border-strong px-5 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-2"
             >
               Close
             </button>

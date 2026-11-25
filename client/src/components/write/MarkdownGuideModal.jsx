@@ -48,7 +48,7 @@ const MarkdownGuideModal = ({ isOpen, onClose, onInsertTemplate }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl border border-border bg-background text-text-primary shadow-pop">
+      <div role="dialog" aria-modal="true" aria-label="Markdown guide" className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border border-border bg-surface-1 text-text-primary shadow-pop">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-subtle px-6 py-4">
           <div className="flex items-center gap-2.5">
