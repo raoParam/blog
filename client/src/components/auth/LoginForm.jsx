@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { authInputClass, authLabelClass, authButtonClass } from "./AuthShell";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -56,87 +57,71 @@ const LoginForm = () => {
   };
 
   return (
-    <>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
-
+    <form onSubmit={handleSubmit} noValidate className="space-y-5">
       <div>
-        <label
-          htmlFor="login-email"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
-        >
+        <label htmlFor="login-email" className={authLabelClass}>
           Email
         </label>
         <input
           id="login-email"
           type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
           value={formData.emailId}
-          onChange={(e) =>
-            setFormData({ ...formData, emailId: e.target.value })
-          }
-          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm focus:border-accent outline-none transition"
+          onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
+          aria-invalid={Boolean(errors.emailId)}
+          aria-describedby={errors.emailId ? "login-email-error" : undefined}
+          className={authInputClass}
         />
         {errors.emailId && (
-          <p className="text-danger text-xs mt-1">{errors.emailId}</p>
+          <p id="login-email-error" role="alert" className="mt-1.5 text-sm text-danger">
+            {errors.emailId}
+          </p>
         )}
       </div>
 
       <div>
-        <label
-          htmlFor="login-password"
-          className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-body"
-        >
+        <label htmlFor="login-password" className={authLabelClass}>
           Password
         </label>
         <div className="relative">
           <input
             id="login-password"
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-text-primary text-sm pr-12 focus:border-accent outline-none transition"
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? "login-password-error" : undefined}
+            className={`${authInputClass} pr-12`}
           />
-
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-body hover:text-text-primary transition"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-0 flex items-center px-3.5 text-text-secondary transition hover:text-text-primary"
           >
-            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
           </button>
         </div>
-
         {errors.password && (
-          <p className="text-danger text-xs mt-1">{errors.password}</p>
+          <p id="login-password-error" role="alert" className="mt-1.5 text-sm text-danger">
+            {errors.password}
+          </p>
         )}
       </div>
 
       {error && (
-        <div className="bg-danger/10 border border-danger/30 rounded-lg p-2">
-          <p className="text-danger text-xs text-center">{error}</p>
+        <div role="alert" className="rounded-lg border border-danger/30 bg-danger/10 px-3.5 py-2.5">
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full rounded-xl bg-accent hover:bg-accent-hover py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition disabled:opacity-50"
-      >
-        {submitting ? "Signing in..." : "Sign In"}
+      <button type="submit" disabled={submitting} className={authButtonClass}>
+        {submitting ? "Signing in..." : "Sign in"}
       </button>
-
-      <p className="text-center text-sm text-text-body">
-        Don't have an account?{" "}
-        <Link to="/register" className="font-semibold text-accent hover:text-accent-hover transition">
-          Sign up
-        </Link>
-      </p>
-      </form>
-    </>
+    </form>
   );
 };
 
