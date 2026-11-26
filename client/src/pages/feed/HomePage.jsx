@@ -176,6 +176,7 @@ const HomePage = () => {
     return () => {
       mounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount; loadFeed is triggered by the effect below
   }, []);
 
   useEffect(() => {

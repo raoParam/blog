@@ -28,102 +28,6 @@ const ExplorePage = () => {
     fetchPosts();
   }, []);
 
-  // Fallback data if API fails
-  const fallbackPosts = [
-    {
-      _id: "1",
-      title: "Understanding React Server Components",
-      excerpt: "A deep dive into how RSC work and when to use them in production...",
-      author: { userName: "rahul_kumar", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 42,
-      commentsCount: 8,
-    },
-    {
-      _id: "2",
-      title: "Getting Started with Next.js 14",
-      excerpt: "Learn about App Router, Server Components, and the new features...",
-      author: { userName: "priya_sharma", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 89,
-      commentsCount: 12,
-    },
-    {
-      _id: "3",
-      title: "Why I Left Big Tech",
-      excerpt: "A personal story about work-life balance and mental health...",
-      author: null,
-      createdAt: new Date().toISOString(),
-      likes: 156,
-      commentsCount: 34,
-    },
-    {
-      _id: "4",
-      title: "Mastering TypeScript in 2024",
-      excerpt: "Tips and tricks to level up your TypeScript game...",
-      author: { userName: "typescript_guru", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 67,
-      commentsCount: 15,
-    },
-    {
-      _id: "5",
-      title: "The Future of Web Development",
-      excerpt: "Where are we heading? Predictions for the next 5 years...",
-      author: { userName: "web_dev", isVerifiedBadge: false },
-      createdAt: new Date().toISOString(),
-      likes: 103,
-      commentsCount: 27,
-    },
-    {
-      _id: "6",
-      title: "Building Scalable APIs with Node.js",
-      excerpt: "Best practices for designing and implementing robust APIs...",
-      author: { userName: "api_master", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 78,
-      commentsCount: 19,
-    },
-    {
-      _id: "7",
-      title: "CSS Grid vs Flexbox",
-      excerpt: "When to use which layout system...",
-      author: { userName: "css_wizard", isVerifiedBadge: false },
-      createdAt: new Date().toISOString(),
-      likes: 34,
-      commentsCount: 7,
-    },
-    {
-      _id: "8",
-      title: "Introduction to GraphQL",
-      excerpt: "Why GraphQL is changing how we build APIs...",
-      author: { userName: "graphql_fan", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 92,
-      commentsCount: 23,
-    },
-    {
-      _id: "9",
-      title: "Debugging Like a Pro",
-      excerpt: "Tools and techniques to debug faster...",
-      author: { userName: "debugger", isVerifiedBadge: false },
-      createdAt: new Date().toISOString(),
-      likes: 45,
-      commentsCount: 11,
-    },
-    {
-      _id: "10",
-      title: "Open Source Contribution Guide",
-      excerpt: "How to make your first open source contribution...",
-      author: { userName: "oss_contributor", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 128,
-      commentsCount: 42,
-    },
-  ];
-
-  const displayPosts = posts.length > 0 ? posts : fallbackPosts;
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -173,11 +77,22 @@ const ExplorePage = () => {
 
         <div className="mx-auto max-w-3xl px-6 pb-20 sm:px-8">
           <h2 className="sr-only">Recent posts</h2>
-          <div className="border-t border-border-subtle">
-            {displayPosts.slice(0, 10).map((post) => (
-              <PublicPostCard key={post._id} post={post} />
-            ))}
-          </div>
+          {posts.length > 0 ? (
+            <div className="border-t border-border-subtle">
+              {posts.slice(0, 10).map((post) => (
+                <PublicPostCard key={post._id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div className="border-t border-border-subtle py-14">
+              <p className="font-serif text-2xl font-semibold tracking-tight text-text-primary">
+                No stories yet.
+              </p>
+              <p className="mt-2 max-w-md text-text-secondary">
+                Nothing has been published so far. Check back soon, or create an account and write the first one.
+              </p>
+            </div>
+          )}
 
           {/* Login CTA - always shown */}
           <LoginCTA />

@@ -222,6 +222,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     loadProfileData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load the profile once on mount
   }, []);
 
   const handleLogout = async () => {
