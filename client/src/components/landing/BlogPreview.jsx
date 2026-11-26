@@ -63,39 +63,6 @@ const BlogPreview = () => {
     fetchPosts();
   }, []);
 
-  // Fallback data if API fails
-  const fallbackPosts = [
-    {
-      _id: "1",
-      title: "Understanding React Server Components",
-      excerpt: "A deep dive into how RSC work and when to use them in production...",
-      author: { userName: "rahul_kumar", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 42,
-      commentsCount: 8,
-    },
-    {
-      _id: "2",
-      title: "Getting Started with Next.js 14",
-      excerpt: "Learn about App Router, Server Components, and the new features...",
-      author: { userName: "priya_sharma", isVerifiedBadge: true },
-      createdAt: new Date().toISOString(),
-      likes: 89,
-      commentsCount: 12,
-    },
-    {
-      _id: "3",
-      title: "Why I Left Big Tech",
-      excerpt: "A personal story about work-life balance and mental health...",
-      author: null, // anonymous
-      createdAt: new Date().toISOString(),
-      likes: 156,
-      commentsCount: 34,
-    },
-  ];
-
-  const displayPosts = posts.length > 0 ? posts : fallbackPosts;
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -128,6 +95,30 @@ const BlogPreview = () => {
     );
   }
 
+  if (!error && posts.length === 0) {
+    return (
+      <section className="border-t border-border-subtle">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-24">
+          <SectionHeader showLink={false} />
+          <div className="border-t border-border pt-8">
+            <p className="font-serif text-2xl font-semibold tracking-tight text-text-primary">
+              No stories yet.
+            </p>
+            <p className="mt-2 max-w-md text-text-secondary">
+              Flagger is just getting started. Create an account and publish the first one.
+            </p>
+            <Link
+              to="/register"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-text-primary underline decoration-accent/60 decoration-[1.5px] underline-offset-4 transition hover:text-accent hover:decoration-accent"
+            >
+              Start writing <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (error && posts.length === 0) {
     return (
       <section className="border-t border-border-subtle">
@@ -147,7 +138,7 @@ const BlogPreview = () => {
         <SectionHeader />
 
         <div className="grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
-          {displayPosts.slice(0, 3).map((post) => (
+          {posts.slice(0, 3).map((post) => (
             <article key={post._id} className="border-t border-border pt-6">
               <Link to={`/blog/${post._id}`} className="group block h-full">
                 <div className="mb-5 flex items-center gap-2.5 text-sm">

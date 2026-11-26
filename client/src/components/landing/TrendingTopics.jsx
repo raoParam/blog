@@ -37,18 +37,6 @@ const TrendingTopics = () => {
     fetchCategories();
   }, []);
 
-  // Fallback data if API fails or is empty
-  const fallbackTopics = [
-    { name: "react", count: "2.3k" },
-    { name: "nextjs", count: "1.8k" },
-    { name: "typescript", count: "1.5k" },
-    { name: "tailwind", count: "1.2k" },
-    { name: "nodejs", count: "1.1k" },
-    { name: "python", count: "980" },
-  ];
-
-  const displayTopics = categories.length > 0 ? categories : fallbackTopics;
-
   if (loading) {
     return (
       <TopicsShell>
@@ -61,18 +49,13 @@ const TrendingTopics = () => {
     );
   }
 
-  if (error) {
-    return (
-      <TopicsShell>
-        <p className="text-sm text-text-secondary">{error}</p>
-      </TopicsShell>
-    );
-  }
+  // No real topics (empty or failed): hide the section instead of showing made-up ones
+  if (error || categories.length === 0) return null;
 
   return (
     <TopicsShell>
       <ul className="flex flex-wrap gap-2.5">
-        {displayTopics.map((topic, index) => (
+        {categories.map((topic, index) => (
           <li
             key={topic.name || index}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-1 px-4 py-2 text-sm"

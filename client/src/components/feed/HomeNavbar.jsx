@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LogOut, Search, ChevronDown, Menu, User, PenSquare, ShieldCheck, Settings } from "lucide-react";
+import { LogOut, ChevronDown, Menu, User, PenSquare, ShieldCheck, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import BrandMark from "../common/BrandMark";
 
@@ -42,18 +42,6 @@ const HomeNavbar = ({ user, onLogout, onToggleMobileMenu, onWrite }) => {
           <BrandMark size="sm" />
           <span className="font-serif text-xl font-bold tracking-tight text-text-primary">Flagger</span>
         </Link>
-
-        <div className="hidden flex-1 md:block">
-          <div className="relative mx-auto max-w-[450px]">
-            <Search size={16} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              type="text"
-              aria-label="Search articles and authors"
-              placeholder="Search articles, authors..."
-              className="w-full rounded-lg border border-border-subtle bg-surface-1 py-2 pl-9 pr-4 text-sm text-text-primary placeholder:text-text-muted transition focus:border-border-strong focus:outline-none"
-            />
-          </div>
-        </div>
 
         <div className="relative ml-auto flex items-center gap-3" ref={profileRef}>
           <button

@@ -204,6 +204,7 @@ const BlogPage = () => {
       window.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally re-runs only when the viewer opens or the image count changes
   }, [imageViewerOpen, images.length]);
 
   const handleToggleLike = async () => {
